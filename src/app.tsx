@@ -2,7 +2,6 @@
  * Copyright (C) 2026 Moremi Vannak
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
-import picomatch from 'picomatch'
 import React from 'react'
 import { type Dispatcher } from 'tea-cup-fp'
 
@@ -19,7 +18,7 @@ import {
   RulerIcon,
   SunIcon,
 } from './component/icon'
-import { matchUrlPattern } from './storage/storage'
+import { getGlobError, matchUrlPattern } from './storage/storage'
 import {
   type GlobalSetting,
   type Model,
@@ -237,16 +236,6 @@ const padThemeStylingView = (
       {patternStyleSelectorView(theme, padTheme, dispatch)}
     </div>
   )
-}
-
-const getGlobError = (pattern: string): string | null => {
-  if (!pattern.trim()) return null
-  try {
-    picomatch(pattern.trim())
-    return null
-  } catch (e) {
-    return e instanceof Error ? e.message : String(e)
-  }
 }
 
 const matchRowView = (

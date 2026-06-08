@@ -4,7 +4,11 @@
  */
 import { describe, expect, it, vi } from 'vitest'
 
-import { getHostname, matchUrlPattern } from '../src/storage/storage'
+import {
+  getGlobError,
+  getHostname,
+  matchUrlPattern,
+} from '../src/storage/storage'
 
 // Set up hoisted mock state so we can control picomatch behavior dynamically
 const { mockState } = vi.hoisted(() => {
@@ -73,6 +77,27 @@ describe('Storage Helpers', () => {
 
     it('returns false for empty pattern', () => {
       expect(matchUrlPattern('https://google.com/', '')).toBe(false)
+    })
+  })
+
+  describe('getGlobError', () => {
+    it('returns null for valid glob patterns', () => {
+      expect(getGlobError('**')).toBeNull()
+      expect(getGlobError('*://*.wikipedia.org/**')).toBeNull()
+    })
+
+    it('returns null for empty or whitespace patterns', () => {
+      expect(getGlobError('')).toBeNull()
+      expect(getGlobError('   ')).toBeNull()
+    })
+
+    it('returns error message string when picomatch compilation fails', () => {
+      mockState.forceThrow = true
+      try {
+        expect(getGlobError('invalid-pattern')).toBe('Mocked picomatch error')
+      } finally {
+        mockState.forceThrow = false
+      }
     })
   })
 })

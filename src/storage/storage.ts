@@ -49,6 +49,19 @@ export const matchUrlPattern = (urlStr: string, pattern: string): boolean => {
 }
 
 /**
+ * Compiles a glob pattern using picomatch to verify it is valid, returning the error message if invalid.
+ */
+export const getGlobError = (pattern: string): string | null => {
+  if (!pattern.trim()) return null
+  try {
+    picomatch(pattern.trim())
+    return null
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e)
+  }
+}
+
+/**
  * Load settings list for a specific domain.
  */
 export const loadPadSettings = (
