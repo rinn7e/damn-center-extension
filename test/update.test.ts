@@ -10,6 +10,8 @@ import {
   determineIsDarkPure,
   getActivePadSettingIndex,
   parseUrlSegments,
+  resolveNewSidePure,
+  resolveNewWidthPure,
   swapArrayElements,
   updatePadSettingInList,
   validateBackupData,
@@ -212,6 +214,109 @@ describe('Update Helpers', () => {
         ],
       }
       expect(validateBackupData(badBackup)).toBe(false)
+    })
+  })
+
+  describe('resolveNewSidePure', () => {
+    it('switches to Left side and preserves width', () => {
+      expect(resolveNewSidePure({ _tag: 'Left', width: 100 }, 'Left')).toEqual({
+        _tag: 'Left',
+        width: 100,
+      })
+      expect(resolveNewSidePure({ _tag: 'Right', width: 120 }, 'Left')).toEqual(
+        {
+          _tag: 'Left',
+          width: 120,
+        },
+      )
+      expect(
+        resolveNewSidePure(
+          { _tag: 'Both', leftWidth: 90, rightWidth: 110 },
+          'Left',
+        ),
+      ).toEqual({ _tag: 'Left', width: 90 })
+    })
+
+    it('switches to Right side and preserves width', () => {
+      expect(resolveNewSidePure({ _tag: 'Left', width: 100 }, 'Right')).toEqual(
+        {
+          _tag: 'Right',
+          width: 100,
+        },
+      )
+      expect(
+        resolveNewSidePure({ _tag: 'Right', width: 120 }, 'Right'),
+      ).toEqual({
+        _tag: 'Right',
+        width: 120,
+      })
+      expect(
+        resolveNewSidePure(
+          { _tag: 'Both', leftWidth: 90, rightWidth: 110 },
+          'Right',
+        ),
+      ).toEqual({ _tag: 'Right', width: 110 })
+    })
+
+    it('switches to Both side and resolves left/right fallback widths', () => {
+      expect(resolveNewSidePure({ _tag: 'Left', width: 100 }, 'Both')).toEqual({
+        _tag: 'Both',
+        leftWidth: 100,
+        rightWidth: 80,
+      })
+      expect(resolveNewSidePure({ _tag: 'Right', width: 120 }, 'Both')).toEqual(
+        {
+          _tag: 'Both',
+          leftWidth: 80,
+          rightWidth: 120,
+        },
+      )
+      expect(
+        resolveNewSidePure(
+          { _tag: 'Both', leftWidth: 90, rightWidth: 110 },
+          'Both',
+        ),
+      ).toEqual({ _tag: 'Both', leftWidth: 90, rightWidth: 110 })
+    })
+  })
+
+  describe('resolveNewWidthPure', () => {
+    it('sets left width correctly', () => {
+      expect(
+        resolveNewWidthPure({ _tag: 'Left', width: 100 }, 'left', 150),
+      ).toEqual({
+        _tag: 'Left',
+        width: 150,
+      })
+      expect(
+        resolveNewWidthPure(
+          { _tag: 'Both', leftWidth: 90, rightWidth: 110 },
+          'left',
+          130,
+        ),
+      ).toEqual({ _tag: 'Both', leftWidth: 130, rightWidth: 110 })
+      expect(
+        resolveNewWidthPure({ _tag: 'Right', width: 100 }, 'left', 150),
+      ).toEqual({ _tag: 'Right', width: 100 })
+    })
+
+    it('sets right width correctly', () => {
+      expect(
+        resolveNewWidthPure({ _tag: 'Right', width: 120 }, 'right', 160),
+      ).toEqual({
+        _tag: 'Right',
+        width: 160,
+      })
+      expect(
+        resolveNewWidthPure(
+          { _tag: 'Both', leftWidth: 90, rightWidth: 110 },
+          'right',
+          140,
+        ),
+      ).toEqual({ _tag: 'Both', leftWidth: 90, rightWidth: 140 })
+      expect(
+        resolveNewWidthPure({ _tag: 'Left', width: 100 }, 'right', 150),
+      ).toEqual({ _tag: 'Left', width: 100 })
     })
   })
 })

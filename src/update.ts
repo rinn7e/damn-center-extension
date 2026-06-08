@@ -25,6 +25,7 @@ import {
   type Msg,
   type PadSettings,
   PadSettingsCodec,
+  type PadSide,
   createDefaultPadSettings,
   defaultGlobalSetting,
   defaultPadSettings,
@@ -95,6 +96,74 @@ export const determineIsDarkPure = (
     return false
   }
   return systemPrefersDark
+}
+
+/**
+ * Resolves the new PadSide structure when switching between Left, Right, or Both side configurations.
+ */
+export const resolveNewSidePure = (
+  currentSide: PadSide,
+  sideType: 'Left' | 'Right' | 'Both',
+): PadSide => {
+  if (sideType === 'Left') {
+    const currentWidth =
+      currentSide._tag === 'Left' || currentSide._tag === 'Right'
+        ? currentSide.width
+        : currentSide.leftWidth
+    return { _tag: 'Left', width: currentWidth }
+  } else if (sideType === 'Right') {
+    const currentWidth =
+      currentSide._tag === 'Left' || currentSide._tag === 'Right'
+        ? currentSide.width
+        : currentSide.rightWidth
+    return { _tag: 'Right', width: currentWidth }
+  } else {
+    const leftW =
+      currentSide._tag === 'Left'
+        ? currentSide.width
+        : currentSide._tag === 'Both'
+          ? currentSide.leftWidth
+          : 80
+    const rightW =
+      currentSide._tag === 'Right'
+        ? currentSide.width
+        : currentSide._tag === 'Both'
+          ? currentSide.rightWidth
+          : 80
+    return { _tag: 'Both', leftWidth: leftW, rightWidth: rightW }
+  }
+}
+
+/**
+ * Resolves the new PadSide structure when adjusting left or right width inputs.
+ */
+export const resolveNewWidthPure = (
+  currentSide: PadSide,
+  sideType: 'left' | 'right',
+  width: number,
+): PadSide => {
+  if (sideType === 'left') {
+    if (currentSide._tag === 'Left') {
+      return { _tag: 'Left', width }
+    } else if (currentSide._tag === 'Both') {
+      return {
+        _tag: 'Both',
+        leftWidth: width,
+        rightWidth: currentSide.rightWidth,
+      }
+    }
+  } else if (sideType === 'right') {
+    if (currentSide._tag === 'Right') {
+      return { _tag: 'Right', width }
+    } else if (currentSide._tag === 'Both') {
+      return {
+        _tag: 'Both',
+        leftWidth: currentSide.leftWidth,
+        rightWidth: width,
+      }
+    }
+  }
+  return currentSide
 }
 
 const determineIsDark = (themeMode: string): boolean => {
@@ -388,64 +457,16 @@ export const update = (
       return handleToggleEnabled(msg, model)
 
     case 'SetPadSideType':
-      return updateActiveSetting(model, (active) => {
-        let updatedSide = active.side
-        if (msg.sideType === 'Left') {
-          const currentWidth =
-            active.side._tag === 'Left' || active.side._tag === 'Right'
-              ? active.side.width
-              : active.side.leftWidth
-          updatedSide = { _tag: 'Left', width: currentWidth }
-        } else if (msg.sideType === 'Right') {
-          const currentWidth =
-            active.side._tag === 'Left' || active.side._tag === 'Right'
-              ? active.side.width
-              : active.side.rightWidth
-          updatedSide = { _tag: 'Right', width: currentWidth }
-        } else if (msg.sideType === 'Both') {
-          const leftW =
-            active.side._tag === 'Left'
-              ? active.side.width
-              : active.side._tag === 'Both'
-                ? active.side.leftWidth
-                : 80
-          const rightW =
-            active.side._tag === 'Right'
-              ? active.side.width
-              : active.side._tag === 'Both'
-                ? active.side.rightWidth
-                : 80
-          updatedSide = { _tag: 'Both', leftWidth: leftW, rightWidth: rightW }
-        }
-        return { ...active, side: updatedSide }
-      })
+      return updateActiveSetting(model, (active) => ({
+        ...active,
+        side: resolveNewSidePure(active.side, msg.sideType),
+      }))
 
     case 'SetPadWidth':
-      return updateActiveSetting(model, (active) => {
-        let updatedSide = active.side
-        if (msg.sideType === 'left') {
-          if (active.side._tag === 'Left') {
-            updatedSide = { _tag: 'Left', width: msg.width }
-          } else if (active.side._tag === 'Both') {
-            updatedSide = {
-              _tag: 'Both',
-              leftWidth: msg.width,
-              rightWidth: active.side.rightWidth,
-            }
-          }
-        } else if (msg.sideType === 'right') {
-          if (active.side._tag === 'Right') {
-            updatedSide = { _tag: 'Right', width: msg.width }
-          } else if (active.side._tag === 'Both') {
-            updatedSide = {
-              _tag: 'Both',
-              leftWidth: active.side.leftWidth,
-              rightWidth: msg.width,
-            }
-          }
-        }
-        return { ...active, side: updatedSide }
-      })
+      return updateActiveSetting(model, (active) => ({
+        ...active,
+        side: resolveNewWidthPure(active.side, msg.sideType, msg.width),
+      }))
 
     case 'SetPadThemeMode':
       return updateActiveSetting(model, (active) => ({

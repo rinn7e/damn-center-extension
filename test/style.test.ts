@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 import {
   getActivePadThemePure,
   resolveBgStyles,
+  resolvePadWidths,
 } from '../src/common/style-helper'
 
 describe('Style Helpers', () => {
@@ -75,6 +76,31 @@ describe('Style Helpers', () => {
       expect(badPatternStyles).toEqual({
         backgroundColor: '#ffffff',
         backgroundImage: 'none',
+      })
+    })
+  })
+
+  describe('resolvePadWidths', () => {
+    it('returns width for Left side', () => {
+      expect(resolvePadWidths({ _tag: 'Left', width: 120 })).toEqual({
+        leftWidth: 120,
+        rightWidth: 0,
+      })
+    })
+
+    it('returns width for Right side', () => {
+      expect(resolvePadWidths({ _tag: 'Right', width: 150 })).toEqual({
+        leftWidth: 0,
+        rightWidth: 150,
+      })
+    })
+
+    it('returns widths for Both sides', () => {
+      expect(
+        resolvePadWidths({ _tag: 'Both', leftWidth: 90, rightWidth: 110 }),
+      ).toEqual({
+        leftWidth: 90,
+        rightWidth: 110,
       })
     })
   })

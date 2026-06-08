@@ -2,7 +2,11 @@
  * Copyright (C) 2026 Moremi Vannak
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
-import { getActivePadThemePure, resolveBgStyles } from '../common/style-helper'
+import {
+  getActivePadThemePure,
+  resolveBgStyles,
+  resolvePadWidths,
+} from '../common/style-helper'
 import {
   getHostname,
   loadGlobalSetting,
@@ -69,16 +73,7 @@ const updateStyles = (settings: PadSettings, globalSetting: GlobalSetting) => {
     document.documentElement.appendChild(styleElement)
   }
 
-  let leftWidth = 0
-  let rightWidth = 0
-  if (settings.side._tag === 'Left') {
-    leftWidth = settings.side.width
-  } else if (settings.side._tag === 'Right') {
-    rightWidth = settings.side.width
-  } else if (settings.side._tag === 'Both') {
-    leftWidth = settings.side.leftWidth
-    rightWidth = settings.side.rightWidth
-  }
+  const { leftWidth, rightWidth } = resolvePadWidths(settings.side)
 
   if (!settings.enabled || (leftWidth <= 0 && rightWidth <= 0)) {
     styleElement.textContent = ''
