@@ -44,20 +44,48 @@ The build scripts output compiled extension bundles to `./dist/chrome` and `./di
 
 ## Installation
 
-To load the built extension into your browser:
+### Web Stores (Recommended)
 
-1. Build the production bundles:
-   ```bash
-   pnpm run build
-   ```
-2. Open the browser's extension management page:
-   - Chrome: `chrome://extensions/`
-   - Firefox: `about:debugging#/runtime/this-firefox`
-3. Enable developer mode:
-   - Chrome: Toggle **Developer mode** in the top-right corner.
-4. Load the compiled extension:
-   - Chrome: Click **Load unpacked** and select the `./dist/chrome` directory.
-   - Firefox: Click **Load Temporary Add-on...** and select any file inside the `./dist/firefox` directory (e.g., `manifest.json`).
+- **Chrome Web Store**: Under Review / Coming Soon
+- **Firefox Add-ons**: Coming Soon
+
+---
+
+### Manual Build & Installation
+
+If you prefer to compile and install the extension yourself, follow these steps:
+
+#### 1. Build from Source
+
+Ensure you have [Node.js](https://nodejs.org/) and [pnpm](https://pnpm.io/) installed.
+
+```bash
+# Install dependencies
+pnpm install
+
+# Build the production bundles for both browsers
+pnpm run build
+```
+
+This compiles the extension code and outputs target directories:
+
+- `./dist/chrome` for Chrome and Chromium-based browsers.
+- `./dist/firefox` for Firefox.
+
+#### 2. Load the Extension into Your Browser
+
+##### For Chrome and Chromium-based Browsers (Brave, Edge, Vivaldi, Opera)
+
+1. Open the browser and navigate to `chrome://extensions/`.
+2. Enable **Developer mode** using the toggle in the top-right corner.
+3. Click the **Load unpacked** button in the top-left corner.
+4. Select the `./dist/chrome` directory from this repository.
+
+##### For Firefox
+
+1. Open the browser and navigate to `about:debugging#/runtime/this-firefox`.
+2. Click the **Load Temporary Add-on...** button.
+3. Select the `manifest.json` file inside the `./dist/firefox` directory.
 
 ---
 
