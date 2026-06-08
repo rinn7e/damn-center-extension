@@ -2,7 +2,7 @@
  * Copyright (C) 2026 Moremi Vannak
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
-import { type PadSide } from '../type'
+import { type PadSide } from './type/pad-setting'
 import { patterns } from './type/preset'
 
 /**

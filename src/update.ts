@@ -8,6 +8,19 @@ import * as t from 'io-ts'
 import { Cmd, Task } from 'tea-cup-fp'
 
 import { UI_THEME_ID } from './common/env'
+import {
+  type GlobalSetting,
+  GlobalSettingCodec,
+  defaultGlobalSetting,
+} from './common/type/global-setting'
+import { type Hostname } from './common/type/hostname'
+import {
+  type PadSettings,
+  PadSettingsCodec,
+  type PadSide,
+  createDefaultPadSettings,
+  defaultPadSettings,
+} from './common/type/pad-setting'
 import { injectTheme, themes } from './common/type/theme'
 import {
   getHostname,
@@ -17,19 +30,7 @@ import {
   saveGlobalSetting,
   savePadSettings,
 } from './storage/storage'
-import {
-  type GlobalSetting,
-  GlobalSettingCodec,
-  type Hostname,
-  type Model,
-  type Msg,
-  type PadSettings,
-  PadSettingsCodec,
-  type PadSide,
-  createDefaultPadSettings,
-  defaultGlobalSetting,
-  defaultPadSettings,
-} from './type'
+import { type Model, type Msg } from './type'
 
 export const getActivePadSettingIndex = (
   url: string,

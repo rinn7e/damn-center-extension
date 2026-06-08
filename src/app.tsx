@@ -7,6 +7,13 @@ import { type Dispatcher } from 'tea-cup-fp'
 
 import './asset/index.css'
 import { UI_THEME_ID } from './common/env'
+import { type GlobalSetting } from './common/type/global-setting'
+import {
+  type PadSettings,
+  type PadTheme,
+  type PadThemeMode,
+  defaultPadSettings,
+} from './common/type/pad-setting'
 import { darkColors, lightColors, patterns } from './common/type/preset'
 import { themes } from './common/type/theme'
 import {
@@ -19,15 +26,7 @@ import {
   SunIcon,
 } from './component/icon'
 import { getGlobError, matchUrlPattern } from './storage/storage'
-import {
-  type GlobalSetting,
-  type Model,
-  type Msg,
-  type PadSettings,
-  type PadTheme,
-  type PadThemeMode,
-  defaultPadSettings,
-} from './type'
+import { type Model, type Msg } from './type'
 
 const transparentBgStyle = {
   backgroundImage:

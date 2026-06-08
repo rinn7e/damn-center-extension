@@ -4,7 +4,10 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { type PadSettings, defaultPadSettings } from '../src/type'
+import {
+  type PadSettings,
+  defaultPadSettings,
+} from '../src/common/type/pad-setting'
 import {
   buildGlobPatternFromSegments,
   determineIsDarkPure,

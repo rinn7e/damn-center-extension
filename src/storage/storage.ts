@@ -9,11 +9,10 @@ import picomatch from 'picomatch'
 import {
   type GlobalSetting,
   GlobalSettingCodec,
-  type Hostname,
-  type PadSettings,
-  PadSettingsCodec,
   defaultGlobalSetting,
-} from '../type'
+} from '../common/type/global-setting'
+import { type Hostname } from '../common/type/hostname'
+import { type PadSettings, PadSettingsCodec } from '../common/type/pad-setting'
 
 /**
  * Extracts the clean hostname from a URL string.

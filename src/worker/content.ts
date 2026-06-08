@@ -8,16 +8,16 @@ import {
   resolvePadWidths,
 } from '../common/style-helper'
 import {
+  type GlobalSetting,
+  defaultGlobalSetting,
+} from '../common/type/global-setting'
+import { type PadSettings } from '../common/type/pad-setting'
+import {
   getHostname,
   loadGlobalSetting,
   loadPadSettings,
   matchUrlPattern,
 } from '../storage/storage'
-import {
-  type GlobalSetting,
-  type PadSettings,
-  defaultGlobalSetting,
-} from '../type'
 
 let currentSettings: PadSettings | null = null
 let currentGlobalSetting: GlobalSetting | null = null
