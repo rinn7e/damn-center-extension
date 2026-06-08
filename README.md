@@ -95,6 +95,39 @@ This compiles the extension code and outputs target directories:
 
 ---
 
+## Layout Shifting Mechanism
+
+To shift page content dynamically without breaking absolute or sticky elements, the extension restructures the document layout at the root using CSS Flexbox:
+
+```
++-------------------------------------------------------------+
+| html (display: flex; flex-direction: row; overflow: hidden) |
+|                                                             |
+| +------------+ +------------------------------+ +---------+ |
+| | Left Pad   | | Body                         | |Right Pad| |
+| | (order: 1) | | (order: 2; overflow-y: auto) | |(order:3)| |
+| |            | |                              | |         | |
+| | [Pattern]  | | [ Page Content ]             | | [Color] | |
+| |            | |                              | |         | |
+| +------------+ +------------------------------+ +---------+ |
++-------------------------------------------------------------+
+```
+
+1. **Root Flexbox Container**: The `html` element is transformed into a horizontal flex container.
+2. **Constrained Scrollable Body**: Viewport scrolling is disabled on `html`, and shifted to `body` (`overflow-y: auto`). The body's width is constrained to make room for padding.
+3. **Flex Order Positioning**: Left and right pads are inserted as flex items with explicitly defined orders, shifting the body content to the center dynamically.
+
+---
+
+## Known Incompatibilities
+
+The following websites are currently known to be incompatible with the extension's layout shifting mechanism:
+
+- [https://studio.youtube.com/](https://studio.youtube.com/) (YouTube Studio)
+- [https://mail.google.com/mail/](https://mail.google.com/mail/) (Gmail)
+
+---
+
 ## Video Showcase
 
 [![Damn Center Showcase](https://img.youtube.com/vi/Yc29sO4jF9g/0.jpg)](https://www.youtube.com/watch?v=Yc29sO4jF9g)
