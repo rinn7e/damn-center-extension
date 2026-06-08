@@ -1,0 +1,53 @@
+{
+  "name": "damn-center-extension",
+  "private": true,
+  "version": "1.0.0",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build:chrome": "TARGET=chrome vite build && TARGET=chrome BUILD_TARGET=content vite build",
+    "build:firefox": "TARGET=firefox vite build && TARGET=firefox BUILD_TARGET=content vite build",
+    "build": "tsc && pnpm run build:chrome && pnpm run build:firefox",
+    "check": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "fp-ts": "^2.16.0",
+    "io-ts": "^2.2.20",
+    "io-ts-types": "^0.5.19",
+    "picomatch": "^4.0.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-tea-cup": "5.1.3",
+    "tailwind-merge": "^3.0.2",
+    "tea-cup-fp": "1.1.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.29.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+    "@types/chrome": "^0.0.299",
+    "@types/picomatch": "^4.0.3",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.29.0",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-react-dom": "^1.52.2",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "eslint-plugin-react-x": "^1.52.2",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "globals": "^16.2.0",
+    "prettier": "^3.8.1",
+    "prettier-plugin-tailwindcss": "^0.7.2",
+    "tailwind-scrollbar": "^4.0.2",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.34.1",
+    "vite": "^6.1.0"
+  }
+}

@@ -1,0 +1,102 @@
+/*
+ * Copyright (C) 2026 Moremi Vannak
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+@import 'tailwindcss';
+
+@plugin 'tailwind-scrollbar' {
+  nocompatible: true;
+}
+
+:root {
+  --color-primary: #10b981;
+  --color-secondary: #0f172a;
+  --color-bg-card: #ffffff;
+  --color-bg-input: #f1f5f9;
+  --color-border-card: #e2e8f0;
+  --color-border-input: #cbd5e1;
+  --color-text-main: #0f172a;
+  --color-text-muted: #475569;
+  --color-text-dim: #64748b;
+
+  --font-header: 'Inter', sans-serif;
+  --font-normal: 'Inter', sans-serif;
+}
+
+@theme {
+  --color-theme-primary: var(--color-primary);
+  --color-theme-secondary: var(--color-secondary);
+  --color-theme-bg-card: var(--color-bg-card);
+  --color-theme-bg-input: var(--color-bg-input);
+  --color-theme-border-card: var(--color-border-card);
+  --color-theme-border-input: var(--color-border-input);
+  --color-theme-text-main: var(--color-text-main);
+  --color-theme-text-muted: var(--color-text-muted);
+  --color-theme-text-dim: var(--color-text-dim);
+
+  --font-theme-header: var(--font-header);
+  --font-theme-normal: var(--font-normal);
+}
+
+/* Custom premium design classes */
+body {
+  overflow: hidden;
+  background-color: var(--color-secondary);
+  color: var(--color-text-main);
+}
+
+.app-body-scroll {
+  @apply scrollbar scrollbar-w-[4px] scrollbar-thumb-theme-border-card hover:scrollbar-thumb-theme-border-input scrollbar-track-transparent overflow-y-auto;
+}
+
+@supports selector(::-webkit-scrollbar) {
+  .app-body-scroll {
+    scrollbar-color: auto !important;
+    scrollbar-width: auto !important;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Hide default spinner arrows on number inputs */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+/* Flatten default browser color input styling */
+input[type='color'] {
+  -webkit-appearance: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  background: none;
+  display: block;
+}
+
+input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+input[type='color']::-webkit-color-swatch {
+  border: none;
+}
