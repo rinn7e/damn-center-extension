@@ -2,7 +2,7 @@
  * Copyright (C) 2026 Moremi Vannak
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
-import { patterns } from '../common/type/preset'
+import { getActivePadThemePure, resolveBgStyles } from '../common/style-helper'
 import {
   getHostname,
   loadGlobalSetting,
@@ -31,13 +31,12 @@ const systemThemeMedia = window.matchMedia('(prefers-color-scheme: dark)')
  * Gets the background theme settings for the current mode.
  */
 const getActivePadTheme = (settings: PadSettings) => {
-  if (settings.themeMode === 'light') {
-    return settings.light
-  } else if (settings.themeMode === 'dark') {
-    return settings.dark
-  } else {
-    return systemThemeMedia.matches ? settings.dark : settings.light
-  }
+  return getActivePadThemePure(
+    settings.themeMode,
+    settings.light,
+    settings.dark,
+    systemThemeMedia.matches,
+  )
 }
 
 /**
@@ -199,15 +198,8 @@ const updateStyles = (settings: PadSettings, globalSetting: GlobalSetting) => {
     el.style.backgroundImage = ''
     el.style.backgroundSize = ''
 
-    if (bgType === 'color') {
-      el.style.backgroundColor = color
-    } else if (bgType === 'pattern') {
-      const pat = patterns.find((p) => p.id === patternId) || patterns[0]
-      const patStyles = pat.style(color)
-      Object.assign(el.style, patStyles)
-    } else {
-      el.style.backgroundColor = 'transparent'
-    }
+    const styles = resolveBgStyles(bgType, color, patternId)
+    Object.assign(el.style, styles)
   }
 
   if (leftWidth > 0) {
