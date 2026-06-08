@@ -4,6 +4,7 @@
  */
 import * as TE from 'fp-ts/lib/TaskEither'
 import { pipe } from 'fp-ts/lib/function'
+import * as t from 'io-ts'
 import { Cmd, Task } from 'tea-cup-fp'
 
 import { UI_THEME_ID } from './common/env'
@@ -18,10 +19,12 @@ import {
 } from './storage/storage'
 import {
   type GlobalSetting,
+  GlobalSettingCodec,
   type Hostname,
   type Model,
   type Msg,
   type PadSettings,
+  PadSettingsCodec,
   createDefaultPadSettings,
   defaultGlobalSetting,
   defaultPadSettings,
@@ -476,6 +479,12 @@ export const update = (
         Cmd.none(),
       ]
 
+    case 'ExportConfig':
+      return [model, triggerExportCmd()]
+
+    case 'ImportConfig':
+      return [model, triggerImportCmd(msg.jsonText)]
+
     case 'NoOp':
       return [model, Cmd.none()]
   }
@@ -483,6 +492,109 @@ export const update = (
 
 // Side effects task runners
 // -------------------------------------------------------------
+
+const validateBackupData = (data: unknown): boolean => {
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    return false
+  }
+  const keys = Object.keys(data)
+  if (keys.length === 0) return false
+  for (const key of keys) {
+    const val = (data as Record<string, unknown>)[key]
+    if (key === 'global_settings') {
+      const decoded = GlobalSettingCodec.decode(val)
+      if (decoded._tag === 'Left') return false
+    } else {
+      const decoded = t.array(PadSettingsCodec).decode(val)
+      if (decoded._tag === 'Left') return false
+    }
+  }
+  return true
+}
+
+const triggerExportCmd = (): Cmd<Msg> => {
+  return Task.attempt(
+    Task.fromPromise(() => {
+      return new Promise<void>((resolve) => {
+        if (
+          typeof chrome === 'undefined' ||
+          !chrome.storage ||
+          !chrome.storage.local
+        ) {
+          console.warn('[Damn Center] storage.local not available for export')
+          resolve()
+          return
+        }
+        chrome.storage.local.get(null, (allData) => {
+          try {
+            const jsonStr = JSON.stringify(allData, null, 2)
+            const blob = new Blob([jsonStr], { type: 'application/json' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = 'damn-center-backup.json'
+            a.click()
+            URL.revokeObjectURL(url)
+          } catch (e) {
+            console.error('[Damn Center] Export error:', e)
+          }
+          resolve()
+        })
+      })
+    }),
+    (): Msg => ({ _tag: 'NoOp' }),
+  )
+}
+
+const triggerImportCmd = (jsonText: string): Cmd<Msg> => {
+  return Task.attempt(
+    Task.fromPromise(async () => {
+      if (
+        typeof chrome === 'undefined' ||
+        !chrome.storage ||
+        !chrome.storage.local
+      ) {
+        alert('Storage API is not available.')
+        return
+      }
+
+      try {
+        const parsed = JSON.parse(jsonText)
+        if (!validateBackupData(parsed)) {
+          alert('Invalid backup file format.')
+          return
+        }
+
+        await new Promise<void>((resolve, reject) => {
+          chrome.storage.local.clear(() => {
+            if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError.message))
+            } else {
+              resolve()
+            }
+          })
+        })
+
+        await new Promise<void>((resolve, reject) => {
+          chrome.storage.local.set(parsed, () => {
+            if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError.message))
+            } else {
+              resolve()
+            }
+          })
+        })
+
+        alert('Configuration imported successfully!')
+        window.location.reload()
+      } catch (e) {
+        console.error('[Damn Center] Import failed:', e)
+        alert('Failed to parse backup file.')
+      }
+    }),
+    (): Msg => ({ _tag: 'NoOp' }),
+  )
+}
 
 const queryActiveTabAndSettings = (): Promise<{
   hostname: Hostname

@@ -6,6 +6,10 @@ A browser extension that adds customizable left and right padding to web pages. 
 
 Built with **React 19**, **Vite 6**, **TypeScript**, **Tailwind CSS v4**, **react-tea-cup**, and **fp-ts**.
 
+## Video Showcase
+
+[![Damn Center Showcase](https://img.youtube.com/vi/Yc29sO4jF9g/0.jpg)](https://www.youtube.com/watch?v=Yc29sO4jF9g)
+
 ---
 
 ## Getting Started

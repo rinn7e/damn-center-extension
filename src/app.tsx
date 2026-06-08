@@ -678,6 +678,51 @@ const styleEditorView = (
   )
 }
 
+const footerView = (dispatch: Dispatcher<Msg>) => {
+  return (
+    <div className='border-theme-border-card mt-[16px] flex items-center justify-between border-t pt-[16px]'>
+      <a
+        href='https://github.com/rinn7e/damn-center-extension'
+        target='_blank'
+        rel='noopener noreferrer'
+        className='text-theme-text-dim hover:text-theme-primary text-[11px] font-medium transition-all'
+      >
+        Source Code - Github
+      </a>
+      <div className='flex items-center gap-[12px]'>
+        <button
+          type='button'
+          onClick={() => dispatch({ _tag: 'ExportConfig' })}
+          className='text-theme-text-dim hover:text-theme-primary cursor-pointer text-[11px] font-semibold transition-all'
+        >
+          Export Config
+        </button>
+        <div className='bg-theme-border-input h-[10px] w-[1px]' />
+        <label className='text-theme-text-dim hover:text-theme-primary cursor-pointer text-[11px] font-semibold transition-all'>
+          Import Config
+          <input
+            type='file'
+            accept='.json'
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) {
+                const reader = new FileReader()
+                reader.onload = (event) => {
+                  const text = event.target?.result as string
+                  dispatch({ _tag: 'ImportConfig', jsonText: text })
+                }
+                reader.readAsText(file)
+              }
+              e.target.value = ''
+            }}
+            className='hidden'
+          />
+        </label>
+      </div>
+    </div>
+  )
+}
+
 interface AppProps {
   model: Model
   dispatch: Dispatcher<Msg>
@@ -735,6 +780,7 @@ export const App: React.FC<AppProps> = ({ model, dispatch }) => {
               </p>
             </div>
           )}
+          {footerView(dispatch)}
         </div>
       </div>
     </div>

@@ -150,4 +150,6 @@ export type Msg =
   | { _tag: 'MoveMatchDown'; index: number }
   | { _tag: 'ToggleShowRuler' }
   | { _tag: 'ToggleMatchesCollapsed' }
+  | { _tag: 'ExportConfig' }
+  | { _tag: 'ImportConfig'; jsonText: string }
   | { _tag: 'NoOp' }
