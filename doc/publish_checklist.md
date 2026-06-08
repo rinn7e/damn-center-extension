@@ -25,7 +25,7 @@ Prepare the required graphical and textual assets for the store listing page.
 - [ ] **Screenshots**: At least 1 (maximum 5) screenshot of the extension popup and content modifications in action.
   - Dimension: 1280x800 or 640x400 pixels (PNG or JPEG).
 - [ ] **Store Description**:
-  - Short description (max 132 characters): "Add beautiful, customizable left or right padding to any website with support for theme-aware custom colors and SVG patterns."
+  - Short description (max 132 characters): "Adds customizable left and right padding to web pages with support for theme-aware background colors and SVG patterns."
   - Detailed description: Summarize features (customizable padding, saved per-site, theme-aware presets, red ruler helper, and glob pattern matches).
 - [ ] **Category**: Productivity or Developer Tools.
 - [ ] **Privacy Policy**: (Required if using storage APIs to collect preferences, although Damn Center storage is strictly local/offline).

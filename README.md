@@ -1,8 +1,10 @@
-# Damn Center
+![Damn Center Logo](public/icon128.png)
 
-A premium, highly-polished Chrome extension that allows adding customizable left and right padding to any website. The padding features arbitrary widths, domain-specific URL configuration matches, a vertical alignment ruler, and gorgeous theme-aware custom background colors or SVG patterns.
+# Damn Center - the page !
 
-Built with **React 19**, **Vite 6**, **TypeScript**, **Tailwind CSS v4**, and **fp-ts** + **io-ts**.
+A browser extension that adds customizable left and right padding to web pages. Features include adjustable widths, domain-specific URL matching rules, a vertical layout alignment ruler, theme-aware background styling, and SVG patterns.
+
+Built with React 19, Vite 6, TypeScript, Tailwind CSS v4, fp-ts, and io-ts.
 
 ---
 
@@ -10,68 +12,63 @@ Built with **React 19**, **Vite 6**, **TypeScript**, **Tailwind CSS v4**, and **
 
 ### 1. Install Dependencies
 
-Ensure you have `pnpm` installed, then run the installation command inside the extension directory:
+Install dependencies using `pnpm`:
 
 ```bash
 pnpm install
 ```
 
-### 2. Run Local Development Server
+### 2. Development
 
-To start development mode with hot-reloading:
+Run the development server:
 
 ```bash
 pnpm run dev
 ```
 
-### 3. Build for Production
+### 3. Build
 
-To typecheck the project and bundle it into the static `dist/` directory for Chrome:
+Compile production bundles for Chrome and Firefox:
 
 ```bash
 pnpm run build
 ```
 
-This output is saved to the `./dist` folder, which contains `manifest.json`, `content.js`, and the React popup assets.
+The build scripts output compiled extension bundles to `./dist/chrome` and `./dist/firefox` containing browser-specific manifests and assets.
 
 ---
 
-## Installing the Extension in Google Chrome
+## Installation
 
-To install the built extension into your browser, follow these simple steps:
+To load the built extension into your browser:
 
-1. **Build the extension** using the production command:
+1. Build the production bundles:
    ```bash
    pnpm run build
    ```
-2. Open Google Chrome and navigate to the Extensions management page:
-   ```text
-   chrome://extensions/
-   ```
-3. In the top-right corner, toggle the **Developer mode** switch to **ON**.
-4. In the top-left, click the **Load unpacked** button.
-5. In the file picker, select the compiled **`dist`** directory of this project:
-   ```text
-   /path/to/symmetry-project/damn-center-extension/dist
-   ```
-6. The **Damn Center** extension icon will now appear in your toolbar. Pin it for easy access!
+2. Open the browser's extension management page:
+   - Chrome: `chrome://extensions/`
+   - Firefox: `about:debugging#/runtime/this-firefox`
+3. Enable developer mode:
+   - Chrome: Toggle **Developer mode** in the top-right corner.
+4. Load the compiled extension:
+   - Chrome: Click **Load unpacked** and select the `./dist/chrome` directory.
+   - Firefox: Click **Load Temporary Add-on...** and select any file inside the `./dist/firefox` directory (e.g., `manifest.json`).
 
 ---
 
-## Features & Configuration
+## Features
 
-- **Real-time Live Width Adjustment**: Drag the width slider inside the popup to instantly scale the padding space.
-- **Flexible Side Selectors**: Support padding Left, Right, or Both sides simultaneously.
-- **Full-Page Alignment Ruler**: Toggle a vertical centered ruler guide on your pages to help you align layouts precisely.
-- **Modern Flexbox Layout Shifting**: Page content is shifted dynamically using a clean flexbox structure with structural `order` property, ensuring side pads never overlap content and compatibility with fixed headers.
-- **Auto-Theme & Color Schemes**:
-  - Independent configurations for **Light Mode** and **Dark Mode**.
-  - **Theme Trigger Mode**: Explicitly force light, dark, or set to `System` to automatically sync with your OS preferences (`prefers-color-scheme`).
-- **SVG Background Patterns**: Choose from custom grids, dots, stripes, carbon texture, or Moroccan lattices that blend dynamically with any selected background color.
-- **Collapsible Matches**: Keep your popup clean by collapsing the match cards list when not in use.
+- **Width Adjustment**: Scale padding width dynamically using the popup slider.
+- **Side Selection**: Apply padding to the left side, right side, or both sides.
+- **Alignment Ruler**: Toggle a vertical centered ruler guide to assist with layout alignment.
+- **Layout Shifting**: Shifts page content dynamically using flexbox layout rules to prevent padding from overlapping page content.
+- **Theme Compatibility**: Supports independent configurations for Light and Dark modes. Can sync with system preferences (`prefers-color-scheme`) or force a specific mode.
+- **SVG Patterns**: Apply customizable SVG background patterns (grids, dots, stripes, carbon, or lattice) over background colors.
+- **Collapsible Matches**: Collapse list items in the popup UI to organize configuration matches.
 
 ---
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
