@@ -47,6 +47,13 @@ export const PadThemeCodec: t.Type<PadTheme> = t.type({
   bgPattern: t.string,
 })
 
+export type ShiftingStrategy = { _tag: 'Flexbox' } | { _tag: 'Placeholder' }
+
+export const ShiftingStrategyCodec = t.union([
+  t.type({ _tag: t.literal('Flexbox') }),
+  t.type({ _tag: t.literal('Placeholder') }),
+])
+
 export type PadSettings = {
   enabled: boolean
   side: PadSide
@@ -54,6 +61,7 @@ export type PadSettings = {
   light: PadTheme
   dark: PadTheme
   matchPattern: string
+  shiftingStrategy: ShiftingStrategy
 }
 
 export const PadSettingsCodec = t.type({
@@ -63,6 +71,7 @@ export const PadSettingsCodec = t.type({
   light: PadThemeCodec,
   dark: PadThemeCodec,
   matchPattern: t.string,
+  shiftingStrategy: ShiftingStrategyCodec,
 })
 
 export const createDefaultPadSettings = (
@@ -82,6 +91,7 @@ export const createDefaultPadSettings = (
     bgPattern: 'dots',
   },
   matchPattern,
+  shiftingStrategy: { _tag: 'Flexbox' },
 })
 
 export const defaultPadSettings: PadSettings = createDefaultPadSettings('**')

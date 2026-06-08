@@ -686,7 +686,22 @@ const footerView = (dispatch: Dispatcher<Msg>) => {
           Export Config
         </button>
         <div className='bg-theme-border-input h-[10px] w-[1px]' />
-        <label className='text-theme-text-dim hover:text-theme-primary cursor-pointer text-[11px] font-semibold transition-all'>
+        <label
+          onClick={(e) => {
+            const isPopup =
+              typeof chrome !== 'undefined' &&
+              chrome.extension &&
+              chrome.extension.getViews &&
+              chrome.extension.getViews({ type: 'popup' }).includes(window)
+            if (isPopup && chrome.tabs && chrome.tabs.create) {
+              e.preventDefault()
+              chrome.tabs.create({
+                url: chrome.runtime.getURL('index.html?mode=tab'),
+              })
+            }
+          }}
+          className='text-theme-text-dim hover:text-theme-primary cursor-pointer text-[11px] font-semibold transition-all'
+        >
           Import Config
           <input
             type='file'

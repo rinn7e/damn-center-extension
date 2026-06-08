@@ -179,6 +179,7 @@ describe('Update Helpers', () => {
               bgPattern: 'dots',
             },
             matchPattern: 'https://google.com/**',
+            shiftingStrategy: { _tag: 'Flexbox' },
           },
         ],
       }

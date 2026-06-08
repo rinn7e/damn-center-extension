@@ -43,52 +43,11 @@ const getActivePadTheme = (settings: PadSettings) => {
   )
 }
 
-/**
- * Updates DOM styles based on settings.
- */
-const updateStyles = (settings: PadSettings, globalSetting: GlobalSetting) => {
-  currentSettings = settings
-  currentGlobalSetting = globalSetting
-
-  // Handle Centered Ruler
-  if (settings.enabled && globalSetting.showRuler) {
-    if (!rulerElement) {
-      rulerElement = document.createElement('div')
-      rulerElement.id = 'symmetry-pad-ruler'
-      rulerElement.style.cssText =
-        'position:fixed !important; top:0 !important; bottom:0 !important; left:50% !important; width:1px !important; background-color:rgba(239, 68, 68, 0.6) !important; z-index:2147483647 !important; pointer-events:none !important;'
-      document.documentElement.appendChild(rulerElement)
-    } else {
-      rulerElement.style.display = 'block'
-    }
-  } else {
-    if (rulerElement) {
-      rulerElement.style.display = 'none'
-    }
-  }
-
-  if (!styleElement) {
-    styleElement = document.createElement('style')
-    styleElement.id = 'symmetry-pad-style'
-    document.documentElement.appendChild(styleElement)
-  }
-
-  const { leftWidth, rightWidth } = resolvePadWidths(settings.side)
-
-  if (!settings.enabled || (leftWidth <= 0 && rightWidth <= 0)) {
-    styleElement.textContent = ''
-    if (leftPadPlaceholderElement)
-      leftPadPlaceholderElement.style.display = 'none'
-    if (leftPadElement) leftPadElement.style.display = 'none'
-    if (rightPadPlaceholderElement)
-      rightPadPlaceholderElement.style.display = 'none'
-    if (rightPadElement) rightPadElement.style.display = 'none'
-    return
-  }
-
-  const activePadTheme = getActivePadTheme(settings)
-
-  // Unified layout shifting CSS using flexbox + order property:
+const applyFlexboxShifting = (
+  styleElement: HTMLStyleElement,
+  leftWidth: number,
+  rightWidth: number,
+) => {
   const css = `
     html {
       display: flex !important;
@@ -147,8 +106,67 @@ const updateStyles = (settings: PadSettings, globalSetting: GlobalSetting) => {
       z-index: 0 !important;
     }
   `
-
   styleElement.textContent = css
+}
+
+const applyPlaceholderShifting = (
+  styleElement: HTMLStyleElement,
+  _leftWidth: number,
+  _rightWidth: number,
+) => {
+  styleElement.textContent = ''
+}
+
+/**
+ * Updates DOM styles based on settings.
+ */
+const updateStyles = (settings: PadSettings, globalSetting: GlobalSetting) => {
+  currentSettings = settings
+  currentGlobalSetting = globalSetting
+
+  // Handle Centered Ruler
+  if (settings.enabled && globalSetting.showRuler) {
+    if (!rulerElement) {
+      rulerElement = document.createElement('div')
+      rulerElement.id = 'symmetry-pad-ruler'
+      rulerElement.style.cssText =
+        'position:fixed !important; top:0 !important; bottom:0 !important; left:50% !important; width:1px !important; background-color:rgba(239, 68, 68, 0.6) !important; z-index:2147483647 !important; pointer-events:none !important;'
+      document.documentElement.appendChild(rulerElement)
+    } else {
+      rulerElement.style.display = 'block'
+    }
+  } else {
+    if (rulerElement) {
+      rulerElement.style.display = 'none'
+    }
+  }
+
+  if (!styleElement) {
+    styleElement = document.createElement('style')
+    styleElement.id = 'symmetry-pad-style'
+    document.documentElement.appendChild(styleElement)
+  }
+
+  const { leftWidth, rightWidth } = resolvePadWidths(settings.side)
+
+  if (!settings.enabled || (leftWidth <= 0 && rightWidth <= 0)) {
+    styleElement.textContent = ''
+    if (leftPadPlaceholderElement)
+      leftPadPlaceholderElement.style.display = 'none'
+    if (leftPadElement) leftPadElement.style.display = 'none'
+    if (rightPadPlaceholderElement)
+      rightPadPlaceholderElement.style.display = 'none'
+    if (rightPadElement) rightPadElement.style.display = 'none'
+    return
+  }
+
+  const activePadTheme = getActivePadTheme(settings)
+
+  if (settings.shiftingStrategy._tag === 'Placeholder') {
+    applyPlaceholderShifting(styleElement, leftWidth, rightWidth)
+  } else {
+    applyFlexboxShifting(styleElement, leftWidth, rightWidth)
+  }
 
   const ensurePadDivs = () => {
     if (!leftPadPlaceholderElement) {
@@ -197,11 +215,13 @@ const updateStyles = (settings: PadSettings, globalSetting: GlobalSetting) => {
     Object.assign(el.style, styles)
   }
 
+  const isPlaceholder = settings.shiftingStrategy._tag === 'Placeholder'
+
   if (leftWidth > 0) {
     leftPadPlaceholderElement!.style.width = `${leftWidth}px`
-    leftPadPlaceholderElement!.style.display = 'block'
+    leftPadPlaceholderElement!.style.display = isPlaceholder ? 'none' : 'block'
     leftPadElement!.style.width = `${leftWidth}px`
-    leftPadElement!.style.display = 'block'
+    leftPadElement!.style.display = isPlaceholder ? 'none' : 'block'
     applyBg(
       leftPadElement!,
       activePadTheme.bgType,
@@ -216,9 +236,9 @@ const updateStyles = (settings: PadSettings, globalSetting: GlobalSetting) => {
 
   if (rightWidth > 0) {
     rightPadPlaceholderElement!.style.width = `${rightWidth}px`
-    rightPadPlaceholderElement!.style.display = 'block'
+    rightPadPlaceholderElement!.style.display = isPlaceholder ? 'none' : 'block'
     rightPadElement!.style.width = `${rightWidth}px`
-    rightPadElement!.style.display = 'block'
+    rightPadElement!.style.display = isPlaceholder ? 'none' : 'block'
     applyBg(
       rightPadElement!,
       activePadTheme.bgType,
@@ -256,6 +276,7 @@ const init = () => {
             light: { bgType: 'transparent', bgColor: '', bgPattern: '' },
             dark: { bgType: 'transparent', bgColor: '', bgPattern: '' },
             matchPattern: '',
+            shiftingStrategy: { _tag: 'Flexbox' },
           },
           globalSetting,
         )
@@ -277,6 +298,7 @@ const init = () => {
             light: { bgType: 'transparent', bgColor: '', bgPattern: '' },
             dark: { bgType: 'transparent', bgColor: '', bgPattern: '' },
             matchPattern: '',
+            shiftingStrategy: { _tag: 'Flexbox' },
           },
           globalSetting,
         )
