@@ -11,7 +11,8 @@
     "build": "tsc && pnpm run build:chrome && pnpm run build:firefox",
     "check": "tsc --noEmit",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "vitest run"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -48,6 +49,7 @@
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.34.1",
-    "vite": "^6.1.0"
+    "vite": "^6.1.0",
+    "vitest": "^4.1.8"
   }
 }

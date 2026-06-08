@@ -47,49 +47,87 @@ export const getActivePadSettingIndex = (
   return 0
 }
 
-const getDefaultPatternForUrl = (url: string): string => {
-  let defaultPattern = '**'
-  try {
-    if (url) {
-      const parsed = new URL(url)
-      const paths = parsed.pathname.split('/').filter(Boolean)
-      if (paths.length > 0) {
-        if (paths.length > 1) {
-          defaultPattern = `${parsed.origin}/${paths[0]}/**`
-        } else {
-          defaultPattern = `${parsed.origin}/${paths[0]}**`
-        }
-      } else {
-        defaultPattern = `${parsed.origin}/**`
-      }
-    }
-  } catch {
-    // Fallback to default pattern '**' if URL parsing fails
-  }
-  return defaultPattern
+export type UrlSegments = {
+  origin: string
+  paths: string[]
 }
 
-const determineIsDark = (themeMode: string): boolean => {
+export const parseUrlSegments = (url: string): UrlSegments | null => {
+  try {
+    if (!url) return null
+    const parsed = new URL(url)
+    const paths = parsed.pathname.split('/').filter(Boolean)
+    return { origin: parsed.origin, paths }
+  } catch {
+    return null
+  }
+}
+
+export const buildGlobPatternFromSegments = (
+  segments: UrlSegments | null,
+): string => {
+  if (!segments) return '**'
+  const { origin, paths } = segments
+  if (paths.length > 0) {
+    if (paths.length > 1) {
+      return `${origin}/${paths[0]}/**`
+    } else {
+      return `${origin}/${paths[0]}{,/**}`
+    }
+  } else {
+    return `${origin}/**`
+  }
+}
+
+const getDefaultPatternForUrl = (url: string): string => {
+  const segments = parseUrlSegments(url)
+  return buildGlobPatternFromSegments(segments)
+}
+
+export const determineIsDarkPure = (
+  themeMode: string,
+  systemPrefersDark: boolean,
+): boolean => {
   if (themeMode === 'dark') {
     return true
   }
   if (themeMode === 'light') {
     return false
   }
-  return typeof window !== 'undefined'
-    ? window.matchMedia('(prefers-color-scheme: dark)').matches
-    : false
+  return systemPrefersDark
+}
+
+const determineIsDark = (themeMode: string): boolean => {
+  const systemPrefersDark =
+    typeof window !== 'undefined'
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      : false
+  return determineIsDarkPure(themeMode, systemPrefersDark)
+}
+
+export const updatePadSettingInList = (
+  list: PadSettings[],
+  index: number,
+  updater: (settings: PadSettings) => PadSettings,
+): PadSettings[] => {
+  const target = list[index]
+  if (!target) return list
+  const updatedList = [...list]
+  updatedList[index] = updater(target)
+  return updatedList
 }
 
 const updateActiveSetting = (
   model: Model,
   updater: (active: PadSettings) => PadSettings,
 ): [Model, Cmd<Msg>] => {
-  const active = model.padSettingList[model.selectedIndex]
-  if (!active) return [model, Cmd.none()]
-  const updatedActive = updater(active)
-  const updatedList = [...model.padSettingList]
-  updatedList[model.selectedIndex] = updatedActive
+  const updatedList = updatePadSettingInList(
+    model.padSettingList,
+    model.selectedIndex,
+    updater,
+  )
+  const updatedActive = updatedList[model.selectedIndex]
+  if (!updatedActive) return [model, Cmd.none()]
   return [
     { ...model, padSettingList: updatedList },
     Cmd.batch([
@@ -102,6 +140,21 @@ const updateActiveSetting = (
       injectThemeCmd(updatedActive),
     ]),
   ]
+}
+
+export const swapArrayElements = <T>(
+  list: T[],
+  idx1: number,
+  idx2: number,
+): T[] => {
+  if (idx1 < 0 || idx1 >= list.length || idx2 < 0 || idx2 >= list.length) {
+    return list
+  }
+  const updatedList = [...list]
+  const temp = updatedList[idx1]
+  updatedList[idx1] = updatedList[idx2]
+  updatedList[idx2] = temp
+  return updatedList
 }
 
 const handleInit = (
@@ -246,10 +299,7 @@ const handleMoveMatchUp = (
 ): [Model, Cmd<Msg>] => {
   const idx = msg.index
   if (idx <= 0 || idx >= model.padSettingList.length) return [model, Cmd.none()]
-  const updatedList = [...model.padSettingList]
-  const temp = updatedList[idx]
-  updatedList[idx] = updatedList[idx - 1]
-  updatedList[idx - 1] = temp
+  const updatedList = swapArrayElements(model.padSettingList, idx, idx - 1)
   const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
   const activeSettings = updatedList[updatedIndex] || defaultPadSettings
   return [
@@ -273,10 +323,7 @@ const handleMoveMatchDown = (
   const idx = msg.index
   if (idx < 0 || idx >= model.padSettingList.length - 1)
     return [model, Cmd.none()]
-  const updatedList = [...model.padSettingList]
-  const temp = updatedList[idx]
-  updatedList[idx] = updatedList[idx + 1]
-  updatedList[idx + 1] = temp
+  const updatedList = swapArrayElements(model.padSettingList, idx, idx + 1)
   const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
   const activeSettings = updatedList[updatedIndex] || defaultPadSettings
   return [
@@ -493,7 +540,7 @@ export const update = (
 // Side effects task runners
 // -------------------------------------------------------------
 
-const validateBackupData = (data: unknown): boolean => {
+export const validateBackupData = (data: unknown): boolean => {
   if (typeof data !== 'object' || data === null || Array.isArray(data)) {
     return false
   }

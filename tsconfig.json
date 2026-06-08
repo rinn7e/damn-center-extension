@@ -11,5 +11,5 @@
     "noEmit": true,
     "types": ["vite/client", "chrome"]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "test/**/*"]
 }
