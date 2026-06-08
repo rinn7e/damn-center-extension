@@ -4,7 +4,7 @@
 
 A browser extension that adds customizable left and right padding to web pages. Features include adjustable widths, domain-specific URL matching rules, a vertical layout alignment ruler, theme-aware background styling, and SVG patterns.
 
-Built with React 19, Vite 6, TypeScript, Tailwind CSS v4, fp-ts, and io-ts.
+Built with **React 19**, **Vite 6**, **TypeScript**, **Tailwind CSS v4**, **react-tea-cup**, and **fp-ts**.
 
 ---
 
