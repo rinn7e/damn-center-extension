@@ -43,7 +43,7 @@ const getActivePadTheme = (settings: PadSettings) => {
   )
 }
 
-const applyFlexboxShifting = (
+const runApplyFlexboxShifting = (
   styleElement: HTMLStyleElement,
   leftWidth: number,
   rightWidth: number,
@@ -109,7 +109,7 @@ const applyFlexboxShifting = (
   styleElement.textContent = css
 }
 
-const applyPlaceholderShifting = (
+const runApplyPlaceholderShifting = (
   styleElement: HTMLStyleElement,
   _leftWidth: number,
   _rightWidth: number,
@@ -120,7 +120,10 @@ const applyPlaceholderShifting = (
 /**
  * Handles ruler creation and toggling (3 lines dividing screen into 4 equal parts).
  */
-const updateRuler = (settings: PadSettings, globalSetting: GlobalSetting) => {
+const runUpdateRuler = (
+  settings: PadSettings,
+  globalSetting: GlobalSetting,
+) => {
   if (settings.enabled && globalSetting.showRuler) {
     if (!rulerElement) {
       rulerElement = document.createElement('div')
@@ -131,7 +134,7 @@ const updateRuler = (settings: PadSettings, globalSetting: GlobalSetting) => {
       const positions = ['25%', '50%', '75%']
       positions.forEach((pos) => {
         const line = document.createElement('div')
-        line.style.cssText = `position:absolute !important; top:0 !important; bottom:0 !important; left:${pos} !important; width:1px !important; background-color:rgba(239, 68, 68, 0.6) !important; pointer-events:none !important;`
+        line.style.cssText = `position:absolute !important; top:0 !important; bottom:0 !important; left:${pos} !important; width:1px !important; background-color:rgba(239, 68, 68, 0.6) !important; pointer-events:none !important;'`
         rulerElement!.appendChild(line)
       })
       document.documentElement.appendChild(rulerElement)
@@ -148,11 +151,14 @@ const updateRuler = (settings: PadSettings, globalSetting: GlobalSetting) => {
 /**
  * Updates DOM styles based on settings.
  */
-const updateStyles = (settings: PadSettings, globalSetting: GlobalSetting) => {
+const runUpdateStyles = (
+  settings: PadSettings,
+  globalSetting: GlobalSetting,
+) => {
   currentSettings = settings
   currentGlobalSetting = globalSetting
 
-  updateRuler(settings, globalSetting)
+  runUpdateRuler(settings, globalSetting)
 
   if (!styleElement) {
     styleElement = document.createElement('style')
@@ -176,12 +182,12 @@ const updateStyles = (settings: PadSettings, globalSetting: GlobalSetting) => {
   const activePadTheme = getActivePadTheme(settings)
 
   if (settings.shiftingStrategy._tag === 'Placeholder') {
-    applyPlaceholderShifting(styleElement, leftWidth, rightWidth)
+    runApplyPlaceholderShifting(styleElement, leftWidth, rightWidth)
   } else {
-    applyFlexboxShifting(styleElement, leftWidth, rightWidth)
+    runApplyFlexboxShifting(styleElement, leftWidth, rightWidth)
   }
 
-  const ensurePadDivs = () => {
+  const runEnsurePadDivs = () => {
     if (!leftPadPlaceholderElement) {
       leftPadPlaceholderElement = document.createElement('div')
       leftPadPlaceholderElement.id = 'symmetry-pad-left-placeholder'
@@ -212,9 +218,9 @@ const updateStyles = (settings: PadSettings, globalSetting: GlobalSetting) => {
     }
   }
 
-  ensurePadDivs()
+  runEnsurePadDivs()
 
-  const applyBg = (
+  const runApplyBg = (
     el: HTMLDivElement,
     bgType: 'color' | 'pattern' | 'transparent',
     color: string,
@@ -235,7 +241,7 @@ const updateStyles = (settings: PadSettings, globalSetting: GlobalSetting) => {
     leftPadPlaceholderElement!.style.display = isPlaceholder ? 'none' : 'block'
     leftPadElement!.style.width = `${leftWidth}px`
     leftPadElement!.style.display = isPlaceholder ? 'none' : 'block'
-    applyBg(
+    runApplyBg(
       leftPadElement!,
       activePadTheme.bgType,
       activePadTheme.bgColor,
@@ -252,7 +258,7 @@ const updateStyles = (settings: PadSettings, globalSetting: GlobalSetting) => {
     rightPadPlaceholderElement!.style.display = isPlaceholder ? 'none' : 'block'
     rightPadElement!.style.width = `${rightWidth}px`
     rightPadElement!.style.display = isPlaceholder ? 'none' : 'block'
-    applyBg(
+    runApplyBg(
       rightPadElement!,
       activePadTheme.bgType,
       activePadTheme.bgColor,
@@ -268,7 +274,7 @@ const updateStyles = (settings: PadSettings, globalSetting: GlobalSetting) => {
 /**
  * Initializes settings on current page.
  */
-const init = () => {
+const runInit = () => {
   const hostname = getHostname(window.location.href)
   console.log('[Damn Center] Initializing content script for host:', hostname)
 
@@ -281,7 +287,7 @@ const init = () => {
       const settingsList = padEither._tag === 'Right' ? padEither.right : []
 
       if (!globalSetting.enabled) {
-        updateStyles(
+        runUpdateStyles(
           {
             enabled: false,
             side: { _tag: 'Left', width: 0 },
@@ -301,9 +307,9 @@ const init = () => {
         (s) => s.enabled && matchUrlPattern(url, s.matchPattern),
       )
       if (matched) {
-        updateStyles(matched, globalSetting)
+        runUpdateStyles(matched, globalSetting)
       } else {
-        updateStyles(
+        runUpdateStyles(
           {
             enabled: false,
             side: { _tag: 'Left', width: 0 },
@@ -322,7 +328,7 @@ const init = () => {
 
 let lastUrl = window.location.href
 
-const checkUrlChange = () => {
+const runCheckUrlChange = () => {
   const url = window.location.href
   if (url !== lastUrl) {
     lastUrl = url
@@ -330,27 +336,27 @@ const checkUrlChange = () => {
       '[Damn Center] URL change detected, re-evaluating matching rules:',
       url,
     )
-    init()
+    runInit()
   }
 }
 
-// Re-evaluate styles if system scheme changes
+// Re-evaluate styles if system theme changes
 systemThemeMedia.addEventListener('change', () => {
   if (
     currentSettings &&
     currentGlobalSetting &&
     currentSettings.themeMode === 'system'
   ) {
-    updateStyles(currentSettings, currentGlobalSetting)
+    runUpdateStyles(currentSettings, currentGlobalSetting)
   }
 })
 
 // Listen for popstate and hashchange events
-window.addEventListener('popstate', checkUrlChange)
-window.addEventListener('hashchange', checkUrlChange)
+window.addEventListener('popstate', runCheckUrlChange)
+window.addEventListener('hashchange', runCheckUrlChange)
 
 // Periodic check for client-side routing transitions
-setInterval(checkUrlChange, 500)
+setInterval(runCheckUrlChange, 500)
 
 // Listen for updates from the popup
 if (
@@ -364,7 +370,7 @@ if (
         '[Damn Center] Settings updated from popup:',
         message.settings,
       )
-      updateStyles(
+      runUpdateStyles(
         message.settings,
         message.globalSetting || defaultGlobalSetting,
       )
@@ -374,7 +380,7 @@ if (
 
 // Run immediately or wait for DOM
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init)
+  document.addEventListener('DOMContentLoaded', runInit)
 } else {
-  init()
+  runInit()
 }
