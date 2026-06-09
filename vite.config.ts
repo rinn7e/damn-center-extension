@@ -28,7 +28,7 @@ export default defineConfig(() => {
       build: {
         outDir,
         emptyOutDir: false, // Keep the popup files
-        minify: false,
+        minify: true,
         lib: {
           entry: resolve(process.cwd(), 'src/worker/content.ts'),
           name: 'SymmetryPadContent',
@@ -45,7 +45,7 @@ export default defineConfig(() => {
     build: {
       outDir,
       emptyOutDir: true, // Clean dist before building popup
-      minify: false,
+      minify: true,
       rollupOptions: {
         input: {
           popup: resolve(process.cwd(), 'index.html'),
