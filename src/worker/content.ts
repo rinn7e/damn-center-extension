@@ -118,19 +118,22 @@ const applyPlaceholderShifting = (
 }
 
 /**
- * Updates DOM styles based on settings.
+ * Handles ruler creation and toggling (3 lines dividing screen into 4 equal parts).
  */
-const updateStyles = (settings: PadSettings, globalSetting: GlobalSetting) => {
-  currentSettings = settings
-  currentGlobalSetting = globalSetting
-
-  // Handle Centered Ruler
+const updateRuler = (settings: PadSettings, globalSetting: GlobalSetting) => {
   if (settings.enabled && globalSetting.showRuler) {
     if (!rulerElement) {
       rulerElement = document.createElement('div')
       rulerElement.id = 'symmetry-pad-ruler'
       rulerElement.style.cssText =
-        'position:fixed !important; top:0 !important; bottom:0 !important; left:50% !important; width:1px !important; background-color:rgba(239, 68, 68, 0.6) !important; z-index:2147483647 !important; pointer-events:none !important;'
+        'position:fixed !important; top:0 !important; bottom:0 !important; left:0 !important; right:0 !important; z-index:2147483647 !important; pointer-events:none !important;'
+
+      const positions = ['25%', '50%', '75%']
+      positions.forEach((pos) => {
+        const line = document.createElement('div')
+        line.style.cssText = `position:absolute !important; top:0 !important; bottom:0 !important; left:${pos} !important; width:1px !important; background-color:rgba(239, 68, 68, 0.6) !important; pointer-events:none !important;`
+        rulerElement!.appendChild(line)
+      })
       document.documentElement.appendChild(rulerElement)
     } else {
       rulerElement.style.display = 'block'
@@ -140,6 +143,16 @@ const updateStyles = (settings: PadSettings, globalSetting: GlobalSetting) => {
       rulerElement.style.display = 'none'
     }
   }
+}
+
+/**
+ * Updates DOM styles based on settings.
+ */
+const updateStyles = (settings: PadSettings, globalSetting: GlobalSetting) => {
+  currentSettings = settings
+  currentGlobalSetting = globalSetting
+
+  updateRuler(settings, globalSetting)
 
   if (!styleElement) {
     styleElement = document.createElement('style')
