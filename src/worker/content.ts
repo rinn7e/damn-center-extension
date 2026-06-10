@@ -161,7 +161,7 @@ const calculateIsNotMaximized = (): boolean => {
   // which are always accurate and represent the actual space available to the page.
   const isMaximized =
     window.innerWidth * zoom >= screen.availWidth - 50 &&
-    window.innerHeight * zoom >= screen.availHeight - 150
+    window.innerHeight * zoom >= screen.availHeight - 250
 
   return !isMaximized
 }
