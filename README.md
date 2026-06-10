@@ -34,6 +34,14 @@ pnpm run build
 
 The build scripts output compiled extension bundles to `./dist/chrome` and `./dist/firefox` containing browser-specific manifests and assets.
 
+### 4. Development Build
+
+Compile development bundles for Chrome and Firefox (which load `.env.development` variables and preserve source maps, without zipping):
+
+```bash
+pnpm run build:dev
+```
+
 ---
 
 ## Installation
@@ -80,6 +88,18 @@ This compiles the extension code and outputs target directories:
 1. Open the browser and navigate to `about:debugging#/runtime/this-firefox`.
 2. Click the **Load Temporary Add-on...** button.
 3. Select the `manifest.json` file inside the `./dist/firefox` directory.
+
+---
+
+## Environment Variables
+
+The project loads configurations from environment files based on the build target mode:
+
+| Variable Name          | Description                                                                                                   | Default / Example Value      |
+| :--------------------- | :------------------------------------------------------------------------------------------------------------ | :--------------------------- |
+| `VITE_UI_THEME_ID`     | Theme identifier for the extension's popup UI.                                                                | `solarizedLight`             |
+| `VITE_DISABLE_LOG`     | Strips all `console.*` (log, warn, error, info, debug) calls from compiled bundles if set to `true`.          | `true` (prod), `false` (dev) |
+| `VITE_SHOW_BUILD_DATE` | Displays the formatted date/time of the build under the extension title in the popup header if set to `true`. | `true`, `false`              |
 
 ---
 
