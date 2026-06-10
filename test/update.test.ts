@@ -162,6 +162,7 @@ describe('Update Helpers', () => {
           schema_version: 1,
           enabled: true,
           showRuler: false,
+          disableWhenNotMaximized: false,
         },
         'google.com': [
           {
@@ -203,6 +204,7 @@ describe('Update Helpers', () => {
           schema_version: 1,
           enabled: 'should-be-boolean',
           showRuler: false,
+          disableWhenNotMaximized: false,
         },
       }
       expect(validateBackupData(badBackup)).toBe(false)

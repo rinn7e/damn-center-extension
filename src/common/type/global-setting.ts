@@ -10,16 +10,19 @@ export type GlobalSetting = {
   schema_version: number
   enabled: boolean
   showRuler: boolean
+  disableWhenNotMaximized: boolean
 }
 
 export const GlobalSettingCodec = t.type({
   schema_version: t.number,
   enabled: t.boolean,
   showRuler: t.boolean,
+  disableWhenNotMaximized: t.boolean,
 })
 
 export const defaultGlobalSetting: GlobalSetting = {
   schema_version: 1,
   enabled: true,
   showRuler: false,
+  disableWhenNotMaximized: false,
 }

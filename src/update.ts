@@ -542,6 +542,28 @@ export const update = (
       ]
     }
 
+    case 'ToggleDisableWhenNotMaximized': {
+      const updatedGlobal = {
+        ...model.globalSetting,
+        disableWhenNotMaximized: !model.globalSetting.disableWhenNotMaximized,
+      }
+      const activeSettings =
+        model.padSettingList[model.selectedIndex] || defaultPadSettings
+      return [
+        { ...model, globalSetting: updatedGlobal },
+        Cmd.batch([
+          saveGlobalSettingCmd(updatedGlobal),
+          saveSettingsCmd(
+            model.hostname,
+            model.currentUrl,
+            model.padSettingList,
+            updatedGlobal,
+          ),
+          injectThemeCmd(activeSettings),
+        ]),
+      ]
+    }
+
     case 'ToggleMatchesCollapsed':
       return [
         { ...model, matchesCollapsed: !model.matchesCollapsed },

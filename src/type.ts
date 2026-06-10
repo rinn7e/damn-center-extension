@@ -43,6 +43,7 @@ export type Msg =
   | { _tag: 'MoveMatchUp'; index: number }
   | { _tag: 'MoveMatchDown'; index: number }
   | { _tag: 'ToggleShowRuler' }
+  | { _tag: 'ToggleDisableWhenNotMaximized' }
   | { _tag: 'ToggleMatchesCollapsed' }
   | { _tag: 'ExportConfig' }
   | { _tag: 'ImportConfig'; jsonText: string }

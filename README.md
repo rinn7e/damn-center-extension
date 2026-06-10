@@ -111,6 +111,7 @@ The project loads configurations from environment files based on the build targe
 - **Layout Shifting**: Shifts page content dynamically using flexbox layout rules to prevent padding from overlapping page content.
 - **Theme Compatibility**: Supports independent configurations for Light and Dark modes. Can sync with system preferences (`prefers-color-scheme`) or force a specific mode.
 - **SVG Patterns**: Apply customizable SVG background patterns (grids, dots, stripes, carbon, or lattice) over background colors.
+- **Disable when Not Maximized**: Automatically suspends padding and alignment rules when the window is tiled, restored, or not fully maximized. Bypasses OS-level and fractional browser zoom discrepancies (such as Chrome on Linux Wayland bugs) to keep window space fully optimized.
 - **Collapsible Matches**: Collapse list items in the popup UI to organize configuration matches.
 
 ---

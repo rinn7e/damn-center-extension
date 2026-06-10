@@ -123,8 +123,9 @@ const runApplyPlaceholderShifting = (
 const runUpdateRuler = (
   settings: PadSettings,
   globalSetting: GlobalSetting,
+  isEffectivelyEnabled: boolean,
 ) => {
-  if (settings.enabled && globalSetting.showRuler) {
+  if (isEffectivelyEnabled && globalSetting.showRuler) {
     if (!rulerElement) {
       rulerElement = document.createElement('div')
       rulerElement.id = 'symmetry-pad-ruler'
@@ -149,8 +150,39 @@ const runUpdateRuler = (
 }
 
 /**
- * Updates DOM styles based on settings.
+ * Calculates whether the browser window is currently not maximized.
+ * Utilizes a zoom-aware heuristic with a small tolerance.
  */
+const calculateIsNotMaximized = (): boolean => {
+  const zoom = window.devicePixelRatio || 1
+
+  // Linux Chrome has a known bug under Wayland where window.outerWidth/Height
+  // always return full screen dimensions. We use viewport inner dimensions instead,
+  // which are always accurate and represent the actual space available to the page.
+  const isMaximized =
+    window.innerWidth * zoom >= screen.availWidth - 50 &&
+    window.innerHeight * zoom >= screen.availHeight - 150
+
+  return !isMaximized
+}
+
+/**
+ * Determines whether the extension's padding and ruler should be active
+ * based on individual page settings, global settings, and window maximization state.
+ */
+const calculateIsEffectivelyEnabled = (
+  settings: PadSettings,
+  globalSetting: GlobalSetting,
+): boolean => {
+  const isNotMaximized = calculateIsNotMaximized()
+
+  return (
+    settings.enabled &&
+    globalSetting.enabled &&
+    !(globalSetting.disableWhenNotMaximized && isNotMaximized)
+  )
+}
+
 const runUpdateStyles = (
   settings: PadSettings,
   globalSetting: GlobalSetting,
@@ -158,7 +190,12 @@ const runUpdateStyles = (
   currentSettings = settings
   currentGlobalSetting = globalSetting
 
-  runUpdateRuler(settings, globalSetting)
+  const isEffectivelyEnabled = calculateIsEffectivelyEnabled(
+    settings,
+    globalSetting,
+  )
+
+  runUpdateRuler(settings, globalSetting, isEffectivelyEnabled)
 
   if (!styleElement) {
     styleElement = document.createElement('style')
@@ -168,7 +205,7 @@ const runUpdateStyles = (
 
   const { leftWidth, rightWidth } = resolvePadWidths(settings.side)
 
-  if (!settings.enabled || (leftWidth <= 0 && rightWidth <= 0)) {
+  if (!isEffectivelyEnabled || (leftWidth <= 0 && rightWidth <= 0)) {
     styleElement.textContent = ''
     if (leftPadPlaceholderElement)
       leftPadPlaceholderElement.style.display = 'none'
@@ -384,3 +421,10 @@ if (document.readyState === 'loading') {
 } else {
   runInit()
 }
+
+// Re-evaluate styles if the window is resized (to detect maximization shifts)
+window.addEventListener('resize', () => {
+  if (currentSettings && currentGlobalSetting) {
+    runUpdateStyles(currentSettings, currentGlobalSetting)
+  }
+})
