@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2026 Moremi Vannak
- * SPDX-License-Identifier: GPL-3.0-or-later
+ * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { GlobalSetting } from './common/type/global-setting'
 import type { Hostname } from './common/type/hostname'

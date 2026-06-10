@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ## [Unreleased]
 
+---
+
+## [1.0.2] - 2026-06-10
+
 ### Added
 - **"Disable when Not Maximized" Option**: Dynamic padding suspension when the browser window is tiled or resized (resolves Linux Wayland viewport bugs).
 - **Dev Icon Badges**: Automatic orange "DEV" banner overlay on extension icons for development builds.

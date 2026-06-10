@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2026 Moremi Vannak
- * SPDX-License-Identifier: GPL-3.0-or-later
+ * SPDX-License-Identifier: GPL-3.0-only
  */
 import React from 'react'
 import { type Dispatcher } from 'tea-cup-fp'
@@ -84,7 +84,7 @@ const headerView = (
     chrome.runtime &&
     chrome.runtime.getManifest
       ? `v${chrome.runtime.getManifest().version}`
-      : 'v1.0.1'
+      : 'version unknown'
   const buildTimeStr =
     SHOW_BUILD_DATE && BUILD_DATE
       ? `build: ${formatDateTime(new Date(BUILD_DATE))}`

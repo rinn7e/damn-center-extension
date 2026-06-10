@@ -45,9 +45,10 @@ Compile the production bundles and auto-package the zip files:
 pnpm run build
 ```
 
-This script will compile files into `dist/chrome` and `dist/firefox`, and then output two zipped archives in the `./dist/` directory:
-*   `dist/damn-center-chrome-v<VERSION>.zip`
-*   `dist/damn-center-firefox-v<VERSION>.zip`
+This script will compile files into `dist/chrome` and `dist/firefox`, and then output three zipped archives in the `./dist/` directory:
+*   `dist/damn-center-chrome-v<VERSION>.zip` (Chrome extension package)
+*   `dist/damn-center-firefox-v<VERSION>.zip` (Firefox extension package)
+*   `dist/damn-center-source-v<VERSION>.zip` (Source code package for store review, excluding `node_modules`, `dist`, `.git`, `backup`, `.github`, and `scratch`)
 
 ---
 

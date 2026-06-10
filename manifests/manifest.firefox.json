@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Damn Center",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Adds customizable left and right padding to web pages with support for theme-aware background colors and SVG patterns.",
   "permissions": ["storage", "activeTab"],
   "content_security_policy": {
@@ -10,7 +10,10 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "damn-center-extension@rinn7e-technology.com",
-      "strict_min_version": "109.0"
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
     }
   },
   "icons": {
