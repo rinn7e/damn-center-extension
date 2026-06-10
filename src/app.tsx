@@ -6,7 +6,8 @@ import React from 'react'
 import { type Dispatcher } from 'tea-cup-fp'
 
 import './asset/index.css'
-import { UI_THEME_ID } from './common/env'
+import { formatDateTime } from './common/date-util'
+import { BUILD_DATE, SHOW_BUILD_DATE, UI_THEME_ID } from './common/env'
 import { type GlobalSetting } from './common/type/global-setting'
 import {
   type PadSettings,
@@ -84,15 +85,26 @@ const headerView = (
     chrome.runtime.getManifest
       ? `v${chrome.runtime.getManifest().version}`
       : 'v1.0.1'
+  const buildTimeStr =
+    SHOW_BUILD_DATE && BUILD_DATE
+      ? `build: ${formatDateTime(new Date(BUILD_DATE))}`
+      : ''
   return (
     <div className='border-theme-border-card w-full shrink-0 border-b'>
       <div className='flex items-center justify-between px-[16px] pt-[14px] pb-[12px]'>
-        <h1 className='text-theme-primary flex items-baseline gap-[6px] text-base leading-none font-semibold tracking-tight'>
-          <span>Damn Center - the page !</span>
-          <span className='text-theme-text-dim pb-[2px] text-xs leading-none font-normal'>
-            {version}
-          </span>
-        </h1>
+        <div className='flex flex-col gap-[4px]'>
+          <h1 className='text-theme-primary flex items-baseline gap-[6px] text-base leading-none font-semibold tracking-tight'>
+            <span>Damn Center - the page !</span>
+            <span className='text-theme-text-dim pb-[2px] text-xs leading-none font-normal'>
+              {version}
+            </span>
+          </h1>
+          {buildTimeStr && (
+            <span className='text-theme-text-dim text-[11px] leading-none font-normal'>
+              {buildTimeStr}
+            </span>
+          )}
+        </div>
         <div className='flex items-center gap-[6px]'>
           {toggleSwitchView(
             isEnabled,

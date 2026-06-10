@@ -6,7 +6,7 @@ import {
   getActivePadThemePure,
   resolveBgStyles,
   resolvePadWidths,
-} from '../common/style-helper'
+} from '../common/style-util'
 import {
   type GlobalSetting,
   defaultGlobalSetting,

@@ -8,7 +8,7 @@ import {
   getActivePadThemePure,
   resolveBgStyles,
   resolvePadWidths,
-} from '../src/common/style-helper'
+} from '../src/common/style-util'
 
 describe('Style Helpers', () => {
   describe('getActivePadThemePure', () => {

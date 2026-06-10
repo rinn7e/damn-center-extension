@@ -6,13 +6,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build:chrome": "TARGET=chrome vite build && TARGET=chrome BUILD_TARGET=content vite build && cd dist/chrome && zip -r ../damn-center-chrome-v1.0.1.zip .",
-    "build:firefox": "TARGET=firefox vite build && TARGET=firefox BUILD_TARGET=content vite build && cd dist/firefox && zip -r ../damn-center-firefox-v1.0.1.zip .",
-    "build": "tsc && pnpm run build:chrome && pnpm run build:firefox",
+    "build:chrome:dev": "TARGET=chrome vite build --mode development && TARGET=chrome BUILD_TARGET=content vite build --mode development && cd dist/chrome && zip -r ../damn-center-chrome-dev-v1.0.1.zip .",
+    "build:firefox:dev": "TARGET=firefox vite build --mode development && TARGET=firefox BUILD_TARGET=content vite build --mode development && cd dist/firefox && zip -r ../damn-center-firefox-dev-v1.0.1.zip .",
+    "build:dev": "tsc && pnpm run build:chrome:dev && pnpm run build:firefox:dev",
     "check": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:chrome": "TARGET=chrome vite build && TARGET=chrome BUILD_TARGET=content vite build && cd dist/chrome && zip -r ../damn-center-chrome-v1.0.1.zip .",
+    "build:firefox": "TARGET=firefox vite build && TARGET=firefox BUILD_TARGET=content vite build && cd dist/firefox && zip -r ../damn-center-firefox-v1.0.1.zip .",
+    "build": "tsc && pnpm run build:chrome && pnpm run build:firefox"
   },
   "dependencies": {
     "clsx": "^2.1.1",

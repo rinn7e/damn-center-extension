@@ -26,6 +26,11 @@ export default defineConfig(({ mode }) => {
   if (isContent) {
     return {
       plugins: [copyManifestPlugin()],
+      define: {
+        'import.meta.env.VITE_BUILD_DATE': JSON.stringify(
+          new Date().toISOString(),
+        ),
+      },
       build: {
         outDir,
         emptyOutDir: false, // Keep the popup files
@@ -41,9 +46,17 @@ export default defineConfig(({ mode }) => {
             minify: {
               compress: {
                 treeshake: {
-                  // Drops console.log if its return value isn't used
+                  // Drops console methods if their return value isn't used
                   manualPureFunctions:
-                    env.VITE_DISABLE_LOG === 'true' ? ['console.log'] : [],
+                    env.VITE_DISABLE_LOG === 'true'
+                      ? [
+                          'console.log',
+                          'console.warn',
+                          'console.error',
+                          'console.info',
+                          'console.debug',
+                        ]
+                      : [],
                 },
               },
             },
@@ -56,6 +69,11 @@ export default defineConfig(({ mode }) => {
   // Popup build configuration
   return {
     plugins: [react(), tailwindcss(), copyManifestPlugin()],
+    define: {
+      'import.meta.env.VITE_BUILD_DATE': JSON.stringify(
+        new Date().toISOString(),
+      ),
+    },
     build: {
       outDir,
       emptyOutDir: true, // Clean dist before building popup
@@ -68,9 +86,17 @@ export default defineConfig(({ mode }) => {
           minify: {
             compress: {
               treeshake: {
-                // Drops console.log if its return value isn't used
+                // Drops console methods if their return value isn't used
                 manualPureFunctions:
-                  env.VITE_DISABLE_LOG === 'true' ? ['console.log'] : [],
+                  env.VITE_DISABLE_LOG === 'true'
+                    ? [
+                        'console.log',
+                        'console.warn',
+                        'console.error',
+                        'console.info',
+                        'console.debug',
+                      ]
+                    : [],
               },
             },
           },
