@@ -1,6 +1,6 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { copyFileSync, existsSync, mkdirSync } from 'fs'
+import { copyFileSync, existsSync, mkdirSync, unlinkSync } from 'fs'
 import { resolve } from 'path'
 import { defineConfig, loadEnv } from 'vite'
 
@@ -16,10 +16,35 @@ export default defineConfig(({ mode }) => {
       if (!existsSync(outDir)) {
         mkdirSync(outDir, { recursive: true })
       }
+      
+      // Copy the target-specific manifest
       copyFileSync(
         resolve(process.cwd(), `manifests/manifest.${target}.json`),
         resolve(outDir, 'manifest.json'),
       )
+
+      // Swap development icons if building in development mode
+      const sizes = [16, 32, 48, 128]
+      const isDev = mode === 'development'
+
+      sizes.forEach((size) => {
+        const destIconPath = resolve(outDir, `icon${size}.png`)
+        const devIconSource = resolve(process.cwd(), `public/icon${size}-dev.png`)
+
+        if (isDev && existsSync(devIconSource)) {
+          copyFileSync(devIconSource, destIconPath)
+        }
+
+        // Clean up the temporary -dev icon from the destination folder
+        const destDevIcon = resolve(outDir, `icon${size}-dev.png`)
+        if (existsSync(destDevIcon)) {
+          try {
+            unlinkSync(destDevIcon)
+          } catch (e) {
+            // Ignore if already unlinked
+          }
+        }
+      })
     },
   })
 
