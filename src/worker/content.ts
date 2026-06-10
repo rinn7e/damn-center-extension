@@ -153,15 +153,40 @@ const runUpdateRuler = (
  * Calculates whether the browser window is currently not maximized.
  * Utilizes a zoom-aware heuristic with a small tolerance.
  */
+/**
+ * Calculates physical screen available dimensions for Chrome.
+ */
+const getScreenPhysicalChrome = (_zoom: number) => {
+  return {
+    screenPhysicalWidth: screen.availWidth,
+    screenPhysicalHeight: screen.availHeight,
+  }
+}
+
+/**
+ * Calculates physical screen available dimensions for Firefox.
+ */
+const getScreenPhysicalFirefox = (zoom: number) => {
+  return {
+    screenPhysicalWidth: screen.availWidth * zoom,
+    screenPhysicalHeight: screen.availHeight * zoom,
+  }
+}
+
 const calculateIsNotMaximized = (): boolean => {
   const zoom = window.devicePixelRatio || 1
+  const isFirefox = navigator.userAgent.includes('Firefox')
+
+  const { screenPhysicalWidth, screenPhysicalHeight } = isFirefox
+    ? getScreenPhysicalFirefox(zoom)
+    : getScreenPhysicalChrome(zoom)
 
   // Linux Chrome has a known bug under Wayland where window.outerWidth/Height
   // always return full screen dimensions. We use viewport inner dimensions instead,
   // which are always accurate and represent the actual space available to the page.
   const isMaximized =
-    window.innerWidth * zoom >= screen.availWidth - 50 &&
-    window.innerHeight * zoom >= screen.availHeight - 250
+    window.innerWidth * zoom >= screenPhysicalWidth - 50 &&
+    window.innerHeight * zoom >= screenPhysicalHeight - 250
 
   return !isMaximized
 }
