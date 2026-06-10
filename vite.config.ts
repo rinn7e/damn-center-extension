@@ -2,9 +2,10 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { copyFileSync, existsSync, mkdirSync } from 'fs'
 import { resolve } from 'path'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
   const isContent = process.env.BUILD_TARGET === 'content'
   const target = process.env.TARGET || 'chrome'
   const outDir = resolve(process.cwd(), `dist/${target}`)
@@ -35,6 +36,19 @@ export default defineConfig(() => {
           formats: ['iife'],
           fileName: () => 'content.js',
         },
+        rolldownOptions: {
+          output: {
+            minify: {
+              compress: {
+                treeshake: {
+                  // Drops console.log if its return value isn't used
+                  manualPureFunctions:
+                    env.VITE_DISABLE_LOG === 'true' ? ['console.log'] : [],
+                },
+              },
+            },
+          },
+        },
       },
     }
   }
@@ -46,9 +60,20 @@ export default defineConfig(() => {
       outDir,
       emptyOutDir: true, // Clean dist before building popup
       minify: true,
-      rollupOptions: {
+      rolldownOptions: {
         input: {
           popup: resolve(process.cwd(), 'index.html'),
+        },
+        output: {
+          minify: {
+            compress: {
+              treeshake: {
+                // Drops console.log if its return value isn't used
+                manualPureFunctions:
+                  env.VITE_DISABLE_LOG === 'true' ? ['console.log'] : [],
+              },
+            },
+          },
         },
       },
     },

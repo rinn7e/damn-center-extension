@@ -78,13 +78,19 @@ const headerView = (
   dispatch: Dispatcher<Msg>,
 ) => {
   const isEnabled = globalSetting.enabled
+  const version =
+    typeof chrome !== 'undefined' &&
+    chrome.runtime &&
+    chrome.runtime.getManifest
+      ? `v${chrome.runtime.getManifest().version}`
+      : 'v1.0.1'
   return (
     <div className='border-theme-border-card w-full shrink-0 border-b'>
       <div className='flex items-center justify-between px-[16px] pt-[14px] pb-[12px]'>
         <h1 className='text-theme-primary flex items-baseline gap-[6px] text-base leading-none font-semibold tracking-tight'>
           <span>Damn Center - the page !</span>
           <span className='text-theme-text-dim pb-[2px] text-xs leading-none font-normal'>
-            v1.0
+            {version}
           </span>
         </h1>
         <div className='flex items-center gap-[6px]'>
