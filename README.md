@@ -8,6 +8,11 @@ Damn Center adds customizable left and right padding to web pages on the fly. Ad
 
 Built with **React**, **Vite**, **TypeScript**, **Tailwind CSS**, **react-tea-cup**, and **fp-ts**.
 
+## Screenshot
+
+![Damn Center Screenshot](public/screenshot/screenshot2.png)
+
+
 ## Getting Started
 
 ### 1. Install Dependencies
