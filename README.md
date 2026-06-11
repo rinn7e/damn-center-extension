@@ -2,7 +2,9 @@
 
 # Damn Center - the page !
 
-A browser extension that adds customizable left and right padding to web pages. Features include adjustable widths, domain-specific URL matching rules, a vertical layout alignment ruler, theme-aware background styling, and SVG patterns.
+A layout-centering browser extension designed to prevent neck and eye strain by bringing web content into a balanced, comfortable view. Ideal for widescreen and ultrawide monitors, it shifts off-centered web layouts to the absolute center, making reading long articles, code, and documentation a comfortable experience.
+
+Damn Center adds customizable left and right padding to web pages on the fly. Adjust padding widths, overlay vertical alignment rulers, select side shifting, customize base colors, and choose beautiful SVG background patterns that automatically synchronize with your system's light/dark mode preference.
 
 Built with **React**, **Vite**, **TypeScript**, **Tailwind CSS**, **react-tea-cup**, and **fp-ts**.
 
