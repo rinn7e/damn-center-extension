@@ -47,6 +47,11 @@ const runApplyFlexboxShifting = (
   styleElement: HTMLStyleElement,
   leftWidth: number,
   rightWidth: number,
+  activePadTheme: {
+    bgType: 'color' | 'pattern' | 'transparent'
+    bgColor: string
+    bgPattern: string
+  },
 ) => {
   const css = `
     html {
@@ -107,14 +112,113 @@ const runApplyFlexboxShifting = (
     }
   `
   styleElement.textContent = css
+
+  // Construct left and right helper elements if not already present
+  const runEnsurePadDivs = () => {
+    if (!leftPadPlaceholderElement) {
+      leftPadPlaceholderElement = document.createElement('div')
+      leftPadPlaceholderElement.id = 'symmetry-pad-left-placeholder'
+      leftPadPlaceholderElement.style.cssText =
+        'flex-shrink:0; height:100vh; pointer-events:none !important; background:transparent !important; transition: width 0.15s ease-out;'
+      document.documentElement.appendChild(leftPadPlaceholderElement)
+    }
+    if (!leftPadElement) {
+      leftPadElement = document.createElement('div')
+      leftPadElement.id = 'symmetry-pad-left'
+      leftPadElement.style.cssText =
+        'position:fixed; left:0; top:0; height:100vh; z-index:0; pointer-events:none !important; transition: width 0.15s ease-out, background 0.15s ease-out;'
+      document.documentElement.appendChild(leftPadElement)
+    }
+    if (!rightPadPlaceholderElement) {
+      rightPadPlaceholderElement = document.createElement('div')
+      rightPadPlaceholderElement.id = 'symmetry-pad-right-placeholder'
+      rightPadPlaceholderElement.style.cssText =
+        'flex-shrink:0; height:100vh; pointer-events:none !important; background:transparent !important; transition: width 0.15s ease-out;'
+      document.documentElement.appendChild(rightPadPlaceholderElement)
+    }
+    if (!rightPadElement) {
+      rightPadElement = document.createElement('div')
+      rightPadElement.id = 'symmetry-pad-right'
+      rightPadElement.style.cssText =
+        'position:fixed; right:0; top:0; height:100vh; z-index:0; pointer-events:none !important; transition: width 0.15s ease-out, background 0.15s ease-out;'
+      document.documentElement.appendChild(rightPadElement)
+    }
+  }
+
+  runEnsurePadDivs()
+
+  // Apply background properties (color/SVG pattern) to pad element
+  const runApplyBg = (
+    el: HTMLDivElement,
+    bgType: 'color' | 'pattern' | 'transparent',
+    color: string,
+    patternId: string,
+  ) => {
+    el.style.backgroundColor = ''
+    el.style.backgroundImage = ''
+    el.style.backgroundSize = ''
+
+    const styles = resolveBgStyles(bgType, color, patternId)
+    Object.assign(el.style, styles)
+  }
+
+  // Configure width, visibility, and background styles for left padding
+  if (leftWidth > 0) {
+    leftPadPlaceholderElement!.style.width = `${leftWidth}px`
+    leftPadPlaceholderElement!.style.display = 'block'
+    leftPadElement!.style.width = `${leftWidth}px`
+    leftPadElement!.style.display = 'block'
+    runApplyBg(
+      leftPadElement!,
+      activePadTheme.bgType,
+      activePadTheme.bgColor,
+      activePadTheme.bgPattern,
+    )
+  } else {
+    if (leftPadPlaceholderElement)
+      leftPadPlaceholderElement.style.display = 'none'
+    if (leftPadElement) leftPadElement.style.display = 'none'
+  }
+
+  // Configure width, visibility, and background styles for right padding
+  if (rightWidth > 0) {
+    rightPadPlaceholderElement!.style.width = `${rightWidth}px`
+    rightPadPlaceholderElement!.style.display = 'block'
+    rightPadElement!.style.width = `${rightWidth}px`
+    rightPadElement!.style.display = 'block'
+    runApplyBg(
+      rightPadElement!,
+      activePadTheme.bgType,
+      activePadTheme.bgColor,
+      activePadTheme.bgPattern,
+    )
+  } else {
+    if (rightPadPlaceholderElement)
+      rightPadPlaceholderElement.style.display = 'none'
+    if (rightPadElement) rightPadElement.style.display = 'none'
+  }
 }
 
-const runApplyPlaceholderShifting = (
-  styleElement: HTMLStyleElement,
-  _leftWidth: number,
-  _rightWidth: number,
-) => {
-  styleElement.textContent = ''
+const runApplyPlaceholderShifting = () => {
+  runHideAllPads()
+}
+
+const runHideAllPads = () => {
+  if (styleElement) {
+    styleElement.textContent = ''
+  }
+  if (leftPadPlaceholderElement) {
+    leftPadPlaceholderElement.style.display = 'none'
+  }
+  if (leftPadElement) {
+    leftPadElement.style.display = 'none'
+  }
+  if (rightPadPlaceholderElement) {
+    rightPadPlaceholderElement.style.display = 'none'
+  }
+  if (rightPadElement) {
+    rightPadElement.style.display = 'none'
+  }
 }
 
 /**
@@ -236,113 +340,21 @@ const runUpdateStyles = (
 
   // Clear styles and hide element structures if inactive or zero-width
   if (!isEffectivelyEnabled || (leftWidth <= 0 && rightWidth <= 0)) {
-    styleElement.textContent = ''
-    if (leftPadPlaceholderElement)
-      leftPadPlaceholderElement.style.display = 'none'
-    if (leftPadElement) leftPadElement.style.display = 'none'
-    if (rightPadPlaceholderElement)
-      rightPadPlaceholderElement.style.display = 'none'
-    if (rightPadElement) rightPadElement.style.display = 'none'
+    runHideAllPads()
   } else {
     // Retrieve matching background colors and patterns based on current mode
     const activePadTheme = getActivePadTheme(settings)
 
-    // Apply layout configuration CSS to the page
+    // Apply layout configuration based on strategy
     if (settings.shiftingStrategy._tag === 'Placeholder') {
-      runApplyPlaceholderShifting(styleElement, leftWidth, rightWidth)
+      runApplyPlaceholderShifting()
     } else {
-      runApplyFlexboxShifting(styleElement, leftWidth, rightWidth)
-    }
-
-    // Construct left and right helper elements if not already present
-    const runEnsurePadDivs = () => {
-      if (!leftPadPlaceholderElement) {
-        leftPadPlaceholderElement = document.createElement('div')
-        leftPadPlaceholderElement.id = 'symmetry-pad-left-placeholder'
-        leftPadPlaceholderElement.style.cssText =
-          'flex-shrink:0; height:100vh; pointer-events:none !important; background:transparent !important; transition: width 0.15s ease-out;'
-        document.documentElement.appendChild(leftPadPlaceholderElement)
-      }
-      if (!leftPadElement) {
-        leftPadElement = document.createElement('div')
-        leftPadElement.id = 'symmetry-pad-left'
-        leftPadElement.style.cssText =
-          'position:fixed; left:0; top:0; height:100vh; z-index:0; pointer-events:none !important; transition: width 0.15s ease-out, background 0.15s ease-out;'
-        document.documentElement.appendChild(leftPadElement)
-      }
-      if (!rightPadPlaceholderElement) {
-        rightPadPlaceholderElement = document.createElement('div')
-        rightPadPlaceholderElement.id = 'symmetry-pad-right-placeholder'
-        rightPadPlaceholderElement.style.cssText =
-          'flex-shrink:0; height:100vh; pointer-events:none !important; background:transparent !important; transition: width 0.15s ease-out;'
-        document.documentElement.appendChild(rightPadPlaceholderElement)
-      }
-      if (!rightPadElement) {
-        rightPadElement = document.createElement('div')
-        rightPadElement.id = 'symmetry-pad-right'
-        rightPadElement.style.cssText =
-          'position:fixed; right:0; top:0; height:100vh; z-index:0; pointer-events:none !important; transition: width 0.15s ease-out, background 0.15s ease-out;'
-        document.documentElement.appendChild(rightPadElement)
-      }
-    }
-
-    runEnsurePadDivs()
-
-    // Apply background properties (color/SVG pattern) to pad element
-    const runApplyBg = (
-      el: HTMLDivElement,
-      bgType: 'color' | 'pattern' | 'transparent',
-      color: string,
-      patternId: string,
-    ) => {
-      el.style.backgroundColor = ''
-      el.style.backgroundImage = ''
-      el.style.backgroundSize = ''
-
-      const styles = resolveBgStyles(bgType, color, patternId)
-      Object.assign(el.style, styles)
-    }
-
-    const isPlaceholder = settings.shiftingStrategy._tag === 'Placeholder'
-
-    // Configure width, visibility, and background styles for left padding
-    if (leftWidth > 0) {
-      leftPadPlaceholderElement!.style.width = `${leftWidth}px`
-      leftPadPlaceholderElement!.style.display = isPlaceholder
-        ? 'none'
-        : 'block'
-      leftPadElement!.style.width = `${leftWidth}px`
-      leftPadElement!.style.display = isPlaceholder ? 'none' : 'block'
-      runApplyBg(
-        leftPadElement!,
-        activePadTheme.bgType,
-        activePadTheme.bgColor,
-        activePadTheme.bgPattern,
+      runApplyFlexboxShifting(
+        styleElement,
+        leftWidth,
+        rightWidth,
+        activePadTheme,
       )
-    } else {
-      if (leftPadPlaceholderElement)
-        leftPadPlaceholderElement.style.display = 'none'
-      if (leftPadElement) leftPadElement.style.display = 'none'
-    }
-
-    // Configure width, visibility, and background styles for right padding
-    if (rightWidth > 0) {
-      rightPadPlaceholderElement!.style.width = `${rightWidth}px`
-      rightPadPlaceholderElement!.style.display = isPlaceholder
-        ? 'none'
-        : 'block'
-      rightPadElement!.style.width = `${rightWidth}px`
-      rightPadElement!.style.display = isPlaceholder ? 'none' : 'block'
-      runApplyBg(
-        rightPadElement!,
-        activePadTheme.bgType,
-        activePadTheme.bgColor,
-        activePadTheme.bgPattern,
-      )
-    } else {
-      if (rightPadPlaceholderElement)
-        rightPadPlaceholderElement.style.display = 'none'
-      if (rightPadElement) rightPadElement.style.display = 'none'
     }
   }
 }
