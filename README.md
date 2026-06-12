@@ -12,7 +12,6 @@ Built with **React**, **Vite**, **TypeScript**, **Tailwind CSS**, **react-tea-cu
 
 ![Damn Center Screenshot](public/screenshot/screenshot2.png)
 
-
 ## Getting Started
 
 ### 1. Install Dependencies

@@ -45,8 +45,9 @@ export const resolveBgStyles = (
         backgroundImage: 'none',
         backgroundSize: '',
       }
+    } else {
+      return pat.style(color)
     }
-    return pat.style(color)
   } else {
     return {
       backgroundColor: 'transparent',

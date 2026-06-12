@@ -25,9 +25,10 @@ export const getHostname = (urlStr: string): Hostname => {
       urlStr.startsWith('chrome-extension://')
     ) {
       return 'system-settings' as Hostname
+    } else {
+      const url = new URL(urlStr)
+      return url.hostname as Hostname
     }
-    const url = new URL(urlStr)
-    return url.hostname as Hostname
   } catch {
     return 'unknown-domain' as Hostname
   }
@@ -38,9 +39,12 @@ export const getHostname = (urlStr: string): Hostname => {
  */
 export const matchUrlPattern = (urlStr: string, pattern: string): boolean => {
   try {
-    if (!pattern) return false
-    const isMatch = picomatch(pattern.trim(), { nocase: true })
-    return isMatch(urlStr.trim())
+    if (!pattern) {
+      return false
+    } else {
+      const isMatch = picomatch(pattern.trim(), { nocase: true })
+      return isMatch(urlStr.trim())
+    }
   } catch {
     // If glob pattern is invalid (e.g. while typing), fallback to substring inclusion
     return urlStr.toLowerCase().includes(pattern.toLowerCase())
@@ -51,12 +55,15 @@ export const matchUrlPattern = (urlStr: string, pattern: string): boolean => {
  * Compiles a glob pattern using picomatch to verify it is valid, returning the error message if invalid.
  */
 export const getGlobError = (pattern: string): string | null => {
-  if (!pattern.trim()) return null
-  try {
-    picomatch(pattern.trim())
+  if (!pattern.trim()) {
     return null
-  } catch (e) {
-    return e instanceof Error ? e.message : String(e)
+  } else {
+    try {
+      picomatch(pattern.trim())
+      return null
+    } catch (e) {
+      return e instanceof Error ? e.message : String(e)
+    }
   }
 }
 
@@ -75,26 +82,24 @@ export const loadPadSettings = (
           !chrome.storage.local
         ) {
           resolve([])
-          return
+        } else {
+          chrome.storage.local.get([hostname], (res) => {
+            const raw = res[hostname]
+            if (!raw) {
+              resolve([])
+            } else {
+              const decodedList = t.array(PadSettingsCodec).decode(raw)
+              if (decodedList._tag === 'Right') {
+                resolve(decodedList.right)
+              } else {
+                console.warn(
+                  `Failed to decode settings for ${hostname}, returning empty list`,
+                )
+                resolve([])
+              }
+            }
+          })
         }
-        chrome.storage.local.get([hostname], (res) => {
-          const raw = res[hostname]
-          if (!raw) {
-            resolve([])
-            return
-          }
-
-          const decodedList = t.array(PadSettingsCodec).decode(raw)
-          if (decodedList._tag === 'Right') {
-            resolve(decodedList.right)
-            return
-          }
-
-          console.warn(
-            `Failed to decode settings for ${hostname}, returning empty list`,
-          )
-          resolve([])
-        })
       })
     },
     (reason) => reason as Error,
@@ -117,15 +122,15 @@ export const savePadSettings = (
           !chrome.storage.local
         ) {
           reject(new Error('chrome.storage.local is not available'))
-          return
+        } else {
+          chrome.storage.local.set({ [hostname]: settingsList }, () => {
+            if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError.message))
+            } else {
+              resolve()
+            }
+          })
         }
-        chrome.storage.local.set({ [hostname]: settingsList }, () => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message))
-          } else {
-            resolve()
-          }
-        })
       })
     },
     (reason) => reason as Error,
@@ -145,21 +150,21 @@ export const loadGlobalSetting = (): TE.TaskEither<Error, GlobalSetting> => {
           !chrome.storage.local
         ) {
           resolve(defaultGlobalSetting)
-          return
+        } else {
+          chrome.storage.local.get(['global_settings'], (res) => {
+            const raw = res['global_settings']
+            if (!raw) {
+              resolve(defaultGlobalSetting)
+            } else {
+              const decoded = GlobalSettingCodec.decode(raw)
+              if (decoded._tag === 'Right') {
+                resolve(decoded.right)
+              } else {
+                resolve(defaultGlobalSetting)
+              }
+            }
+          })
         }
-        chrome.storage.local.get(['global_settings'], (res) => {
-          const raw = res['global_settings']
-          if (!raw) {
-            resolve(defaultGlobalSetting)
-            return
-          }
-          const decoded = GlobalSettingCodec.decode(raw)
-          if (decoded._tag === 'Right') {
-            resolve(decoded.right)
-          } else {
-            resolve(defaultGlobalSetting)
-          }
-        })
       })
     },
     (reason) => reason as Error,
@@ -181,15 +186,18 @@ export const saveGlobalSetting = (
           !chrome.storage.local
         ) {
           reject(new Error('chrome.storage.local is not available'))
-          return
+        } else {
+          chrome.storage.local.set(
+            { ['global_settings']: globalSetting },
+            () => {
+              if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message))
+              } else {
+                resolve()
+              }
+            },
+          )
         }
-        chrome.storage.local.set({ ['global_settings']: globalSetting }, () => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message))
-          } else {
-            resolve()
-          }
-        })
       })
     },
     (reason) => reason as Error,

@@ -21,6 +21,7 @@ pnpm run test
 ```
 
 Ensure everything compiles in development mode without issues:
+
 ```bash
 pnpm run build:dev
 ```
@@ -46,9 +47,10 @@ pnpm run build
 ```
 
 This script will compile files into `dist/chrome` and `dist/firefox`, and then output three zipped archives in the `./dist/` directory:
-*   `dist/damn-center-chrome-v<VERSION>.zip` (Chrome extension package)
-*   `dist/damn-center-firefox-v<VERSION>.zip` (Firefox extension package)
-*   `dist/damn-center-source-v<VERSION>.zip` (Source code package for store review, excluding `node_modules`, `dist`, `.git`, `backup`, `.github`, and `scratch`)
+
+- `dist/damn-center-chrome-v<VERSION>.zip` (Chrome extension package)
+- `dist/damn-center-firefox-v<VERSION>.zip` (Firefox extension package)
+- `dist/damn-center-source-v<VERSION>.zip` (Source code package for store review, excluding `node_modules`, `dist`, `.git`, `backup`, `.github`, and `scratch`)
 
 ---
 
@@ -79,44 +81,50 @@ git push origin v<VERSION>
 4. Set the Release Title to `Damn Center v<VERSION>`.
 5. Write a brief summary of the changes/features added in this release.
 6. Drag and drop the compiled `.zip` files from your local `./dist/` directory into the **Attach binaries** box:
-   *   `damn-center-chrome-v<VERSION>.zip`
-   *   `damn-center-firefox-v<VERSION>.zip`
+   - `damn-center-chrome-v<VERSION>.zip`
+   - `damn-center-firefox-v<VERSION>.zip`
 7. Click **Publish release**.
 
 ### Example Configuration (for v1.0.1):
 
-*   **Tag version**: `v1.0.1`
-*   **Target**: `master` (or select the branch/commit)
-*   **Release Title**: `Damn Center v1.0.1`
-*   **Description**:
-    ```markdown
-    ## What's New in v1.0.1 🚀
+- **Tag version**: `v1.0.1`
+- **Target**: `master` (or select the branch/commit)
+- **Release Title**: `Damn Center v1.0.1`
+- **Description**:
 
-    This release adds automatic window maximization detection, an alignment guide ruler, customizable background SVG patterns, and dynamic versioning.
+  ```markdown
+  ## What's New in v1.0.1 🚀
 
-    ### Key Features:
-    * **"Disable when Not Maximized" Option**: Automatically suspends padding and alignment rules when the browser window is tiled or resized (bypasses Linux Wayland viewport bugs).
-    * **Triple-Line Alignment Ruler**: Added layout guide split lines at 25%, 50%, and 75% width.
-    * **SVG Background Patterns**: Added Dotted Grid, Diagonal Stripes, Aesthetic Grid, Carbon Fiber, and Moroccan Lattice overlays.
-    * **Dynamic Version Header**: Displays manifest version and build date inside the popup UI.
+  This release adds automatic window maximization detection, an alignment guide ruler, customizable background SVG patterns, and dynamic versioning.
 
-    ### Release Packages 📦
-    Please download the appropriate bundle for your browser and load it manually:
-    * `damn-center-chrome-v1.0.1.zip` (Chrome)
-    * `damn-center-firefox-v1.0.1.zip` (Firefox)
-    ```
+  ### Key Features:
+
+  - **"Disable when Not Maximized" Option**: Automatically suspends padding and alignment rules when the browser window is tiled or resized (bypasses Linux Wayland viewport bugs).
+  - **Triple-Line Alignment Ruler**: Added layout guide split lines at 25%, 50%, and 75% width.
+  - **SVG Background Patterns**: Added Dotted Grid, Diagonal Stripes, Aesthetic Grid, Carbon Fiber, and Moroccan Lattice overlays.
+  - **Dynamic Version Header**: Displays manifest version and build date inside the popup UI.
+
+  ### Release Packages 📦
+
+  Please download the appropriate bundle for your browser and load it manually:
+
+  - `damn-center-chrome-v1.0.1.zip` (Chrome)
+  - `damn-center-firefox-v1.0.1.zip` (Firefox)
+  ```
 
 ---
 
 ## 6. Submit to Browser Web Stores
 
 ### Chrome Web Store (Chrome Developer Dashboard)
+
 1. Log in to the [Chrome Developer Dashboard](https://developer.chrome.com/dashboard).
 2. Click on the **Damn Center** item.
 3. Go to the **Package** section and upload the `dist/damn-center-chrome-v<VERSION>.zip` file.
 4. Fill in store listing metadata if changed, and submit for review.
 
 ### Firefox Add-ons (Mozilla Developer Hub)
+
 1. Log in to the [Firefox Add-on Developer Hub](https://addons.mozilla.org/developers/).
 2. Submit a new version of the extension.
 3. Upload the `dist/damn-center-firefox-v<VERSION>.zip` file.

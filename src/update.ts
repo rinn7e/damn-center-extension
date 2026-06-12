@@ -39,14 +39,18 @@ export const getActivePadSettingIndex = (
   const enabledIndex = list.findIndex(
     (s) => s.enabled && matchUrlPattern(url, s.matchPattern),
   )
-  if (enabledIndex !== -1) return enabledIndex
-
-  const matchingIndex = list.findIndex((s) =>
-    matchUrlPattern(url, s.matchPattern),
-  )
-  if (matchingIndex !== -1) return matchingIndex
-
-  return 0
+  if (enabledIndex !== -1) {
+    return enabledIndex
+  } else {
+    const matchingIndex = list.findIndex((s) =>
+      matchUrlPattern(url, s.matchPattern),
+    )
+    if (matchingIndex !== -1) {
+      return matchingIndex
+    } else {
+      return 0
+    }
+  }
 }
 
 export type UrlSegments = {
@@ -56,10 +60,13 @@ export type UrlSegments = {
 
 export const parseUrlSegments = (url: string): UrlSegments | null => {
   try {
-    if (!url) return null
-    const parsed = new URL(url)
-    const paths = parsed.pathname.split('/').filter(Boolean)
-    return { origin: parsed.origin, paths }
+    if (!url) {
+      return null
+    } else {
+      const parsed = new URL(url)
+      const paths = parsed.pathname.split('/').filter(Boolean)
+      return { origin: parsed.origin, paths }
+    }
   } catch {
     return null
   }
@@ -68,16 +75,19 @@ export const parseUrlSegments = (url: string): UrlSegments | null => {
 export const buildGlobPatternFromSegments = (
   segments: UrlSegments | null,
 ): string => {
-  if (!segments) return '**'
-  const { origin, paths } = segments
-  if (paths.length > 0) {
-    if (paths.length > 1) {
-      return `${origin}/${paths[0]}/**`
-    } else {
-      return `${origin}/${paths[0]}{,/**}`
-    }
+  if (!segments) {
+    return '**'
   } else {
-    return `${origin}/**`
+    const { origin, paths } = segments
+    if (paths.length > 0) {
+      if (paths.length > 1) {
+        return `${origin}/${paths[0]}/**`
+      } else {
+        return `${origin}/${paths[0]}{,/**}`
+      }
+    } else {
+      return `${origin}/**`
+    }
   }
 }
 
@@ -92,11 +102,11 @@ export const determineIsDarkPure = (
 ): boolean => {
   if (themeMode === 'dark') {
     return true
-  }
-  if (themeMode === 'light') {
+  } else if (themeMode === 'light') {
     return false
+  } else {
+    return systemPrefersDark
   }
-  return systemPrefersDark
 }
 
 /**
@@ -152,6 +162,8 @@ export const resolveNewWidthPure = (
         leftWidth: width,
         rightWidth: currentSide.rightWidth,
       }
+    } else {
+      return currentSide
     }
   } else if (sideType === 'right') {
     if (currentSide._tag === 'Right') {
@@ -162,9 +174,12 @@ export const resolveNewWidthPure = (
         leftWidth: currentSide.leftWidth,
         rightWidth: width,
       }
+    } else {
+      return currentSide
     }
+  } else {
+    return currentSide
   }
-  return currentSide
 }
 
 const determineIsDark = (themeMode: string): boolean => {
@@ -181,10 +196,13 @@ export const updatePadSettingInList = (
   updater: (settings: PadSettings) => PadSettings,
 ): PadSettings[] => {
   const target = list[index]
-  if (!target) return list
-  const updatedList = [...list]
-  updatedList[index] = updater(target)
-  return updatedList
+  if (!target) {
+    return list
+  } else {
+    const updatedList = [...list]
+    updatedList[index] = updater(target)
+    return updatedList
+  }
 }
 
 const updateActiveSetting = (
@@ -197,19 +215,22 @@ const updateActiveSetting = (
     updater,
   )
   const updatedActive = updatedList[model.selectedIndex]
-  if (!updatedActive) return [model, Cmd.none()]
-  return [
-    { ...model, padSettingList: updatedList },
-    Cmd.batch([
-      saveSettingsCmd(
-        model.hostname,
-        model.currentUrl,
-        updatedList,
-        model.globalSetting,
-      ),
-      injectThemeCmd(updatedActive),
-    ]),
-  ]
+  if (!updatedActive) {
+    return [model, Cmd.none()]
+  } else {
+    return [
+      { ...model, padSettingList: updatedList },
+      Cmd.batch([
+        saveSettingsCmd(
+          model.hostname,
+          model.currentUrl,
+          updatedList,
+          model.globalSetting,
+        ),
+        injectThemeCmd(updatedActive),
+      ]),
+    ]
+  }
 }
 
 export const swapArrayElements = <T>(
@@ -219,12 +240,13 @@ export const swapArrayElements = <T>(
 ): T[] => {
   if (idx1 < 0 || idx1 >= list.length || idx2 < 0 || idx2 >= list.length) {
     return list
+  } else {
+    const updatedList = [...list]
+    const temp = updatedList[idx1]
+    updatedList[idx1] = updatedList[idx2]
+    updatedList[idx2] = temp
+    return updatedList
   }
-  const updatedList = [...list]
-  const temp = updatedList[idx1]
-  updatedList[idx1] = updatedList[idx2]
-  updatedList[idx2] = temp
-  return updatedList
 }
 
 const handleInit = (
@@ -263,24 +285,27 @@ const handleToggleEnabled = (
   model: Model,
 ): [Model, Cmd<Msg>] => {
   const target = model.padSettingList[msg.index]
-  if (!target) return [model, Cmd.none()]
-  const updatedTarget = { ...target, enabled: !target.enabled }
-  const updatedList = [...model.padSettingList]
-  updatedList[msg.index] = updatedTarget
-  const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
-  const activeSettings = updatedList[updatedIndex] || defaultPadSettings
-  return [
-    { ...model, padSettingList: updatedList, selectedIndex: updatedIndex },
-    Cmd.batch([
-      saveSettingsCmd(
-        model.hostname,
-        model.currentUrl,
-        updatedList,
-        model.globalSetting,
-      ),
-      injectThemeCmd(activeSettings),
-    ]),
-  ]
+  if (!target) {
+    return [model, Cmd.none()]
+  } else {
+    const updatedTarget = { ...target, enabled: !target.enabled }
+    const updatedList = [...model.padSettingList]
+    updatedList[msg.index] = updatedTarget
+    const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
+    const activeSettings = updatedList[updatedIndex] || defaultPadSettings
+    return [
+      { ...model, padSettingList: updatedList, selectedIndex: updatedIndex },
+      Cmd.batch([
+        saveSettingsCmd(
+          model.hostname,
+          model.currentUrl,
+          updatedList,
+          model.globalSetting,
+        ),
+        injectThemeCmd(activeSettings),
+      ]),
+    ]
+  }
 }
 
 const handleAddPadSetting = (model: Model): [Model, Cmd<Msg>] => {
@@ -343,24 +368,27 @@ const handleUpdateMatchPattern = (
   model: Model,
 ): [Model, Cmd<Msg>] => {
   const target = model.padSettingList[msg.index]
-  if (!target) return [model, Cmd.none()]
-  const updatedTarget = { ...target, matchPattern: msg.matchPattern }
-  const updatedList = [...model.padSettingList]
-  updatedList[msg.index] = updatedTarget
-  const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
-  const activeSettings = updatedList[updatedIndex] || defaultPadSettings
-  return [
-    { ...model, padSettingList: updatedList, selectedIndex: updatedIndex },
-    Cmd.batch([
-      saveSettingsCmd(
-        model.hostname,
-        model.currentUrl,
-        updatedList,
-        model.globalSetting,
-      ),
-      injectThemeCmd(activeSettings),
-    ]),
-  ]
+  if (!target) {
+    return [model, Cmd.none()]
+  } else {
+    const updatedTarget = { ...target, matchPattern: msg.matchPattern }
+    const updatedList = [...model.padSettingList]
+    updatedList[msg.index] = updatedTarget
+    const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
+    const activeSettings = updatedList[updatedIndex] || defaultPadSettings
+    return [
+      { ...model, padSettingList: updatedList, selectedIndex: updatedIndex },
+      Cmd.batch([
+        saveSettingsCmd(
+          model.hostname,
+          model.currentUrl,
+          updatedList,
+          model.globalSetting,
+        ),
+        injectThemeCmd(activeSettings),
+      ]),
+    ]
+  }
 }
 
 const handleMoveMatchUp = (
@@ -368,22 +396,25 @@ const handleMoveMatchUp = (
   model: Model,
 ): [Model, Cmd<Msg>] => {
   const idx = msg.index
-  if (idx <= 0 || idx >= model.padSettingList.length) return [model, Cmd.none()]
-  const updatedList = swapArrayElements(model.padSettingList, idx, idx - 1)
-  const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
-  const activeSettings = updatedList[updatedIndex] || defaultPadSettings
-  return [
-    { ...model, padSettingList: updatedList, selectedIndex: updatedIndex },
-    Cmd.batch([
-      saveSettingsCmd(
-        model.hostname,
-        model.currentUrl,
-        updatedList,
-        model.globalSetting,
-      ),
-      injectThemeCmd(activeSettings),
-    ]),
-  ]
+  if (idx <= 0 || idx >= model.padSettingList.length) {
+    return [model, Cmd.none()]
+  } else {
+    const updatedList = swapArrayElements(model.padSettingList, idx, idx - 1)
+    const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
+    const activeSettings = updatedList[updatedIndex] || defaultPadSettings
+    return [
+      { ...model, padSettingList: updatedList, selectedIndex: updatedIndex },
+      Cmd.batch([
+        saveSettingsCmd(
+          model.hostname,
+          model.currentUrl,
+          updatedList,
+          model.globalSetting,
+        ),
+        injectThemeCmd(activeSettings),
+      ]),
+    ]
+  }
 }
 
 const handleMoveMatchDown = (
@@ -391,23 +422,25 @@ const handleMoveMatchDown = (
   model: Model,
 ): [Model, Cmd<Msg>] => {
   const idx = msg.index
-  if (idx < 0 || idx >= model.padSettingList.length - 1)
+  if (idx < 0 || idx >= model.padSettingList.length - 1) {
     return [model, Cmd.none()]
-  const updatedList = swapArrayElements(model.padSettingList, idx, idx + 1)
-  const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
-  const activeSettings = updatedList[updatedIndex] || defaultPadSettings
-  return [
-    { ...model, padSettingList: updatedList, selectedIndex: updatedIndex },
-    Cmd.batch([
-      saveSettingsCmd(
-        model.hostname,
-        model.currentUrl,
-        updatedList,
-        model.globalSetting,
-      ),
-      injectThemeCmd(activeSettings),
-    ]),
-  ]
+  } else {
+    const updatedList = swapArrayElements(model.padSettingList, idx, idx + 1)
+    const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
+    const activeSettings = updatedList[updatedIndex] || defaultPadSettings
+    return [
+      { ...model, padSettingList: updatedList, selectedIndex: updatedIndex },
+      Cmd.batch([
+        saveSettingsCmd(
+          model.hostname,
+          model.currentUrl,
+          updatedList,
+          model.globalSetting,
+        ),
+        injectThemeCmd(activeSettings),
+      ]),
+    ]
+  }
 }
 
 const handleToggleGlobalEnabled = (model: Model): [Model, Cmd<Msg>] => {
@@ -443,141 +476,142 @@ export const update = (
   if (model === null) {
     if (msg._tag === 'Init') {
       return handleInit(msg, null)
+    } else {
+      return [null, Cmd.none()]
     }
-    return [null, Cmd.none()]
-  }
+  } else {
+    switch (msg._tag) {
+      case 'Init':
+        return handleInit(msg, model)
 
-  switch (msg._tag) {
-    case 'Init':
-      return handleInit(msg, model)
+      case 'ToggleGlobalEnabled':
+        return handleToggleGlobalEnabled(model)
 
-    case 'ToggleGlobalEnabled':
-      return handleToggleGlobalEnabled(model)
+      case 'ToggleEnabled':
+        return handleToggleEnabled(msg, model)
 
-    case 'ToggleEnabled':
-      return handleToggleEnabled(msg, model)
+      case 'SetPadSideType':
+        return updateActiveSetting(model, (active) => ({
+          ...active,
+          side: resolveNewSidePure(active.side, msg.sideType),
+        }))
 
-    case 'SetPadSideType':
-      return updateActiveSetting(model, (active) => ({
-        ...active,
-        side: resolveNewSidePure(active.side, msg.sideType),
-      }))
+      case 'SetPadWidth':
+        return updateActiveSetting(model, (active) => ({
+          ...active,
+          side: resolveNewWidthPure(active.side, msg.sideType, msg.width),
+        }))
 
-    case 'SetPadWidth':
-      return updateActiveSetting(model, (active) => ({
-        ...active,
-        side: resolveNewWidthPure(active.side, msg.sideType, msg.width),
-      }))
+      case 'SetPadThemeMode':
+        return updateActiveSetting(model, (active) => ({
+          ...active,
+          themeMode: msg.themeMode,
+        }))
 
-    case 'SetPadThemeMode':
-      return updateActiveSetting(model, (active) => ({
-        ...active,
-        themeMode: msg.themeMode,
-      }))
+      case 'SetActivePresetTab':
+        return [{ ...model, activePresetTab: msg.tab }, Cmd.none()]
 
-    case 'SetActivePresetTab':
-      return [{ ...model, activePresetTab: msg.tab }, Cmd.none()]
+      case 'UpdateBgType':
+        return updateActiveSetting(model, (active) => ({
+          ...active,
+          [msg.theme]: {
+            ...active[msg.theme],
+            bgType: msg.bgType,
+          },
+        }))
 
-    case 'UpdateBgType':
-      return updateActiveSetting(model, (active) => ({
-        ...active,
-        [msg.theme]: {
-          ...active[msg.theme],
-          bgType: msg.bgType,
-        },
-      }))
+      case 'UpdateBgColor':
+        return updateActiveSetting(model, (active) => ({
+          ...active,
+          [msg.theme]: {
+            ...active[msg.theme],
+            bgColor: msg.bgColor,
+          },
+        }))
 
-    case 'UpdateBgColor':
-      return updateActiveSetting(model, (active) => ({
-        ...active,
-        [msg.theme]: {
-          ...active[msg.theme],
-          bgColor: msg.bgColor,
-        },
-      }))
+      case 'UpdateBgPattern':
+        return updateActiveSetting(model, (active) => ({
+          ...active,
+          [msg.theme]: {
+            ...active[msg.theme],
+            bgPattern: msg.bgPattern,
+          },
+        }))
 
-    case 'UpdateBgPattern':
-      return updateActiveSetting(model, (active) => ({
-        ...active,
-        [msg.theme]: {
-          ...active[msg.theme],
-          bgPattern: msg.bgPattern,
-        },
-      }))
+      case 'AddPadSetting':
+        return handleAddPadSetting(model)
 
-    case 'AddPadSetting':
-      return handleAddPadSetting(model)
+      case 'DeletePadSetting':
+        return handleDeletePadSetting(msg, model)
 
-    case 'DeletePadSetting':
-      return handleDeletePadSetting(msg, model)
+      case 'UpdateMatchPattern':
+        return handleUpdateMatchPattern(msg, model)
 
-    case 'UpdateMatchPattern':
-      return handleUpdateMatchPattern(msg, model)
+      case 'MoveMatchUp':
+        return handleMoveMatchUp(msg, model)
 
-    case 'MoveMatchUp':
-      return handleMoveMatchUp(msg, model)
+      case 'MoveMatchDown':
+        return handleMoveMatchDown(msg, model)
 
-    case 'MoveMatchDown':
-      return handleMoveMatchDown(msg, model)
-
-    case 'ToggleShowRuler': {
-      const updatedGlobal = {
-        ...model.globalSetting,
-        showRuler: !model.globalSetting.showRuler,
+      case 'ToggleShowRuler': {
+        const updatedGlobal = {
+          ...model.globalSetting,
+          showRuler: !model.globalSetting.showRuler,
+        }
+        const activeSettings =
+          model.padSettingList[model.selectedIndex] || defaultPadSettings
+        return [
+          { ...model, globalSetting: updatedGlobal },
+          Cmd.batch([
+            saveGlobalSettingCmd(updatedGlobal),
+            saveSettingsCmd(
+              model.hostname,
+              model.currentUrl,
+              model.padSettingList,
+              updatedGlobal,
+            ),
+            injectThemeCmd(activeSettings),
+          ]),
+        ]
       }
-      const activeSettings =
-        model.padSettingList[model.selectedIndex] || defaultPadSettings
-      return [
-        { ...model, globalSetting: updatedGlobal },
-        Cmd.batch([
-          saveGlobalSettingCmd(updatedGlobal),
-          saveSettingsCmd(
-            model.hostname,
-            model.currentUrl,
-            model.padSettingList,
-            updatedGlobal,
-          ),
-          injectThemeCmd(activeSettings),
-        ]),
-      ]
-    }
 
-    case 'ToggleDisableWhenNotMaximized': {
-      const updatedGlobal = {
-        ...model.globalSetting,
-        disableWhenNotMaximized: !model.globalSetting.disableWhenNotMaximized,
+      case 'ToggleDisableWhenNotMaximized': {
+        const updatedGlobal = {
+          ...model.globalSetting,
+          disableWhenNotMaximized: !model.globalSetting.disableWhenNotMaximized,
+        }
+        const activeSettings =
+          model.padSettingList[model.selectedIndex] || defaultPadSettings
+        return [
+          { ...model, globalSetting: updatedGlobal },
+          Cmd.batch([
+            saveGlobalSettingCmd(updatedGlobal),
+            saveSettingsCmd(
+              model.hostname,
+              model.currentUrl,
+              model.padSettingList,
+              updatedGlobal,
+            ),
+            injectThemeCmd(activeSettings),
+          ]),
+        ]
       }
-      const activeSettings =
-        model.padSettingList[model.selectedIndex] || defaultPadSettings
-      return [
-        { ...model, globalSetting: updatedGlobal },
-        Cmd.batch([
-          saveGlobalSettingCmd(updatedGlobal),
-          saveSettingsCmd(
-            model.hostname,
-            model.currentUrl,
-            model.padSettingList,
-            updatedGlobal,
-          ),
-          injectThemeCmd(activeSettings),
-        ]),
-      ]
+
+      case 'ToggleMatchesCollapsed':
+        return [
+          { ...model, matchesCollapsed: !model.matchesCollapsed },
+          Cmd.none(),
+        ]
+
+      case 'ExportConfig':
+        return [model, triggerExportCmd()]
+
+      case 'ImportConfig':
+        return [model, triggerImportCmd(msg.jsonText)]
+
+      case 'NoOp':
+        return [model, Cmd.none()]
     }
-
-    case 'ToggleMatchesCollapsed':
-      return [
-        { ...model, matchesCollapsed: !model.matchesCollapsed },
-        Cmd.none(),
-      ]
-
-    case 'ExportConfig':
-      return [model, triggerExportCmd()]
-
-    case 'ImportConfig':
-      return [model, triggerImportCmd(msg.jsonText)]
-
-    case 'NoOp':
-      return [model, Cmd.none()]
   }
 }
 
@@ -587,20 +621,29 @@ export const update = (
 export const validateBackupData = (data: unknown): boolean => {
   if (typeof data !== 'object' || data === null || Array.isArray(data)) {
     return false
-  }
-  const keys = Object.keys(data)
-  if (keys.length === 0) return false
-  for (const key of keys) {
-    const val = (data as Record<string, unknown>)[key]
-    if (key === 'global_settings') {
-      const decoded = GlobalSettingCodec.decode(val)
-      if (decoded._tag === 'Left') return false
+  } else {
+    const keys = Object.keys(data)
+    if (keys.length === 0) {
+      return false
     } else {
-      const decoded = t.array(PadSettingsCodec).decode(val)
-      if (decoded._tag === 'Left') return false
+      let isValid = true
+      for (const key of keys) {
+        const val = (data as Record<string, unknown>)[key]
+        if (key === 'global_settings') {
+          const decoded = GlobalSettingCodec.decode(val)
+          if (decoded._tag === 'Left') {
+            isValid = false
+          }
+        } else {
+          const decoded = t.array(PadSettingsCodec).decode(val)
+          if (decoded._tag === 'Left') {
+            isValid = false
+          }
+        }
+      }
+      return isValid
     }
   }
-  return true
 }
 
 const triggerExportCmd = (): Cmd<Msg> => {
@@ -614,23 +657,23 @@ const triggerExportCmd = (): Cmd<Msg> => {
         ) {
           console.warn('[Damn Center] storage.local not available for export')
           resolve()
-          return
+        } else {
+          chrome.storage.local.get(null, (allData) => {
+            try {
+              const jsonStr = JSON.stringify(allData, null, 2)
+              const blob = new Blob([jsonStr], { type: 'application/json' })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a')
+              a.href = url
+              a.download = 'damn-center-backup.json'
+              a.click()
+              URL.revokeObjectURL(url)
+            } catch (e) {
+              console.error('[Damn Center] Export error:', e)
+            }
+            resolve()
+          })
         }
-        chrome.storage.local.get(null, (allData) => {
-          try {
-            const jsonStr = JSON.stringify(allData, null, 2)
-            const blob = new Blob([jsonStr], { type: 'application/json' })
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url
-            a.download = 'damn-center-backup.json'
-            a.click()
-            URL.revokeObjectURL(url)
-          } catch (e) {
-            console.error('[Damn Center] Export error:', e)
-          }
-          resolve()
-        })
       })
     }),
     (): Msg => ({ _tag: 'NoOp' }),
@@ -646,41 +689,39 @@ const triggerImportCmd = (jsonText: string): Cmd<Msg> => {
         !chrome.storage.local
       ) {
         alert('Storage API is not available.')
-        return
-      }
+      } else {
+        try {
+          const parsed = JSON.parse(jsonText)
+          if (!validateBackupData(parsed)) {
+            alert('Invalid backup file format.')
+          } else {
+            await new Promise<void>((resolve, reject) => {
+              chrome.storage.local.clear(() => {
+                if (chrome.runtime.lastError) {
+                  reject(new Error(chrome.runtime.lastError.message))
+                } else {
+                  resolve()
+                }
+              })
+            })
 
-      try {
-        const parsed = JSON.parse(jsonText)
-        if (!validateBackupData(parsed)) {
-          alert('Invalid backup file format.')
-          return
+            await new Promise<void>((resolve, reject) => {
+              chrome.storage.local.set(parsed, () => {
+                if (chrome.runtime.lastError) {
+                  reject(new Error(chrome.runtime.lastError.message))
+                } else {
+                  resolve()
+                }
+              })
+            })
+
+            alert('Configuration imported successfully!')
+            window.location.reload()
+          }
+        } catch (e) {
+          console.error('[Damn Center] Import failed:', e)
+          alert('Failed to parse backup file.')
         }
-
-        await new Promise<void>((resolve, reject) => {
-          chrome.storage.local.clear(() => {
-            if (chrome.runtime.lastError) {
-              reject(new Error(chrome.runtime.lastError.message))
-            } else {
-              resolve()
-            }
-          })
-        })
-
-        await new Promise<void>((resolve, reject) => {
-          chrome.storage.local.set(parsed, () => {
-            if (chrome.runtime.lastError) {
-              reject(new Error(chrome.runtime.lastError.message))
-            } else {
-              resolve()
-            }
-          })
-        })
-
-        alert('Configuration imported successfully!')
-        window.location.reload()
-      } catch (e) {
-        console.error('[Damn Center] Import failed:', e)
-        alert('Failed to parse backup file.')
       }
     }),
     (): Msg => ({ _tag: 'NoOp' }),
@@ -705,32 +746,31 @@ const queryActiveTabAndSettings = (): Promise<{
         globalSetting: defaultGlobalSetting,
         padSettingList: [defaultPadSettings],
       })
-      return
+    } else {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const activeTab = tabs[0]
+        const url = (activeTab && activeTab.url) || defaultUrl
+        const host = getHostname(url)
+        Promise.all([loadGlobalSetting()(), loadPadSettings(host)()]).then(
+          ([globalEither, padEither]) => {
+            const globalSetting =
+              globalEither._tag === 'Right'
+                ? globalEither.right
+                : defaultGlobalSetting
+            const padSettingList =
+              padEither._tag === 'Right'
+                ? padEither.right
+                : [createDefaultPadSettings('https://' + host + '/**')]
+            resolve({
+              hostname: host,
+              currentUrl: url,
+              globalSetting,
+              padSettingList,
+            })
+          },
+        )
+      })
     }
-
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const activeTab = tabs[0]
-      const url = (activeTab && activeTab.url) || defaultUrl
-      const host = getHostname(url)
-      Promise.all([loadGlobalSetting()(), loadPadSettings(host)()]).then(
-        ([globalEither, padEither]) => {
-          const globalSetting =
-            globalEither._tag === 'Right'
-              ? globalEither.right
-              : defaultGlobalSetting
-          const padSettingList =
-            padEither._tag === 'Right'
-              ? padEither.right
-              : [createDefaultPadSettings('https://' + host + '/**')]
-          resolve({
-            hostname: host,
-            currentUrl: url,
-            globalSetting,
-            padSettingList,
-          })
-        },
-      )
-    })
   })
 }
 
@@ -746,13 +786,14 @@ export const loadInitialDataCmd = (): Cmd<Msg> => {
           globalSetting: res.value.globalSetting,
           padSettingList: res.value.padSettingList,
         }
-      }
-      return {
-        _tag: 'Init',
-        hostname: 'unknown-domain' as Hostname,
-        currentUrl: '',
-        globalSetting: defaultGlobalSetting,
-        padSettingList: [defaultPadSettings],
+      } else {
+        return {
+          _tag: 'Init',
+          hostname: 'unknown-domain' as Hostname,
+          currentUrl: '',
+          globalSetting: defaultGlobalSetting,
+          padSettingList: [defaultPadSettings],
+        }
       }
     },
   )

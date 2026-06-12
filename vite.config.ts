@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
       if (!existsSync(outDir)) {
         mkdirSync(outDir, { recursive: true })
       }
-      
+
       // Copy the target-specific manifest
       copyFileSync(
         resolve(process.cwd(), `manifests/manifest.${target}.json`),
@@ -29,7 +29,10 @@ export default defineConfig(({ mode }) => {
 
       sizes.forEach((size) => {
         const destIconPath = resolve(outDir, `icon${size}.png`)
-        const devIconSource = resolve(process.cwd(), `public/icon${size}-dev.png`)
+        const devIconSource = resolve(
+          process.cwd(),
+          `public/icon${size}-dev.png`,
+        )
 
         if (isDev && existsSync(devIconSource)) {
           copyFileSync(devIconSource, destIconPath)
