@@ -15,7 +15,7 @@
     "test": "vitest run",
     "build:chrome": "TARGET=chrome vite build && TARGET=chrome BUILD_TARGET=content vite build && cd dist/chrome && zip -r ../damn-center-chrome-v1.0.2.zip .",
     "build:firefox": "TARGET=firefox vite build && TARGET=firefox BUILD_TARGET=content vite build && cd dist/firefox && zip -r ../damn-center-firefox-v1.0.2.zip .",
-    "zip-source-code": "mkdir -p dist && zip -r dist/damn-center-source-v1.0.2.zip . -x \"node_modules/*\" \"dist/*\" \".git/*\" \"backup/*\" \".github/*\" \"scratch/*\"",
+    "zip-source-code": "mkdir -p dist && zip -r dist/damn-center-source-v1.0.2.zip . -x \"node_modules/*\" \"dist/*\" \".git/*\" \"backup/*\" \".github/*\" \"scratch/*\" \".env.development\" \".env.production\"",
     "build": "tsc && pnpm run build:chrome && pnpm run build:firefox && pnpm run zip-source-code"
   },
   "dependencies": {
