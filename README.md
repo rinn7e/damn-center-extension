@@ -54,7 +54,7 @@ pnpm run build:dev
 
 ### Web Stores (Recommended)
 
-- **Chrome Web Store**: Under Review / Coming Soon
+- **Chrome Web Store**: [https://chromewebstore.google.com/detail/damn-center/jljnmcioeicnlafnjmgknjgegnaccaii](https://chromewebstore.google.com/detail/damn-center/jljnmcioeicnlafnjmgknjgegnaccaii)
 - **Firefox Add-ons**: [https://addons.mozilla.org/en-US/firefox/addon/damn-center/](https://addons.mozilla.org/en-US/firefox/addon/damn-center/)
 
 ---
