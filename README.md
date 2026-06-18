@@ -22,7 +22,17 @@ Install dependencies using `pnpm`:
 pnpm install
 ```
 
-### 2. Development
+### 2. Set Up Environment Variables
+
+Copy the example environment file to configure your local environment settings:
+
+```bash
+cp .env.example .env.development
+# and/or
+cp .env.example .env.production
+```
+
+### 3. Development
 
 Run the development server:
 
@@ -30,7 +40,7 @@ Run the development server:
 pnpm run dev
 ```
 
-### 3. Build
+### 4. Build
 
 Compile production bundles for Chrome and Firefox:
 
@@ -40,7 +50,7 @@ pnpm run build
 
 The build scripts output compiled extension bundles to `./dist/chrome` and `./dist/firefox` containing browser-specific manifests and assets.
 
-### 4. Development Build
+### 5. Development Build
 
 Compile development bundles for Chrome and Firefox (which load `.env.development` variables and preserve source maps, without zipping):
 
