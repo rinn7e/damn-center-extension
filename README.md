@@ -99,7 +99,17 @@ This compiles the extension code and outputs target directories:
 
 ## Environment Variables
 
-The project loads configurations from environment files based on the build target mode:
+The project loads configurations from environment files based on the build target mode (`.env.development` or `.env.production`). These files are ignored by git to protect local preferences.
+
+To set up your environment variables:
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env.development
+   # and/or
+   cp .env.example .env.production
+   ```
+2. Configure the variables as desired inside the newly created files:
 
 | Variable Name          | Description                                                                                                   | Default / Example Value      |
 | :--------------------- | :------------------------------------------------------------------------------------------------------------ | :--------------------------- |
