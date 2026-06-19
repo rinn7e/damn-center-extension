@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ## [Unreleased]
 
+### Added
+
+- **Auto-Disable on Fullscreen**: Automatically suspends padding and alignment rules when a website enters fullscreen mode (Fix Youtube fullscreen).
+- **Popup UI Font Size Controller**: Added a setting and footer controls to increase or decrease the root font size of the extension's popup UI (clamped between `12px` and `32px` in `1px` steps, default `16px`) to scale all text elements cleanly.
+
 ---
 
 ## [1.0.2] - 2026-06-10
