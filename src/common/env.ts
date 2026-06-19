@@ -15,3 +15,6 @@ export const BUILD_DATE: string | undefined = import.meta.env.VITE_BUILD_DATE
 
 export const SHOW_BUILD_DATE: boolean =
   import.meta.env.VITE_SHOW_BUILD_DATE === 'true'
+
+export const DEFAULT_FONT_SIZE: number =
+  Number(import.meta.env.VITE_DEFAULT_FONT_SIZE) || 16

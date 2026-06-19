@@ -158,7 +158,10 @@ export const loadGlobalSetting = (): TE.TaskEither<Error, GlobalSetting> => {
             } else {
               const decoded = GlobalSettingCodec.decode(raw)
               if (decoded._tag === 'Right') {
-                resolve(decoded.right)
+                resolve({
+                  ...defaultGlobalSetting,
+                  ...decoded.right,
+                })
               } else {
                 resolve(defaultGlobalSetting)
               }

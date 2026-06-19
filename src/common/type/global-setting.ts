@@ -4,6 +4,8 @@
  */
 import * as t from 'io-ts'
 
+import { DEFAULT_FONT_SIZE } from '../env'
+
 export type GlobalSetting = {
   // Tracks storage structure schema version. Useful for future storage migrations.
   // See: [publish_checklist.md](/doc/publish_checklist.md) for strategy details.
@@ -11,18 +13,25 @@ export type GlobalSetting = {
   enabled: boolean
   showRuler: boolean
   disableWhenNotMaximized: boolean
+  fontSize?: number
 }
 
-export const GlobalSettingCodec = t.type({
-  schema_version: t.number,
-  enabled: t.boolean,
-  showRuler: t.boolean,
-  disableWhenNotMaximized: t.boolean,
-})
+export const GlobalSettingCodec = t.intersection([
+  t.type({
+    schema_version: t.number,
+    enabled: t.boolean,
+    showRuler: t.boolean,
+    disableWhenNotMaximized: t.boolean,
+  }),
+  t.partial({
+    fontSize: t.number,
+  }),
+])
 
 export const defaultGlobalSetting: GlobalSetting = {
   schema_version: 1,
   enabled: true,
   showRuler: false,
   disableWhenNotMaximized: false,
+  fontSize: DEFAULT_FONT_SIZE,
 }

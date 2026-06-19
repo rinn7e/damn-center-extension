@@ -7,7 +7,12 @@ import { type Dispatcher } from 'tea-cup-fp'
 
 import './asset/index.css'
 import { formatDateTime } from './common/date-util'
-import { BUILD_DATE, SHOW_BUILD_DATE, UI_THEME_ID } from './common/env'
+import {
+  BUILD_DATE,
+  DEFAULT_FONT_SIZE,
+  SHOW_BUILD_DATE,
+  UI_THEME_ID,
+} from './common/env'
 import { type GlobalSetting } from './common/type/global-setting'
 import {
   type PadSettings,
@@ -95,12 +100,12 @@ const headerView = (
         <div className='flex flex-col gap-[4px]'>
           <h1 className='text-theme-primary flex items-baseline gap-[6px] text-base leading-none font-semibold tracking-tight'>
             <span>Damn Center - the page !</span>
-            <span className='text-theme-text-dim pb-[2px] text-xs leading-none font-normal'>
+            <span className='text-theme-text-dim pb-[2px] text-[0.8125rem] leading-none font-normal'>
               {version}
             </span>
           </h1>
           {buildTimeStr && (
-            <span className='text-theme-text-dim text-[11px] leading-none font-normal'>
+            <span className='text-theme-text-dim text-[0.8125rem] leading-none font-normal'>
               {buildTimeStr}
             </span>
           )}
@@ -128,7 +133,7 @@ const patternStyleSelectorView = (
     <div className='flex flex-col gap-[12px]'>
       <div className='flex flex-col gap-[8px]'>
         <div className='flex items-center justify-between'>
-          <label className='text-theme-text-dim text-[14px] font-semibold tracking-wider uppercase'>
+          <label className='text-theme-text-dim text-[0.875rem] font-semibold tracking-wider uppercase'>
             Base Color
           </label>
           <div className='bg-theme-bg-input border-theme-border-input flex items-center gap-[6px] border px-[6px] py-[2px]'>
@@ -148,7 +153,7 @@ const patternStyleSelectorView = (
               }
               className='block h-[16px] w-[16px] cursor-pointer appearance-none border-0 bg-transparent p-0'
             />
-            <span className='text-theme-text-muted relative top-[1px] font-mono text-[14px] leading-none uppercase'>
+            <span className='text-theme-text-muted relative top-[1px] font-mono text-[0.875rem] leading-none uppercase'>
               {padTheme.bgColor}
             </span>
           </div>
@@ -196,7 +201,7 @@ const patternStyleSelectorView = (
       </div>
 
       <div className='flex flex-col gap-[8px]'>
-        <label className='text-theme-text-dim text-[14px] font-semibold tracking-wider uppercase'>
+        <label className='text-theme-text-dim text-[0.875rem] font-semibold tracking-wider uppercase'>
           Pattern Style
         </label>
         <div className='grid grid-cols-3 gap-[8px]'>
@@ -230,7 +235,7 @@ const patternStyleSelectorView = (
                   <div className='bg-theme-primary absolute top-[18px] left-1/2 z-10 h-[6px] w-[6px] -translate-x-1/2' />
                 )}
                 <div className='bg-theme-bg-input border-theme-border-input relative z-10 w-full border-t px-[6px] py-[4px] transition-all'>
-                  <div className='text-theme-text-main w-full truncate text-[14px] leading-none font-normal tracking-tight'>
+                  <div className='text-theme-text-main w-full truncate text-[0.875rem] leading-none font-normal tracking-tight'>
                     {pat.name}
                   </div>
                 </div>
@@ -288,11 +293,11 @@ const matchRowView = (
         }}
         onClick={(e) => e.stopPropagation()}
         placeholder='Match URL (e.g. ** or https://example.com/api/**)'
-        className='bg-theme-bg-card border-theme-border-input text-theme-text-main focus:border-theme-primary w-full border px-[6px] py-[4px] font-mono text-[12px] focus:outline-none'
+        className='bg-theme-bg-card border-theme-border-input text-theme-text-main focus:border-theme-primary w-full border px-[6px] py-[4px] font-mono text-[0.8125rem] focus:outline-none'
       />
 
       {globError && (
-        <div className='px-[2px] font-mono text-[11px] leading-tight break-all text-red-500'>
+        <div className='px-[2px] font-mono text-[0.8125rem] leading-tight break-all text-red-500'>
           {globError}
         </div>
       )}
@@ -306,7 +311,7 @@ const matchRowView = (
               e.stopPropagation()
               dispatch({ _tag: 'DeletePadSetting', index: idx })
             }}
-            className='flex h-[22px] shrink-0 cursor-pointer items-center justify-center border border-red-500/20 px-[8px] text-[12px] font-semibold text-red-500 transition-all hover:border-red-500/40 hover:text-red-600'
+            className='flex h-[22px] shrink-0 cursor-pointer items-center justify-center border border-red-500/20 px-[8px] text-[0.8125rem] font-semibold text-red-500 transition-all hover:border-red-500/40 hover:text-red-600'
           >
             Delete
           </button>
@@ -317,7 +322,7 @@ const matchRowView = (
               e.stopPropagation()
               dispatch({ _tag: 'MoveMatchUp', index: idx })
             }}
-            className='border-theme-border-input hover:bg-theme-bg-input text-theme-text-main flex h-[22px] shrink-0 cursor-pointer items-center justify-center border px-[8px] text-[12px] font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40'
+            className='border-theme-border-input hover:bg-theme-bg-input text-theme-text-main flex h-[22px] shrink-0 cursor-pointer items-center justify-center border px-[8px] text-[0.8125rem] font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40'
             title='Move Up'
           >
             <ChevronUpIcon />
@@ -329,7 +334,7 @@ const matchRowView = (
               e.stopPropagation()
               dispatch({ _tag: 'MoveMatchDown', index: idx })
             }}
-            className='border-theme-border-input hover:bg-theme-bg-input text-theme-text-main flex h-[22px] shrink-0 cursor-pointer items-center justify-center border px-[8px] text-[12px] font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40'
+            className='border-theme-border-input hover:bg-theme-bg-input text-theme-text-main flex h-[22px] shrink-0 cursor-pointer items-center justify-center border px-[8px] text-[0.8125rem] font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40'
             title='Move Down'
           >
             <ChevronDownIcon />
@@ -338,7 +343,7 @@ const matchRowView = (
 
         {/* Enable/Disable switch for this match */}
         <div className='flex items-center gap-[6px]'>
-          <span className='text-theme-text-dim text-[11px] font-semibold tracking-wider uppercase'>
+          <span className='text-theme-text-dim text-[0.8125rem] font-semibold tracking-wider uppercase'>
             Enabled
           </span>
           {toggleSwitchView(
@@ -355,7 +360,7 @@ const matchRowView = (
             className={`h-[6px] w-[6px] shrink-0 ${item.enabled ? 'bg-theme-primary animate-pulse' : 'bg-theme-text-dim'}`}
           />
           <span
-            className={`text-[11px] font-semibold tracking-wide uppercase ${item.enabled ? 'text-theme-primary' : 'text-theme-text-dim'}`}
+            className={`text-[0.8125rem] font-semibold tracking-wide uppercase ${item.enabled ? 'text-theme-primary' : 'text-theme-text-dim'}`}
           >
             {item.enabled
               ? 'Matches current URL'
@@ -377,14 +382,14 @@ const matchesCardView = (
   return (
     <div className='flex flex-col gap-[12px]'>
       <div className='flex items-center justify-between'>
-        <span className='text-theme-text-main text-[14px] font-semibold'>
+        <span className='text-theme-text-main text-[0.875rem] font-semibold'>
           Matches
         </span>
         <div className='flex items-center gap-[8px]'>
           <button
             type='button'
             onClick={() => dispatch({ _tag: 'AddPadSetting' })}
-            className='text-theme-primary hover:text-theme-primary/80 cursor-pointer text-[13px] font-semibold transition-all'
+            className='text-theme-primary hover:text-theme-primary/80 cursor-pointer text-[0.8125rem] font-semibold transition-all'
           >
             + New Match
           </button>
@@ -406,7 +411,7 @@ const matchesCardView = (
       {!matchesCollapsed && (
         <>
           {padSettingList.length === 0 ? (
-            <div className='text-theme-text-dim pb-[8px] text-[13px]'>
+            <div className='text-theme-text-dim pb-[8px] text-[0.8125rem]'>
               No matches added yet. Click "+ New Match" to configure custom page
               padding.
             </div>
@@ -438,7 +443,7 @@ const widthSliderView = (
   return (
     <div className='flex flex-col gap-[8px]'>
       <div className='flex items-center justify-between'>
-        <label className='text-theme-text-muted text-[14px] font-semibold'>
+        <label className='text-theme-text-muted text-[0.875rem] font-semibold'>
           {label}
         </label>
         <div className='flex items-center gap-[4px]'>
@@ -452,9 +457,11 @@ const widthSliderView = (
                 Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)),
               )
             }
-            className='bg-theme-bg-input border-theme-border-input text-theme-primary focus:border-theme-primary w-[48px] border px-[4px] py-[2px] text-center font-mono text-[14px] focus:outline-none'
+            className='bg-theme-bg-input border-theme-border-input text-theme-primary focus:border-theme-primary w-[48px] border px-[4px] py-[2px] text-center font-mono text-[0.875rem] focus:outline-none'
           />
-          <span className='text-theme-text-dim font-mono text-[14px]'>px</span>
+          <span className='text-theme-text-dim font-mono text-[0.875rem]'>
+            px
+          </span>
         </div>
       </div>
       <input
@@ -500,7 +507,7 @@ const paddingSideView = (settings: PadSettings, dispatch: Dispatcher<Msg>) => {
   const tabs: ('Left' | 'Right' | 'Both')[] = ['Left', 'Right', 'Both']
   return (
     <div className='flex flex-col gap-[4px]'>
-      <label className='text-theme-text-dim text-[14px] font-semibold tracking-wider uppercase'>
+      <label className='text-theme-text-dim text-[0.875rem] font-semibold tracking-wider uppercase'>
         Side
       </label>
       <div className='bg-theme-bg-input border-theme-border-input flex border p-[2px]'>
@@ -509,7 +516,7 @@ const paddingSideView = (settings: PadSettings, dispatch: Dispatcher<Msg>) => {
             key={tab}
             type='button'
             onClick={() => dispatch({ _tag: 'SetPadSideType', sideType: tab })}
-            className={`w-[0px] flex-1 cursor-pointer py-[4px] text-center text-[14px] font-semibold capitalize transition-all ${
+            className={`w-[0px] flex-1 cursor-pointer py-[4px] text-center text-[0.875rem] font-semibold capitalize transition-all ${
               activeSideType === tab
                 ? 'bg-theme-bg-card text-theme-primary'
                 : 'text-theme-text-dim hover:text-theme-text-muted'
@@ -529,7 +536,7 @@ const themeTriggerModeView = (
 ) => {
   return (
     <div className='flex flex-col gap-[4px]'>
-      <label className='text-theme-text-dim text-[14px] font-semibold tracking-wider uppercase'>
+      <label className='text-theme-text-dim text-[0.875rem] font-semibold tracking-wider uppercase'>
         Theme Trigger Mode
       </label>
       <div className='bg-theme-bg-input border-theme-border-input flex border p-[2px]'>
@@ -540,7 +547,7 @@ const themeTriggerModeView = (
             onClick={() =>
               dispatch({ _tag: 'SetPadThemeMode', themeMode: mode })
             }
-            className={`flex w-[0px] flex-1 cursor-pointer items-center justify-center gap-[4px] py-[4px] text-[14px] font-semibold capitalize transition-all ${
+            className={`flex w-[0px] flex-1 cursor-pointer items-center justify-center gap-[4px] py-[4px] text-[0.875rem] font-semibold capitalize transition-all ${
               settings.themeMode === mode
                 ? 'bg-theme-bg-card text-theme-primary'
                 : 'text-theme-text-dim hover:text-theme-text-muted'
@@ -577,14 +584,14 @@ const styleHeaderTabView = (
 ) => {
   return (
     <div className='border-theme-border-input flex items-center justify-between border-b pb-[8px]'>
-      <span className='text-theme-text-main text-[14px] font-semibold'>
+      <span className='text-theme-text-main text-[0.875rem] font-semibold'>
         Configure Styles
       </span>
       <div className='bg-theme-bg-input border-theme-border-input flex border p-[2px]'>
         <button
           type='button'
           onClick={() => dispatch({ _tag: 'SetActivePresetTab', tab: 'light' })}
-          className={`cursor-pointer px-[8px] py-[2px] text-[14px] font-semibold transition-all ${
+          className={`cursor-pointer px-[8px] py-[2px] text-[0.875rem] font-semibold transition-all ${
             activePresetTab === 'light'
               ? 'bg-theme-bg-card text-theme-primary'
               : 'text-theme-text-dim hover:text-theme-text-muted'
@@ -595,7 +602,7 @@ const styleHeaderTabView = (
         <button
           type='button'
           onClick={() => dispatch({ _tag: 'SetActivePresetTab', tab: 'dark' })}
-          className={`cursor-pointer px-[8px] py-[2px] text-[14px] font-semibold transition-all ${
+          className={`cursor-pointer px-[8px] py-[2px] text-[0.875rem] font-semibold transition-all ${
             activePresetTab === 'dark'
               ? 'bg-theme-bg-card text-theme-primary'
               : 'text-theme-text-dim hover:text-theme-text-muted'
@@ -645,13 +652,13 @@ const styleEditorView = (
     <div className='animate-slide-down flex flex-col gap-[16px]'>
       <div className='border-theme-border-card mx-[-16px] border-t' />
       <div className='flex items-center justify-between'>
-        <span className='text-theme-text-main text-[14px] font-semibold'>
+        <span className='text-theme-text-main text-[0.875rem] font-semibold'>
           Settings
         </span>
         <button
           type='button'
           onClick={() => dispatch({ _tag: 'ToggleShowRuler' })}
-          className='flex cursor-pointer items-center gap-[6px] text-[12px] font-medium text-red-500 transition-all select-none hover:text-red-600'
+          className='flex cursor-pointer items-center gap-[6px] text-[0.8125rem] font-medium text-red-500 transition-all select-none hover:text-red-600'
           title={globalSetting.showRuler ? 'Hide Ruler' : 'Show Ruler'}
         >
           <RulerIcon className='h-[14px] w-[14px] shrink-0' />
@@ -688,25 +695,56 @@ const footerView = (
   globalSetting: GlobalSetting,
   dispatch: Dispatcher<Msg>,
 ) => {
+  const currentFontSize = globalSetting.fontSize || DEFAULT_FONT_SIZE
   return (
     <div className='border-theme-border-card mt-[16px] flex flex-col gap-[12px] border-t pt-[16px]'>
       <div className='flex items-center justify-between'>
         <button
           type='button'
           onClick={() => dispatch({ _tag: 'ToggleDisableWhenNotMaximized' })}
-          className='text-theme-text-dim hover:text-theme-text-muted flex cursor-pointer items-center gap-[6px] text-[11px] font-semibold transition-all select-none'
+          className='text-theme-text-dim hover:text-theme-text-muted flex cursor-pointer items-center gap-[6px] text-[0.8125rem] font-semibold transition-all select-none'
           title='Disable extension when window is not maximized'
         >
           {customCheckboxView(globalSetting.disableWhenNotMaximized)}
           <span>Disable when not maximized</span>
         </button>
+
+        {/* Font Size Controller */}
+        <div className='text-theme-text-dim flex items-center gap-[6px] text-[0.8125rem] font-semibold select-none'>
+          <span>Font Size:</span>
+          <button
+            type='button'
+            onClick={() =>
+              dispatch({ _tag: 'SetFontSize', fontSize: currentFontSize - 1 })
+            }
+            disabled={currentFontSize <= 12}
+            className='hover:text-theme-primary px-[4px] transition-all disabled:cursor-not-allowed disabled:opacity-40'
+            title='Decrease Font Size'
+          >
+            -
+          </button>
+          <span className='w-[38px] text-center font-mono'>
+            {currentFontSize}px
+          </span>
+          <button
+            type='button'
+            onClick={() =>
+              dispatch({ _tag: 'SetFontSize', fontSize: currentFontSize + 1 })
+            }
+            disabled={currentFontSize >= 32}
+            className='hover:text-theme-primary px-[4px] transition-all disabled:cursor-not-allowed disabled:opacity-40'
+            title='Increase Font Size'
+          >
+            +
+          </button>
+        </div>
       </div>
       <div className='flex items-center justify-between'>
         <a
           href='https://github.com/rinn7e/damn-center-extension'
           target='_blank'
           rel='noopener noreferrer'
-          className='text-theme-text-dim hover:text-theme-primary text-[11px] font-medium transition-all'
+          className='text-theme-text-dim hover:text-theme-primary text-[0.8125rem] font-medium transition-all'
         >
           Source Code - Github
         </a>
@@ -714,7 +752,7 @@ const footerView = (
           <button
             type='button'
             onClick={() => dispatch({ _tag: 'ExportConfig' })}
-            className='text-theme-text-dim hover:text-theme-primary cursor-pointer text-[11px] font-semibold transition-all'
+            className='text-theme-text-dim hover:text-theme-primary cursor-pointer text-[0.8125rem] font-semibold transition-all'
           >
             Export Config
           </button>
@@ -733,7 +771,7 @@ const footerView = (
                 })
               }
             }}
-            className='text-theme-text-dim hover:text-theme-primary cursor-pointer text-[11px] font-semibold transition-all'
+            className='text-theme-text-dim hover:text-theme-primary cursor-pointer text-[0.8125rem] font-semibold transition-all'
           >
             Import Config
             <input
@@ -766,8 +804,26 @@ interface AppProps {
 }
 
 export const App: React.FC<AppProps> = ({ model, dispatch }) => {
-  const { padSettingList, selectedIndex, activePresetTab, globalSetting } =
-    model
+  const {
+    padSettingList,
+    selectedIndex,
+    activePresetTab,
+    globalSetting,
+    isInjectThemeDone,
+    isSetFontSizeDone,
+  } = model
+
+  if (!isInjectThemeDone || !isSetFontSizeDone) {
+    return (
+      <div className='bg-theme-secondary flex h-[550px] flex-col items-center justify-center select-none'>
+        <div
+          className='border-theme-border-input border-t-theme-primary h-8 w-8 animate-spin border-4'
+          style={{ borderRadius: '50%' }}
+        ></div>
+      </div>
+    )
+  }
+
   const settings = padSettingList[selectedIndex] || defaultPadSettings
   const hasAnyEnabled = padSettingList.some((item) => item.enabled)
   const matchesAnyPattern = padSettingList.some((item) =>
@@ -808,10 +864,10 @@ export const App: React.FC<AppProps> = ({ model, dispatch }) => {
               <div className='text-theme-text-dim mb-[12px]'>
                 <PowerIcon className='h-[32px] w-[32px]' />
               </div>
-              <h3 className='text-theme-text-main text-[14px] font-semibold'>
+              <h3 className='text-theme-text-main text-[0.875rem] font-semibold'>
                 Extension is Disabled
               </h3>
-              <p className='text-theme-text-dim mt-[6px] max-w-[240px] text-[12px] leading-relaxed'>
+              <p className='text-theme-text-dim mt-[6px] max-w-[240px] text-[0.8125rem] leading-relaxed'>
                 Turn on the switch in the top right to enable Damn Center and
                 configure page padding!
               </p>

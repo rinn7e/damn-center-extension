@@ -7,7 +7,7 @@ import { pipe } from 'fp-ts/lib/function'
 import * as t from 'io-ts'
 import { Cmd, Task } from 'tea-cup-fp'
 
-import { UI_THEME_ID } from './common/env'
+import { DEFAULT_FONT_SIZE, UI_THEME_ID } from './common/env'
 import {
   type GlobalSetting,
   GlobalSettingCodec,
@@ -275,8 +275,13 @@ const handleInit = (
       selectedIndex,
       activePresetTab: model ? model.activePresetTab : 'light',
       matchesCollapsed: model ? model.matchesCollapsed : defaultCollapsed,
+      isInjectThemeDone: false,
+      isSetFontSizeDone: false,
     },
-    injectThemeCmd(activeSettings),
+    Cmd.batch([
+      injectThemeCmd(activeSettings),
+      updateRootFontSizeCmd(msg.globalSetting.fontSize || DEFAULT_FONT_SIZE),
+    ]),
   ]
 }
 
@@ -609,6 +614,36 @@ export const update = (
       case 'ImportConfig':
         return [model, triggerImportCmd(msg.jsonText)]
 
+      case 'SetFontSize': {
+        const clampedSize = Math.min(32, Math.max(12, msg.fontSize))
+        const updatedGlobal = {
+          ...model.globalSetting,
+          fontSize: clampedSize,
+        }
+        const activeSettings =
+          model.padSettingList[model.selectedIndex] || defaultPadSettings
+        return [
+          { ...model, globalSetting: updatedGlobal },
+          Cmd.batch([
+            saveGlobalSettingCmd(updatedGlobal),
+            saveSettingsCmd(
+              model.hostname,
+              model.currentUrl,
+              model.padSettingList,
+              updatedGlobal,
+            ),
+            injectThemeCmd(activeSettings),
+            updateRootFontSizeCmd(clampedSize),
+          ]),
+        ]
+      }
+
+      case 'InjectThemeDone':
+        return [{ ...model, isInjectThemeDone: true }, Cmd.none()]
+
+      case 'SetFontSizeDone':
+        return [{ ...model, isSetFontSizeDone: true }, Cmd.none()]
+
       case 'NoOp':
         return [model, Cmd.none()]
     }
@@ -917,6 +952,16 @@ export const injectThemeCmd = (settings: PadSettings): Cmd<Msg> => {
       runInjectTheme(settings)
       return Promise.resolve()
     }),
-    (): Msg => ({ _tag: 'NoOp' }),
+    (): Msg => ({ _tag: 'InjectThemeDone' }),
+  )
+}
+
+export const updateRootFontSizeCmd = (fontSize: number): Cmd<Msg> => {
+  return Task.attempt(
+    Task.fromPromise(() => {
+      document.documentElement.style.fontSize = `${fontSize}px`
+      return Promise.resolve()
+    }),
+    (): Msg => ({ _tag: 'SetFontSizeDone' }),
   )
 }

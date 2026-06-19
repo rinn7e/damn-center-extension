@@ -18,6 +18,8 @@ export interface Model {
   selectedIndex: number
   activePresetTab: 'light' | 'dark'
   matchesCollapsed: boolean
+  isInjectThemeDone: boolean
+  isSetFontSizeDone: boolean
 }
 
 export type Msg =
@@ -47,4 +49,7 @@ export type Msg =
   | { _tag: 'ToggleMatchesCollapsed' }
   | { _tag: 'ExportConfig' }
   | { _tag: 'ImportConfig'; jsonText: string }
+  | { _tag: 'SetFontSize'; fontSize: number }
+  | { _tag: 'InjectThemeDone' }
+  | { _tag: 'SetFontSizeDone' }
   | { _tag: 'NoOp' }
