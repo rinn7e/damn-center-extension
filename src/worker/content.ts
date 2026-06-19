@@ -304,10 +304,12 @@ const calculateIsEffectivelyEnabled = (
   globalSetting: GlobalSetting,
 ): boolean => {
   const isNotMaximized = calculateIsNotMaximized()
+  const isFullscreen = !!document.fullscreenElement
 
   return (
     settings.enabled &&
     globalSetting.enabled &&
+    !isFullscreen &&
     !(globalSetting.disableWhenNotMaximized && isNotMaximized)
   )
 }
@@ -475,6 +477,13 @@ if (document.readyState === 'loading') {
 
 // Re-evaluate styles if the window is resized (to detect maximization shifts)
 window.addEventListener('resize', () => {
+  if (currentSettings && currentGlobalSetting) {
+    runUpdateStyles(currentSettings, currentGlobalSetting)
+  }
+})
+
+// Re-evaluate styles if the document enters or exits fullscreen mode
+document.addEventListener('fullscreenchange', () => {
   if (currentSettings && currentGlobalSetting) {
     runUpdateStyles(currentSettings, currentGlobalSetting)
   }
