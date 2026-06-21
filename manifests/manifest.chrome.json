@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Damn Center",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Adds customizable left and right padding to web pages with support for theme-aware background colors and SVG patterns.",
   "permissions": ["storage", "activeTab"],
   "content_security_policy": {

@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ## [Unreleased]
 
+---
+
+## [1.0.3] - 2026-06-21
+
 ### Added
 
 - **Auto-Disable on Fullscreen**: Automatically suspends padding and alignment rules when a website enters fullscreen mode (Fix Youtube fullscreen).
