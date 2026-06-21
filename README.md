@@ -121,11 +121,12 @@ To set up your environment variables:
    ```
 2. Configure the variables as desired inside the newly created files:
 
-| Variable Name          | Description                                                                                                   | Default / Example Value      |
-| :--------------------- | :------------------------------------------------------------------------------------------------------------ | :--------------------------- |
-| `VITE_UI_THEME_ID`     | Theme identifier for the extension's popup UI.                                                                | `solarizedLight`             |
-| `VITE_DISABLE_LOG`     | Strips all `console.*` (log, warn, error, info, debug) calls from compiled bundles if set to `true`.          | `true` (prod), `false` (dev) |
-| `VITE_SHOW_BUILD_DATE` | Displays the formatted date/time of the build under the extension title in the popup header if set to `true`. | `true`, `false`              |
+| Variable Name            | Description                                                                                                   | Default / Example Value      |
+| :----------------------- | :------------------------------------------------------------------------------------------------------------ | :--------------------------- |
+| `VITE_UI_THEME_ID`       | Theme identifier for the extension's popup UI.                                                                | `solarizedLight`             |
+| `VITE_DISABLE_LOG`       | Strips all `console.*` (log, warn, error, info, debug) calls from compiled bundles if set to `true`.          | `true` (prod), `false` (dev) |
+| `VITE_SHOW_BUILD_DATE`   | Displays the formatted date/time of the build under the extension title in the popup header if set to `true`. | `true`, `false`              |
+| `VITE_DEFAULT_FONT_SIZE` | Defines the default root font size in pixels (e.g. 16) for scaling the extension's popup UI.                  | `16`                         |
 
 ---
 
@@ -134,11 +135,16 @@ To set up your environment variables:
 - **Width Adjustment**: Scale padding width dynamically using the popup slider.
 - **Side Selection**: Apply padding to the left side, right side, or both sides.
 - **Alignment Ruler**: Toggle a vertical centered ruler guide to assist with layout alignment.
-- **Layout Shifting**: Shifts page content dynamically using flexbox layout rules to prevent padding from overlapping page content.
+- **Layout Shifting & Strategies**: Restructures layout using CSS Flexbox shifting (preserves absolute/sticky layouts) or Classic shifting strategies to prevent padding from overlapping content.
 - **Theme Compatibility**: Supports independent configurations for Light and Dark modes. Can sync with system preferences (`prefers-color-scheme`) or force a specific mode.
 - **SVG Patterns**: Apply customizable SVG background patterns (grids, dots, stripes, carbon, or lattice) over background colors.
 - **Disable when Not Maximized**: Automatically suspends padding and alignment rules when the window is tiled, restored, or not fully maximized. Bypasses OS-level and fractional browser zoom discrepancies (such as Chrome on Linux Wayland bugs) to keep window space fully optimized.
+- **Auto-Disable on Fullscreen**: Automatically suspends padding and alignment rules when a website enters fullscreen mode (resolves Youtube and other fullscreen video viewport conflicts).
+- **Popup UI Font Size Controller**: Adjust the root font size of the extension's popup UI (clamped between `12px` and `32px` in `1px` steps, default `16px`) for clean text scaling.
 - **Collapsible Matches**: Collapse list items in the popup UI to organize configuration matches.
+- **Dynamic Version Header**: Displays manifest version and build date inside the popup UI.
+
+For a detailed list of changes across releases, see the [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
