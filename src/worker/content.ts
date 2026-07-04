@@ -278,6 +278,20 @@ const getScreenPhysicalFirefox = (zoom: number) => {
 }
 
 const calculateIsNotMaximized = (): boolean => {
+  const isSafari =
+    navigator.userAgent.includes('Safari') &&
+    !navigator.userAgent.includes('Chrome')
+
+  if (isSafari) {
+    // Safari does not scale devicePixelRatio with page zoom.
+    // However, window.outerWidth/Height and screen.availWidth/Height
+    // remain consistent relative to zoom.
+    const isMaximized =
+      window.outerWidth >= screen.availWidth - 50 &&
+      window.outerHeight >= screen.availHeight - 150
+    return !isMaximized
+  }
+
   const zoom = window.devicePixelRatio || 1
   const isFirefox = navigator.userAgent.includes('Firefox')
 

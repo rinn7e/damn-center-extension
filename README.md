@@ -42,17 +42,17 @@ pnpm run dev
 
 ### 4. Build
 
-Compile production bundles for Chrome and Firefox:
+Compile production bundles for Chrome, Firefox, and Safari:
 
 ```bash
 pnpm run build
 ```
 
-The build scripts output compiled extension bundles to `./dist/chrome` and `./dist/firefox` containing browser-specific manifests and assets.
+The build scripts output compiled extension bundles to `./dist/chrome`, `./dist/firefox`, and `./dist/safari` containing browser-specific manifests and assets.
 
 ### 5. Development Build
 
-Compile development bundles for Chrome and Firefox (which load `.env.development` variables and preserve source maps, without zipping):
+Compile development bundles for Chrome, Firefox, and Safari (which load `.env.development` variables and preserve source maps, without zipping):
 
 ```bash
 pnpm run build:dev
@@ -66,6 +66,7 @@ pnpm run build:dev
 
 - **Chrome Web Store**: [https://chromewebstore.google.com/detail/damn-center/jljnmcioeicnlafnjmgknjgegnaccaii](https://chromewebstore.google.com/detail/damn-center/jljnmcioeicnlafnjmgknjgegnaccaii)
 - **Firefox Add-ons**: [https://addons.mozilla.org/en-US/firefox/addon/damn-center/](https://addons.mozilla.org/en-US/firefox/addon/damn-center/)
+- **Mac App Store (Safari)**: Coming soon!
 
 ---
 
@@ -81,7 +82,7 @@ Ensure you have [Node.js](https://nodejs.org/) and [pnpm](https://pnpm.io/) inst
 # Install dependencies
 pnpm install
 
-# Build the production bundles for both browsers
+# Build the production bundles for all browsers
 pnpm run build
 ```
 
@@ -89,6 +90,7 @@ This compiles the extension code and outputs target directories:
 
 - `./dist/chrome` for Chrome and Chromium-based browsers.
 - `./dist/firefox` for Firefox.
+- `./dist/safari` for Safari.
 
 #### 2. Load the Extension into Your Browser
 
@@ -104,6 +106,14 @@ This compiles the extension code and outputs target directories:
 1. Open the browser and navigate to `about:debugging#/runtime/this-firefox`.
 2. Click the **Load Temporary Add-on...** button.
 3. Select the `manifest.json` file inside the `./dist/firefox` directory.
+
+##### For Safari
+
+1. Open the browser and open **Settings** (or **Preferences**).
+2. Go to the **Advanced** tab and ensure **"Show features for web developers"** (or **"Show Develop menu in menu bar"**) is checked.
+3. In the new **Develop** menu in your system menu bar, check **"Allow Unsigned Extensions"**.
+4. Go to **Safari Settings > Developer** (or under **Develop** in the menu bar) and click **"Add Temporary Extension..."**.
+5. Select the `./dist/safari` directory from this repository.
 
 ---
 

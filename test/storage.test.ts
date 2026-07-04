@@ -41,6 +41,11 @@ describe('Storage Helpers', () => {
       expect(
         getHostname('chrome-extension://abcdefghijklmnopqrstuvwxyz/popup.html'),
       ).toBe('system-settings')
+      expect(
+        getHostname(
+          'safari-web-extension://abcdefghijklmnopqrstuvwxyz/popup.html',
+        ),
+      ).toBe('system-settings')
       expect(getHostname('')).toBe('system-settings')
     })
 

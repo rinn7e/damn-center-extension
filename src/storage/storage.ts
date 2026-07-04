@@ -22,7 +22,8 @@ export const getHostname = (urlStr: string): Hostname => {
     if (
       !urlStr ||
       urlStr.startsWith('chrome://') ||
-      urlStr.startsWith('chrome-extension://')
+      urlStr.startsWith('chrome-extension://') ||
+      urlStr.startsWith('safari-web-extension://')
     ) {
       return 'system-settings' as Hostname
     } else {

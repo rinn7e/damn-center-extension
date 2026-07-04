@@ -8,15 +8,18 @@
     "dev": "vite",
     "build:chrome:dev": "TARGET=chrome vite build --mode development && TARGET=chrome BUILD_TARGET=content vite build --mode development",
     "build:firefox:dev": "TARGET=firefox vite build --mode development && TARGET=firefox BUILD_TARGET=content vite build --mode development",
-    "build:dev": "tsc && pnpm run build:chrome:dev && pnpm run build:firefox:dev",
+    "build:safari:dev": "TARGET=safari vite build --mode development && TARGET=safari BUILD_TARGET=content vite build --mode development",
+    "build:dev": "tsc && pnpm run build:chrome:dev && pnpm run build:firefox:dev && pnpm run build:safari:dev",
     "check": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
     "build:chrome": "TARGET=chrome vite build && TARGET=chrome BUILD_TARGET=content vite build && cd dist/chrome && zip -r ../damn-center-chrome-v1.0.3.zip .",
     "build:firefox": "TARGET=firefox vite build && TARGET=firefox BUILD_TARGET=content vite build && cd dist/firefox && zip -r ../damn-center-firefox-v1.0.3.zip .",
+    "build:safari": "TARGET=safari vite build && TARGET=safari BUILD_TARGET=content vite build && cd dist/safari && zip -r ../damn-center-safari-v1.0.3.zip .",
+    "generate:safari": "bash scripts/generate-safari-project.sh",
     "zip-source-code": "mkdir -p dist && zip -r dist/damn-center-source-v1.0.3.zip . -x \"node_modules/*\" \"dist/*\" \".git/*\" \"backup/*\" \".github/*\" \"scratch/*\" \".env.development\" \".env.production\"",
-    "build": "tsc && pnpm run build:chrome && pnpm run build:firefox && pnpm run zip-source-code"
+    "build": "tsc && pnpm run build:chrome && pnpm run build:firefox && pnpm run build:safari && pnpm run zip-source-code"
   },
   "dependencies": {
     "clsx": "^2.1.1",

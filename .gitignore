@@ -53,3 +53,6 @@ __pycache__/
 *$py.class
 
 backup/
+
+# Safari Web Extension app wrapper project
+/safari-extension/
