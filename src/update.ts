@@ -200,7 +200,10 @@ export const updatePadSettingInList = (
     return list
   } else {
     const updatedList = [...list]
-    updatedList[index] = updater(target)
+    updatedList[index] = {
+      ...updater(target),
+      updatedAt: Date.now(),
+    }
     return updatedList
   }
 }
@@ -293,7 +296,11 @@ const handleToggleEnabled = (
   if (!target) {
     return [model, Cmd.none()]
   } else {
-    const updatedTarget = { ...target, enabled: !target.enabled }
+    const updatedTarget = {
+      ...target,
+      enabled: !target.enabled,
+      updatedAt: Date.now(),
+    }
     const updatedList = [...model.padSettingList]
     updatedList[msg.index] = updatedTarget
     const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
@@ -376,7 +383,11 @@ const handleUpdateMatchPattern = (
   if (!target) {
     return [model, Cmd.none()]
   } else {
-    const updatedTarget = { ...target, matchPattern: msg.matchPattern }
+    const updatedTarget = {
+      ...target,
+      matchPattern: msg.matchPattern,
+      updatedAt: Date.now(),
+    }
     const updatedList = [...model.padSettingList]
     updatedList[msg.index] = updatedTarget
     const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)

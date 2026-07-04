@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ## [Unreleased]
 
+### Added
+
+- **Safari Web Extension Support**: Added official Safari compatibility (Manifest V3) including `build:safari` and `build:safari:dev` targets, an automated Xcode app wrapper conversion shell script (`pnpm run generate:safari`), and specialized window maximization heuristics for Safari's zoom engine.
+- **Settings Update Timestamp (`updatedAt`)**: Introduced an optional `updatedAt` property in the `PadSettings` type and codec (using `t.partial` to maintain backwards compatibility) that automatically refreshes with `Date.now()` on any rule modification, paving the way for intelligent merging of backup files.
+
 ---
 
 ## [1.0.3] - 2026-06-21

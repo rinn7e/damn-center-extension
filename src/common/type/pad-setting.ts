@@ -62,17 +62,23 @@ export type PadSettings = {
   dark: PadTheme
   matchPattern: string
   shiftingStrategy: ShiftingStrategy
+  updatedAt?: number
 }
 
-export const PadSettingsCodec = t.type({
-  enabled: t.boolean,
-  side: PadSideCodec,
-  themeMode: PadThemeModeCodec,
-  light: PadThemeCodec,
-  dark: PadThemeCodec,
-  matchPattern: t.string,
-  shiftingStrategy: ShiftingStrategyCodec,
-})
+export const PadSettingsCodec = t.intersection([
+  t.type({
+    enabled: t.boolean,
+    side: PadSideCodec,
+    themeMode: PadThemeModeCodec,
+    light: PadThemeCodec,
+    dark: PadThemeCodec,
+    matchPattern: t.string,
+    shiftingStrategy: ShiftingStrategyCodec,
+  }),
+  t.partial({
+    updatedAt: t.number,
+  }),
+])
 
 export const createDefaultPadSettings = (
   matchPattern: string,
@@ -92,6 +98,7 @@ export const createDefaultPadSettings = (
   },
   matchPattern,
   shiftingStrategy: { _tag: 'Flexbox' },
+  updatedAt: Date.now(),
 })
 
 export const defaultPadSettings: PadSettings = createDefaultPadSettings('**')

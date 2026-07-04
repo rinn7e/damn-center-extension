@@ -136,6 +136,7 @@ describe('Update Helpers', () => {
         matchPattern: 'site2-updated',
       }))
       expect(updated[1]?.matchPattern).toBe('site2-updated')
+      expect(typeof updated[1]?.updatedAt).toBe('number')
       expect(updated[0]?.matchPattern).toBe('site1')
       expect(updated).not.toBe(list) // verify immutability
     })
@@ -181,6 +182,7 @@ describe('Update Helpers', () => {
             },
             matchPattern: 'https://google.com/**',
             shiftingStrategy: { _tag: 'Flexbox' },
+            updatedAt: 1719876000000,
           },
         ],
       }
