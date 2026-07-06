@@ -26,6 +26,7 @@ import { themes } from './common/type/theme'
 import {
   ChevronDownIcon,
   ChevronUpIcon,
+  HeartIcon,
   MonitorIcon,
   MoonIcon,
   PowerIcon,
@@ -356,7 +357,7 @@ const matchRowView = (
         </div>
       </div>
       {isMatching && isActiveMatch && (
-        <div className='mt-[2px] flex items-center gap-[4px] px-[2px]'>
+        <div className='flex items-center gap-[4px] px-[2px]'>
           <div
             className={`h-[6px] w-[6px] shrink-0 ${item.enabled ? 'bg-theme-primary animate-pulse' : 'bg-theme-text-dim'}`}
           />
@@ -673,7 +674,7 @@ const styleEditorView = (
 ) => {
   return (
     <div className='animate-slide-down flex flex-col gap-[16px]'>
-      <div className='border-theme-border-card mx-[-16px] border-t' />
+      <div className='border-theme-border-card border-t' />
       <div className='flex items-center justify-between'>
         <span className='text-theme-text-main text-[0.875rem] font-semibold'>
           Settings
@@ -720,7 +721,8 @@ const footerView = (
 ) => {
   const currentFontSize = globalSetting.fontSize || DEFAULT_FONT_SIZE
   return (
-    <div className='border-theme-border-card mt-[16px] flex flex-col gap-[12px] border-t pt-[16px]'>
+    <div className='pt-[4px]'>
+      <div className='border-theme-border-card flex flex-col gap-[12px] border-t pt-[16px]'>
       <div className='flex items-center justify-between'>
         <button
           type='button'
@@ -767,9 +769,9 @@ const footerView = (
           href='https://github.com/rinn7e/damn-center-extension'
           target='_blank'
           rel='noopener noreferrer'
-          className='text-theme-text-dim hover:text-theme-primary text-[0.8125rem] font-medium transition-all'
+          className='text-theme-text-dim hover:text-theme-primary text-[0.8125rem] font-normal underline transition-all'
         >
-          Source Code - Github
+          Source Code
         </a>
         <div className='flex items-center gap-[12px]'>
           <button
@@ -817,7 +819,20 @@ const footerView = (
           </label>
         </div>
       </div>
+      <div className='text-theme-text-dim text-[0.75rem] font-normal leading-relaxed text-center px-[4px] border-theme-border-card border-t pt-[8px]'>
+        If you like this extension, you can buy me a coffee at{' '}
+        <a
+          href='https://github.com/sponsors/rinn7e'
+          target='_blank'
+          rel='noopener noreferrer'
+          className='text-theme-primary hover:underline font-semibold inline-flex items-center gap-[4px] align-middle'
+        >
+          <span>GitHub Sponsors</span>
+          <HeartIcon />
+        </a>
+      </div>
     </div>
+  </div>
   )
 }
 
@@ -886,17 +901,19 @@ export const App: React.FC<AppProps> = ({ model, dispatch }) => {
                 )}
             </>
           ) : (
-            <div className='flex flex-col items-center justify-center px-[16px] py-[64px] text-center'>
-              <div className='text-theme-text-dim mb-[12px]'>
+            <div className='flex flex-col items-center justify-center gap-[12px] px-[16px] py-[64px] text-center'>
+              <div className='text-theme-text-dim'>
                 <PowerIcon className='h-[32px] w-[32px]' />
               </div>
-              <h3 className='text-theme-text-main text-[0.875rem] font-semibold'>
-                Extension is Disabled
-              </h3>
-              <p className='text-theme-text-dim mt-[6px] max-w-[240px] text-[0.8125rem] leading-relaxed'>
-                Turn on the switch in the top right to enable Damn Center and
-                configure page padding!
-              </p>
+              <div className='flex flex-col items-center gap-[6px]'>
+                <h3 className='text-theme-text-main text-[0.875rem] font-semibold'>
+                  Extension is Disabled
+                </h3>
+                <p className='text-theme-text-dim max-w-[240px] text-[0.8125rem] leading-relaxed'>
+                  Turn on the switch in the top right to enable Damn Center and
+                  configure page padding!
+                </p>
+              </div>
             </div>
           )}
           {footerView(globalSetting, dispatch)}

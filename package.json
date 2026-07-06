@@ -1,7 +1,7 @@
 {
   "name": "damn-center-extension",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.0.4",
   "license": "GPL-3.0-only",
   "type": "module",
   "scripts": {
@@ -14,11 +14,11 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "build:chrome": "TARGET=chrome vite build && TARGET=chrome BUILD_TARGET=content vite build && cd dist/chrome && zip -r ../damn-center-chrome-v1.0.3.zip .",
-    "build:firefox": "TARGET=firefox vite build && TARGET=firefox BUILD_TARGET=content vite build && cd dist/firefox && zip -r ../damn-center-firefox-v1.0.3.zip .",
-    "build:safari": "TARGET=safari vite build && TARGET=safari BUILD_TARGET=content vite build && cd dist/safari && zip -r ../damn-center-safari-v1.0.3.zip .",
+    "build:chrome": "TARGET=chrome vite build && TARGET=chrome BUILD_TARGET=content vite build && cd dist/chrome && zip -r ../damn-center-chrome-v1.0.4.zip .",
+    "build:firefox": "TARGET=firefox vite build && TARGET=firefox BUILD_TARGET=content vite build && cd dist/firefox && zip -r ../damn-center-firefox-v1.0.4.zip .",
+    "build:safari": "TARGET=safari vite build && TARGET=safari BUILD_TARGET=content vite build && cd dist/safari && zip -r ../damn-center-safari-v1.0.4.zip .",
     "generate:safari": "bash scripts/generate-safari-project.sh",
-    "zip-source-code": "mkdir -p dist && zip -r dist/damn-center-source-v1.0.3.zip . -x \"node_modules/*\" \"dist/*\" \".git/*\" \"backup/*\" \".github/*\" \"scratch/*\" \".env.development\" \".env.production\"",
+    "zip-source-code": "mkdir -p dist && zip -r dist/damn-center-source-v1.0.4.zip . -x \"node_modules/*\" \"dist/*\" \".git/*\" \"backup/*\" \".github/*\" \"scratch/*\" \".env.development\" \".env.production\"",
     "build": "tsc && pnpm run build:chrome && pnpm run build:firefox && pnpm run build:safari && pnpm run zip-source-code"
   },
   "dependencies": {

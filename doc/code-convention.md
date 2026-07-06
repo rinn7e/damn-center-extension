@@ -20,3 +20,7 @@ This document describes the code design principles and style conventions that mu
 
 ## 5. Testing Conventions
 - **Vitest & Coverage:** All logic sub-updater functions, helper functions, and codecs must have 100% test coverage using Vitest, with tests residing inside the `test/` directory (e.g., `test/update.test.ts`, `test/codec.test.ts`).
+
+## 6. Layout & Spacing (No Margin Rule)
+- **No Margin Utility Usage:** Do NOT use margin utility classes (e.g., `mt-`, `mb-`, `mx-`, `my-`, `ml-`, `mr-`, `m-`) for layout element spacing.
+- **Layout Spacing Standard:** Layout spacing between elements must be achieved using parent container `padding` (e.g., `pt-`, `pb-`, `pl-`, `pr-`, `p-`) or flexbox/grid layout properties like `gap-` (e.g., `gap-[12px]`). This keeps element sizing localized and prevents layout overlaps when DOM elements are toggled dynamically.

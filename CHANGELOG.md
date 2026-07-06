@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ### Added
 
+---
+
+## [1.0.4] - 2026-07-06
+
+### Added
+
 - **Domain-Specific Match Toggle (`DomainSetting`)**: Added a toggle switch directly next to the "Matches" card header to quickly enable or disable all configuration matches for the active domain at once without deleting or overriding individual path matching rules.
 - **Platform-Aware Window Maximization**: Improved the "Disable when Not Maximized" option on macOS and Windows to correctly handle High DPI Retina and scaled external displays.
 - **Debounced Window Resize Listener**: Debounced window resize event processing by 150ms to allow OS window snapping and tiling animations to settle before computing window maximization states.
