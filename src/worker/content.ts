@@ -11,7 +11,11 @@ import {
   type GlobalSetting,
   defaultGlobalSetting,
 } from '../common/type/global-setting'
-import { type PadSettings } from '../common/type/pad-setting'
+import {
+  type DomainSetting,
+  type PathSetting,
+  defaultDomainSetting,
+} from '../common/type/pad-setting'
 import {
   getHostname,
   loadGlobalSetting,
@@ -19,8 +23,9 @@ import {
   matchUrlPattern,
 } from '../storage/storage'
 
-let currentSettings: PadSettings | null = null
+let currentSettings: PathSetting | null = null
 let currentGlobalSetting: GlobalSetting | null = null
+let currentDomainSetting: DomainSetting | null = null
 
 let styleElement: HTMLStyleElement | null = null
 let leftPadPlaceholderElement: HTMLDivElement | null = null
@@ -34,7 +39,7 @@ const systemThemeMedia = window.matchMedia('(prefers-color-scheme: dark)')
 /**
  * Gets the background theme settings for the current mode.
  */
-const getActivePadTheme = (settings: PadSettings) => {
+const getActivePadTheme = (settings: PathSetting) => {
   return getActivePadThemePure(
     settings.themeMode,
     settings.light,
@@ -225,7 +230,7 @@ const runHideAllPads = () => {
  * Handles ruler creation and toggling (3 lines dividing screen into 4 equal parts).
  */
 const runUpdateRuler = (
-  settings: PadSettings,
+  settings: PathSetting,
   globalSetting: GlobalSetting,
   isEffectivelyEnabled: boolean,
 ) => {
@@ -314,32 +319,37 @@ const calculateIsNotMaximized = (): boolean => {
  * based on individual page settings, global settings, and window maximization state.
  */
 const calculateIsEffectivelyEnabled = (
-  settings: PadSettings,
+  settings: PathSetting,
   globalSetting: GlobalSetting,
+  domainSetting: DomainSetting,
 ): boolean => {
   const isNotMaximized = calculateIsNotMaximized()
   const isFullscreen = !!document.fullscreenElement
 
   return (
-    settings.enabled &&
     globalSetting.enabled &&
-    !isFullscreen &&
-    !(globalSetting.disableWhenNotMaximized && isNotMaximized)
+    !(globalSetting.disableWhenNotMaximized && isNotMaximized) &&
+    domainSetting.enabled &&
+    settings.enabled &&
+    !isFullscreen
   )
 }
 
 const runUpdateStyles = (
-  settings: PadSettings,
+  settings: PathSetting,
   globalSetting: GlobalSetting,
+  domainSetting: DomainSetting,
 ) => {
   // Cache settings locally for event listener callbacks
   currentSettings = settings
   currentGlobalSetting = globalSetting
+  currentDomainSetting = domainSetting
 
   // Evaluate if styling should be active on this page and window size
   const isEffectivelyEnabled = calculateIsEffectivelyEnabled(
     settings,
     globalSetting,
+    domainSetting,
   )
 
   // Update layout ruler line elements
@@ -390,9 +400,18 @@ const runInit = () => {
           : defaultGlobalSetting
       const settingsList = padEither._tag === 'Right' ? padEither.right : []
 
-      if (!globalSetting.enabled) {
+      const domainSetting = settingsList.find(
+        (item): item is DomainSetting => item._tag === 'DomainSetting',
+      ) || defaultDomainSetting
+
+      const pathSettings = settingsList.filter(
+        (item): item is PathSetting => item._tag === 'PathSetting',
+      )
+
+      if (!globalSetting.enabled || !domainSetting.enabled) {
         runUpdateStyles(
           {
+            _tag: 'PathSetting',
             enabled: false,
             side: { _tag: 'Left', width: 0 },
             themeMode: 'system',
@@ -402,19 +421,21 @@ const runInit = () => {
             shiftingStrategy: { _tag: 'Flexbox' },
           },
           globalSetting,
+          domainSetting,
         )
         return
       }
 
       const url = window.location.href
-      const matched = settingsList.find(
+      const matched = pathSettings.find(
         (s) => s.enabled && matchUrlPattern(url, s.matchPattern),
       )
       if (matched) {
-        runUpdateStyles(matched, globalSetting)
+        runUpdateStyles(matched, globalSetting, domainSetting)
       } else {
         runUpdateStyles(
           {
+            _tag: 'PathSetting',
             enabled: false,
             side: { _tag: 'Left', width: 0 },
             themeMode: 'system',
@@ -424,6 +445,7 @@ const runInit = () => {
             shiftingStrategy: { _tag: 'Flexbox' },
           },
           globalSetting,
+          domainSetting,
         )
       }
     },
@@ -451,7 +473,11 @@ systemThemeMedia.addEventListener('change', () => {
     currentGlobalSetting &&
     currentSettings.themeMode === 'system'
   ) {
-    runUpdateStyles(currentSettings, currentGlobalSetting)
+    runUpdateStyles(
+      currentSettings,
+      currentGlobalSetting,
+      currentDomainSetting || defaultDomainSetting,
+    )
   }
 })
 
@@ -477,6 +503,7 @@ if (
       runUpdateStyles(
         message.settings,
         message.globalSetting || defaultGlobalSetting,
+        message.domainSetting || defaultDomainSetting,
       )
     }
   })
@@ -492,13 +519,21 @@ if (document.readyState === 'loading') {
 // Re-evaluate styles if the window is resized (to detect maximization shifts)
 window.addEventListener('resize', () => {
   if (currentSettings && currentGlobalSetting) {
-    runUpdateStyles(currentSettings, currentGlobalSetting)
+    runUpdateStyles(
+      currentSettings,
+      currentGlobalSetting,
+      currentDomainSetting || defaultDomainSetting,
+    )
   }
 })
 
 // Re-evaluate styles if the document enters or exits fullscreen mode
 document.addEventListener('fullscreenchange', () => {
   if (currentSettings && currentGlobalSetting) {
-    runUpdateStyles(currentSettings, currentGlobalSetting)
+    runUpdateStyles(
+      currentSettings,
+      currentGlobalSetting,
+      currentDomainSetting || defaultDomainSetting,
+    )
   }
 })

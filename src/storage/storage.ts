@@ -12,7 +12,10 @@ import {
   defaultGlobalSetting,
 } from '../common/type/global-setting'
 import { type Hostname } from '../common/type/hostname'
-import { type PadSettings, PadSettingsCodec } from '../common/type/pad-setting'
+import {
+  type PaddingSetting,
+  PaddingSettingCodec,
+} from '../common/type/pad-setting'
 
 /**
  * Extracts the clean hostname from a URL string.
@@ -73,10 +76,10 @@ export const getGlobError = (pattern: string): string | null => {
  */
 export const loadPadSettings = (
   hostname: Hostname,
-): TE.TaskEither<Error, PadSettings[]> => {
+): TE.TaskEither<Error, PaddingSetting[]> => {
   return TE.tryCatch(
     async () => {
-      return new Promise<PadSettings[]>((resolve) => {
+      return new Promise<PaddingSetting[]>((resolve) => {
         if (
           typeof chrome === 'undefined' ||
           !chrome.storage ||
@@ -89,7 +92,7 @@ export const loadPadSettings = (
             if (!raw) {
               resolve([])
             } else {
-              const decodedList = t.array(PadSettingsCodec).decode(raw)
+              const decodedList = t.array(PaddingSettingCodec).decode(raw)
               if (decodedList._tag === 'Right') {
                 resolve(decodedList.right)
               } else {
@@ -112,7 +115,7 @@ export const loadPadSettings = (
  */
 export const savePadSettings = (
   hostname: Hostname,
-  settingsList: PadSettings[],
+  settingsList: PaddingSetting[],
 ): TE.TaskEither<Error, void> => {
   return TE.tryCatch(
     async () => {

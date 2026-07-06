@@ -54,7 +54,29 @@ export const ShiftingStrategyCodec = t.union([
   t.type({ _tag: t.literal('Placeholder') }),
 ])
 
-export type PadSettings = {
+export type DomainSetting = {
+  _tag: 'DomainSetting'
+  enabled: boolean
+  updatedAt?: number
+}
+
+export const DomainSettingCodec = t.intersection([
+  t.type({
+    _tag: t.literal('DomainSetting'),
+    enabled: t.boolean,
+  }),
+  t.partial({
+    updatedAt: t.number,
+  }),
+])
+
+export const defaultDomainSetting: DomainSetting = {
+  _tag: 'DomainSetting',
+  enabled: true,
+}
+
+export type PathSetting = {
+  _tag: 'PathSetting'
   enabled: boolean
   side: PadSide
   themeMode: PadThemeMode
@@ -65,8 +87,9 @@ export type PadSettings = {
   updatedAt?: number
 }
 
-export const PadSettingsCodec = t.intersection([
+export const PathSettingCodec = t.intersection([
   t.type({
+    _tag: t.literal('PathSetting'),
     enabled: t.boolean,
     side: PadSideCodec,
     themeMode: PadThemeModeCodec,
@@ -80,9 +103,10 @@ export const PadSettingsCodec = t.intersection([
   }),
 ])
 
-export const createDefaultPadSettings = (
+export const createDefaultPathSetting = (
   matchPattern: string,
-): PadSettings => ({
+): PathSetting => ({
+  _tag: 'PathSetting',
   enabled: true,
   side: { _tag: 'Left', width: 80 },
   themeMode: 'system',
@@ -101,4 +125,27 @@ export const createDefaultPadSettings = (
   updatedAt: Date.now(),
 })
 
-export const defaultPadSettings: PadSettings = createDefaultPadSettings('**')
+export const defaultPathSetting: PathSetting = createDefaultPathSetting('**')
+
+export type PaddingSetting = DomainSetting | PathSetting
+
+export const PaddingSettingCodec = new t.Type<PaddingSetting, unknown, unknown>(
+  'PaddingSetting',
+  (input): input is PaddingSetting =>
+    DomainSettingCodec.is(input) || PathSettingCodec.is(input),
+  (input, context) => {
+    if (typeof input !== 'object' || input === null) {
+      return t.failure(input, context)
+    }
+    const raw = input as any
+    if (raw._tag === 'DomainSetting') {
+      return DomainSettingCodec.validate(raw, context)
+    } else {
+      const withTag =
+        raw._tag === 'PathSetting' ? raw : { ...raw, _tag: 'PathSetting' }
+      return PathSettingCodec.validate(withTag, context)
+    }
+  },
+  (output) => output,
+)
+

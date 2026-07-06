@@ -15,10 +15,11 @@ import {
 } from './common/env'
 import { type GlobalSetting } from './common/type/global-setting'
 import {
-  type PadSettings,
+  type DomainSetting,
   type PadTheme,
   type PadThemeMode,
-  defaultPadSettings,
+  type PathSetting,
+  defaultPathSetting,
 } from './common/type/pad-setting'
 import { darkColors, lightColors, patterns } from './common/type/preset'
 import { themes } from './common/type/theme'
@@ -261,7 +262,7 @@ const padThemeStylingView = (
 }
 
 const matchRowView = (
-  item: PadSettings,
+  item: PathSetting,
   idx: number,
   listLength: number,
   selectedIndex: number,
@@ -373,18 +374,38 @@ const matchRowView = (
 }
 
 const matchesCardView = (
-  padSettingList: PadSettings[],
+  padSettingList: PathSetting[],
   selectedIndex: number,
   currentUrl: string,
   matchesCollapsed: boolean,
+  domainSetting: DomainSetting,
   dispatch: Dispatcher<Msg>,
 ) => {
   return (
     <div className='flex flex-col gap-[12px]'>
       <div className='flex items-center justify-between'>
-        <span className='text-theme-text-main text-[0.875rem] font-semibold'>
-          Matches
-        </span>
+        <div className='flex items-center gap-[8px]'>
+          <span className='text-theme-text-main text-[0.875rem] font-semibold'>
+            Matches
+          </span>
+          {padSettingList.length > 0 && (
+            <div className='group flex items-center gap-[6px]'>
+              {toggleSwitchView(
+                domainSetting.enabled,
+                () => dispatch({ _tag: 'ToggleDomainEnabled' }),
+                'small',
+                domainSetting.enabled
+                  ? 'Disable per Domain'
+                  : 'Enable per Domain',
+              )}
+              <span className='text-theme-text-dim pointer-events-none text-[0.625rem] leading-none font-normal opacity-0 select-none group-hover:opacity-100'>
+                {domainSetting.enabled
+                  ? 'Disable all matches in this domain'
+                  : 'Enable all matches in this domain'}
+              </span>
+            </div>
+          )}
+        </div>
         <div className='flex items-center gap-[8px]'>
           <button
             type='button'
@@ -416,7 +437,9 @@ const matchesCardView = (
               padding.
             </div>
           ) : (
-            <div className='flex flex-col gap-[8px]'>
+            <div
+              className={`flex flex-col gap-[8px] transition-opacity duration-200 ${!domainSetting.enabled ? 'pointer-events-none opacity-50' : ''}`}
+            >
               {padSettingList.map((item, idx) =>
                 matchRowView(
                   item,
@@ -476,7 +499,7 @@ const widthSliderView = (
   )
 }
 
-const paddingWidthView = (settings: PadSettings, dispatch: Dispatcher<Msg>) => {
+const paddingWidthView = (settings: PathSetting, dispatch: Dispatcher<Msg>) => {
   if (settings.side._tag === 'Left') {
     return widthSliderView('Padding Width', settings.side.width, (val) =>
       dispatch({ _tag: 'SetPadWidth', sideType: 'left', width: val }),
@@ -502,7 +525,7 @@ const paddingWidthView = (settings: PadSettings, dispatch: Dispatcher<Msg>) => {
   }
 }
 
-const paddingSideView = (settings: PadSettings, dispatch: Dispatcher<Msg>) => {
+const paddingSideView = (settings: PathSetting, dispatch: Dispatcher<Msg>) => {
   const activeSideType = settings.side._tag
   const tabs: ('Left' | 'Right' | 'Both')[] = ['Left', 'Right', 'Both']
   return (
@@ -531,7 +554,7 @@ const paddingSideView = (settings: PadSettings, dispatch: Dispatcher<Msg>) => {
 }
 
 const themeTriggerModeView = (
-  settings: PadSettings,
+  settings: PathSetting,
   dispatch: Dispatcher<Msg>,
 ) => {
   return (
@@ -643,7 +666,7 @@ const customCheckboxView = (checked: boolean) => {
 }
 
 const styleEditorView = (
-  settings: PadSettings,
+  settings: PathSetting,
   globalSetting: GlobalSetting,
   activePresetTab: 'light' | 'dark',
   dispatch: Dispatcher<Msg>,
@@ -809,6 +832,7 @@ export const App: React.FC<AppProps> = ({ model, dispatch }) => {
     selectedIndex,
     activePresetTab,
     globalSetting,
+    domainSetting,
     isInjectThemeDone,
     isSetFontSizeDone,
   } = model
@@ -824,8 +848,9 @@ export const App: React.FC<AppProps> = ({ model, dispatch }) => {
     )
   }
 
-  const settings = padSettingList[selectedIndex] || defaultPadSettings
-  const hasAnyEnabled = padSettingList.some((item) => item.enabled)
+  const settings = padSettingList[selectedIndex] || defaultPathSetting
+  const hasAnyEnabled =
+    padSettingList.some((item) => item.enabled) && domainSetting.enabled
   const matchesAnyPattern = padSettingList.some((item) =>
     matchUrlPattern(model.currentUrl, item.matchPattern),
   )
@@ -846,6 +871,7 @@ export const App: React.FC<AppProps> = ({ model, dispatch }) => {
                 selectedIndex,
                 model.currentUrl,
                 model.matchesCollapsed,
+                domainSetting,
                 dispatch,
               )}
 

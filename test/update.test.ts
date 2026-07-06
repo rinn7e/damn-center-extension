@@ -5,8 +5,8 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  type PadSettings,
-  defaultPadSettings,
+  type PathSetting,
+  defaultPathSetting,
 } from '../src/common/type/pad-setting'
 import {
   buildGlobPatternFromSegments,
@@ -22,14 +22,14 @@ import {
 
 describe('Update Helpers', () => {
   describe('getActivePadSettingIndex', () => {
-    const mockSettings: PadSettings[] = [
+    const mockSettings: PathSetting[] = [
       {
-        ...defaultPadSettings,
+        ...defaultPathSetting,
         enabled: true,
         matchPattern: '*://*.wikipedia.org/**',
       },
       {
-        ...defaultPadSettings,
+        ...defaultPathSetting,
         enabled: true,
         matchPattern: '*://github.com/**',
       },
@@ -120,9 +120,9 @@ describe('Update Helpers', () => {
   })
 
   describe('updatePadSettingInList', () => {
-    const list: PadSettings[] = [
-      { ...defaultPadSettings, matchPattern: 'site1' },
-      { ...defaultPadSettings, matchPattern: 'site2' },
+    const list: PathSetting[] = [
+      { ...defaultPathSetting, matchPattern: 'site1' },
+      { ...defaultPathSetting, matchPattern: 'site2' },
     ]
 
     it('returns original list if index is out of bounds', () => {

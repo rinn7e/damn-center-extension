@@ -6,15 +6,17 @@ import type { GlobalSetting } from './common/type/global-setting'
 import type { Hostname } from './common/type/hostname'
 import type {
   PadBgType,
-  PadSettings,
   PadThemeMode,
+  DomainSetting,
+  PathSetting,
 } from './common/type/pad-setting'
 
 export interface Model {
   hostname: Hostname
   currentUrl: string
   globalSetting: GlobalSetting
-  padSettingList: PadSettings[]
+  domainSetting: DomainSetting
+  padSettingList: PathSetting[]
   selectedIndex: number
   activePresetTab: 'light' | 'dark'
   matchesCollapsed: boolean
@@ -28,9 +30,11 @@ export type Msg =
       hostname: Hostname
       currentUrl: string
       globalSetting: GlobalSetting
-      padSettingList: PadSettings[]
+      domainSetting: DomainSetting
+      padSettingList: PathSetting[]
     }
   | { _tag: 'ToggleGlobalEnabled' }
+  | { _tag: 'ToggleDomainEnabled' }
   | { _tag: 'ToggleEnabled'; index: number }
   | { _tag: 'SetPadSideType'; sideType: 'Left' | 'Right' | 'Both' }
   | { _tag: 'SetPadWidth'; sideType: 'left' | 'right'; width: number }

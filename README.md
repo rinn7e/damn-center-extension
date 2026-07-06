@@ -140,6 +140,10 @@ To set up your environment variables:
 
 ---
 
+## Code Convention
+
+Please refer to the [Code Convention Document](doc/code-convention.md) for details on code design principles and style conventions adhered to in this project.
+
 ## Features
 
 - **Width Adjustment**: Scale padding width dynamically using the popup slider.

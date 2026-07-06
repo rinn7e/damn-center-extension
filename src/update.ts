@@ -15,11 +15,14 @@ import {
 } from './common/type/global-setting'
 import { type Hostname } from './common/type/hostname'
 import {
-  type PadSettings,
-  PadSettingsCodec,
+  type DomainSetting,
+  type PathSetting,
+  type PaddingSetting,
   type PadSide,
-  createDefaultPadSettings,
-  defaultPadSettings,
+  PaddingSettingCodec,
+  createDefaultPathSetting,
+  defaultPathSetting,
+  defaultDomainSetting,
 } from './common/type/pad-setting'
 import { injectTheme, themes } from './common/type/theme'
 import {
@@ -34,7 +37,7 @@ import { type Model, type Msg } from './type'
 
 export const getActivePadSettingIndex = (
   url: string,
-  list: PadSettings[],
+  list: PathSetting[],
 ): number => {
   const enabledIndex = list.findIndex(
     (s) => s.enabled && matchUrlPattern(url, s.matchPattern),
@@ -191,10 +194,10 @@ const determineIsDark = (themeMode: string): boolean => {
 }
 
 export const updatePadSettingInList = (
-  list: PadSettings[],
+  list: PathSetting[],
   index: number,
-  updater: (settings: PadSettings) => PadSettings,
-): PadSettings[] => {
+  updater: (settings: PathSetting) => PathSetting,
+): PathSetting[] => {
   const target = list[index]
   if (!target) {
     return list
@@ -210,7 +213,7 @@ export const updatePadSettingInList = (
 
 const updateActiveSetting = (
   model: Model,
-  updater: (active: PadSettings) => PadSettings,
+  updater: (active: PathSetting) => PathSetting,
 ): [Model, Cmd<Msg>] => {
   const updatedList = updatePadSettingInList(
     model.padSettingList,
@@ -229,6 +232,7 @@ const updateActiveSetting = (
           model.currentUrl,
           updatedList,
           model.globalSetting,
+          model.domainSetting,
         ),
         injectThemeCmd(updatedActive),
       ]),
@@ -261,7 +265,7 @@ const handleInit = (
     msg.padSettingList,
   )
   const activeSettings = msg.padSettingList[selectedIndex] || {
-    ...defaultPadSettings,
+    ...defaultPathSetting,
     enabled: false,
   }
   const hasUrlMatch = msg.padSettingList.some((item) =>
@@ -274,6 +278,7 @@ const handleInit = (
       hostname: msg.hostname,
       currentUrl: msg.currentUrl,
       globalSetting: msg.globalSetting,
+      domainSetting: msg.domainSetting,
       padSettingList: msg.padSettingList,
       selectedIndex,
       activePresetTab: model ? model.activePresetTab : 'light',
@@ -304,7 +309,7 @@ const handleToggleEnabled = (
     const updatedList = [...model.padSettingList]
     updatedList[msg.index] = updatedTarget
     const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
-    const activeSettings = updatedList[updatedIndex] || defaultPadSettings
+    const activeSettings = updatedList[updatedIndex] || defaultPathSetting
     return [
       { ...model, padSettingList: updatedList, selectedIndex: updatedIndex },
       Cmd.batch([
@@ -313,6 +318,7 @@ const handleToggleEnabled = (
           model.currentUrl,
           updatedList,
           model.globalSetting,
+          model.domainSetting,
         ),
         injectThemeCmd(activeSettings),
       ]),
@@ -322,7 +328,7 @@ const handleToggleEnabled = (
 
 const handleAddPadSetting = (model: Model): [Model, Cmd<Msg>] => {
   const defaultPattern = getDefaultPatternForUrl(model.currentUrl)
-  const newSetting = createDefaultPadSettings(defaultPattern)
+  const newSetting = createDefaultPathSetting(defaultPattern)
   const updatedList = [newSetting, ...model.padSettingList]
   const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
   const updatedGlobal = { ...model.globalSetting, showRuler: true }
@@ -341,8 +347,9 @@ const handleAddPadSetting = (model: Model): [Model, Cmd<Msg>] => {
         model.currentUrl,
         updatedList,
         updatedGlobal,
+        model.domainSetting,
       ),
-      injectThemeCmd(updatedList[updatedIndex] || defaultPadSettings),
+      injectThemeCmd(updatedList[updatedIndex] || defaultPathSetting),
     ]),
   ]
 }
@@ -354,7 +361,7 @@ const handleDeletePadSetting = (
   const updatedList = model.padSettingList.filter((_, idx) => idx !== msg.index)
   const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
   const activeSettings = updatedList[updatedIndex] || {
-    ...defaultPadSettings,
+    ...defaultPathSetting,
     enabled: false,
   }
   return [
@@ -369,6 +376,7 @@ const handleDeletePadSetting = (
         model.currentUrl,
         updatedList,
         model.globalSetting,
+        model.domainSetting,
       ),
       injectThemeCmd(activeSettings),
     ]),
@@ -391,7 +399,7 @@ const handleUpdateMatchPattern = (
     const updatedList = [...model.padSettingList]
     updatedList[msg.index] = updatedTarget
     const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
-    const activeSettings = updatedList[updatedIndex] || defaultPadSettings
+    const activeSettings = updatedList[updatedIndex] || defaultPathSetting
     return [
       { ...model, padSettingList: updatedList, selectedIndex: updatedIndex },
       Cmd.batch([
@@ -400,6 +408,7 @@ const handleUpdateMatchPattern = (
           model.currentUrl,
           updatedList,
           model.globalSetting,
+          model.domainSetting,
         ),
         injectThemeCmd(activeSettings),
       ]),
@@ -417,7 +426,7 @@ const handleMoveMatchUp = (
   } else {
     const updatedList = swapArrayElements(model.padSettingList, idx, idx - 1)
     const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
-    const activeSettings = updatedList[updatedIndex] || defaultPadSettings
+    const activeSettings = updatedList[updatedIndex] || defaultPathSetting
     return [
       { ...model, padSettingList: updatedList, selectedIndex: updatedIndex },
       Cmd.batch([
@@ -426,6 +435,7 @@ const handleMoveMatchUp = (
           model.currentUrl,
           updatedList,
           model.globalSetting,
+          model.domainSetting,
         ),
         injectThemeCmd(activeSettings),
       ]),
@@ -443,7 +453,7 @@ const handleMoveMatchDown = (
   } else {
     const updatedList = swapArrayElements(model.padSettingList, idx, idx + 1)
     const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
-    const activeSettings = updatedList[updatedIndex] || defaultPadSettings
+    const activeSettings = updatedList[updatedIndex] || defaultPathSetting
     return [
       { ...model, padSettingList: updatedList, selectedIndex: updatedIndex },
       Cmd.batch([
@@ -452,6 +462,7 @@ const handleMoveMatchDown = (
           model.currentUrl,
           updatedList,
           model.globalSetting,
+          model.domainSetting,
         ),
         injectThemeCmd(activeSettings),
       ]),
@@ -465,7 +476,7 @@ const handleToggleGlobalEnabled = (model: Model): [Model, Cmd<Msg>] => {
     enabled: !model.globalSetting.enabled,
   }
   const activeSettings =
-    model.padSettingList[model.selectedIndex] || defaultPadSettings
+    model.padSettingList[model.selectedIndex] || defaultPathSetting
   return [
     { ...model, globalSetting: updatedGlobal },
     Cmd.batch([
@@ -475,6 +486,30 @@ const handleToggleGlobalEnabled = (model: Model): [Model, Cmd<Msg>] => {
         model.currentUrl,
         model.padSettingList,
         updatedGlobal,
+        model.domainSetting,
+      ),
+      injectThemeCmd(activeSettings),
+    ]),
+  ]
+}
+
+const handleToggleDomainEnabled = (model: Model): [Model, Cmd<Msg>] => {
+  const updatedDomain: DomainSetting = {
+    ...model.domainSetting,
+    enabled: !model.domainSetting.enabled,
+    updatedAt: Date.now(),
+  }
+  const activeSettings =
+    model.padSettingList[model.selectedIndex] || defaultPathSetting
+  return [
+    { ...model, domainSetting: updatedDomain },
+    Cmd.batch([
+      saveSettingsCmd(
+        model.hostname,
+        model.currentUrl,
+        model.padSettingList,
+        model.globalSetting,
+        updatedDomain,
       ),
       injectThemeCmd(activeSettings),
     ]),
@@ -502,6 +537,9 @@ export const update = (
 
       case 'ToggleGlobalEnabled':
         return handleToggleGlobalEnabled(model)
+
+      case 'ToggleDomainEnabled':
+        return handleToggleDomainEnabled(model)
 
       case 'ToggleEnabled':
         return handleToggleEnabled(msg, model)
@@ -575,7 +613,7 @@ export const update = (
           showRuler: !model.globalSetting.showRuler,
         }
         const activeSettings =
-          model.padSettingList[model.selectedIndex] || defaultPadSettings
+          model.padSettingList[model.selectedIndex] || defaultPathSetting
         return [
           { ...model, globalSetting: updatedGlobal },
           Cmd.batch([
@@ -585,6 +623,7 @@ export const update = (
               model.currentUrl,
               model.padSettingList,
               updatedGlobal,
+              model.domainSetting,
             ),
             injectThemeCmd(activeSettings),
           ]),
@@ -597,7 +636,7 @@ export const update = (
           disableWhenNotMaximized: !model.globalSetting.disableWhenNotMaximized,
         }
         const activeSettings =
-          model.padSettingList[model.selectedIndex] || defaultPadSettings
+          model.padSettingList[model.selectedIndex] || defaultPathSetting
         return [
           { ...model, globalSetting: updatedGlobal },
           Cmd.batch([
@@ -607,6 +646,7 @@ export const update = (
               model.currentUrl,
               model.padSettingList,
               updatedGlobal,
+              model.domainSetting,
             ),
             injectThemeCmd(activeSettings),
           ]),
@@ -632,7 +672,7 @@ export const update = (
           fontSize: clampedSize,
         }
         const activeSettings =
-          model.padSettingList[model.selectedIndex] || defaultPadSettings
+          model.padSettingList[model.selectedIndex] || defaultPathSetting
         return [
           { ...model, globalSetting: updatedGlobal },
           Cmd.batch([
@@ -642,6 +682,7 @@ export const update = (
               model.currentUrl,
               model.padSettingList,
               updatedGlobal,
+              model.domainSetting,
             ),
             injectThemeCmd(activeSettings),
             updateRootFontSizeCmd(clampedSize),
@@ -681,7 +722,7 @@ export const validateBackupData = (data: unknown): boolean => {
             isValid = false
           }
         } else {
-          const decoded = t.array(PadSettingsCodec).decode(val)
+          const decoded = t.array(PaddingSettingCodec).decode(val)
           if (decoded._tag === 'Left') {
             isValid = false
           }
@@ -778,7 +819,7 @@ const queryActiveTabAndSettings = (): Promise<{
   hostname: Hostname
   currentUrl: string
   globalSetting: GlobalSetting
-  padSettingList: PadSettings[]
+  padSettingList: PaddingSetting[]
 }> => {
   return new Promise((resolve) => {
     const defaultUrl =
@@ -790,7 +831,7 @@ const queryActiveTabAndSettings = (): Promise<{
         hostname: defaultHost,
         currentUrl: defaultUrl,
         globalSetting: defaultGlobalSetting,
-        padSettingList: [defaultPadSettings],
+        padSettingList: [defaultPathSetting],
       })
     } else {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -806,7 +847,7 @@ const queryActiveTabAndSettings = (): Promise<{
             const padSettingList =
               padEither._tag === 'Right'
                 ? padEither.right
-                : [createDefaultPadSettings('https://' + host + '/**')]
+                : [createDefaultPathSetting('https://' + host + '/**')]
             resolve({
               hostname: host,
               currentUrl: url,
@@ -814,10 +855,10 @@ const queryActiveTabAndSettings = (): Promise<{
               padSettingList,
             })
           },
-        )
-      })
+        );
+      });
     }
-  })
+  });
 }
 
 export const loadInitialDataCmd = (): Cmd<Msg> => {
@@ -825,12 +866,25 @@ export const loadInitialDataCmd = (): Cmd<Msg> => {
     Task.fromPromise(queryActiveTabAndSettings),
     (res): Msg => {
       if (res.tag === 'Ok') {
+        const rawList = res.value.padSettingList
+        const domainSetting = rawList.find(
+          (item): item is DomainSetting => item._tag === 'DomainSetting',
+        ) || defaultDomainSetting
+        const pathSettings = rawList.filter(
+          (item): item is PathSetting => item._tag === 'PathSetting',
+        )
+        const finalPathSettings =
+          pathSettings.length > 0
+            ? pathSettings
+            : [createDefaultPathSetting('https://' + res.value.hostname + '/**')]
+
         return {
           _tag: 'Init',
           hostname: res.value.hostname,
           currentUrl: res.value.currentUrl,
           globalSetting: res.value.globalSetting,
-          padSettingList: res.value.padSettingList,
+          domainSetting,
+          padSettingList: finalPathSettings,
         }
       } else {
         return {
@@ -838,7 +892,8 @@ export const loadInitialDataCmd = (): Cmd<Msg> => {
           hostname: 'unknown-domain' as Hostname,
           currentUrl: '',
           globalSetting: defaultGlobalSetting,
-          padSettingList: [defaultPadSettings],
+          domainSetting: defaultDomainSetting,
+          padSettingList: [defaultPathSetting],
         }
       }
     },
@@ -848,12 +903,14 @@ export const loadInitialDataCmd = (): Cmd<Msg> => {
 const persistSettingsAndMessageTab = (
   host: Hostname,
   currentUrl: string,
-  settingsList: PadSettings[],
+  settingsList: PathSetting[],
   globalSetting: GlobalSetting,
+  domainSetting: DomainSetting,
 ): Promise<void> => {
+  const listToSave: PaddingSetting[] = [domainSetting, ...settingsList]
   return new Promise((resolve) => {
     pipe(
-      savePadSettings(host, settingsList),
+      savePadSettings(host, listToSave),
       TE.fold(
         (err) => {
           console.error('[Damn Center] Failed to save settings list:', err)
@@ -875,10 +932,10 @@ const persistSettingsAndMessageTab = (
                     s.enabled && matchUrlPattern(activeUrl, s.matchPattern),
                 )
                 const activeSettings = matched || {
-                  ...defaultPadSettings,
+                  ...defaultPathSetting,
                   enabled: false,
                 }
-                const settingsToInject = globalSetting.enabled
+                const settingsToInject = (globalSetting.enabled && domainSetting.enabled)
                   ? activeSettings
                   : { ...activeSettings, enabled: false }
                 try {
@@ -888,6 +945,7 @@ const persistSettingsAndMessageTab = (
                       type: 'SETTINGS_UPDATED',
                       settings: settingsToInject,
                       globalSetting: globalSetting,
+                      domainSetting: domainSetting,
                     },
                     () => {
                       const err = chrome.runtime.lastError
@@ -921,8 +979,9 @@ const persistSettingsAndMessageTab = (
 export const saveSettingsCmd = (
   host: Hostname,
   currentUrl: string,
-  settingsList: PadSettings[],
+  settingsList: PathSetting[],
   globalSetting: GlobalSetting,
+  domainSetting: DomainSetting,
 ): Cmd<Msg> => {
   return Task.attempt(
     Task.fromPromise(() =>
@@ -931,6 +990,7 @@ export const saveSettingsCmd = (
         currentUrl,
         settingsList,
         globalSetting,
+        domainSetting,
       ),
     ),
     (): Msg => ({ _tag: 'NoOp' }),
@@ -951,13 +1011,13 @@ export const saveGlobalSettingCmd = (
   )
 }
 
-const runInjectTheme = (settings: PadSettings) => {
+const runInjectTheme = (settings: PathSetting) => {
   const activeTheme = themes[UI_THEME_ID] || themes.neon
   const isDark = determineIsDark(settings.themeMode)
   injectTheme(activeTheme, isDark)
 }
 
-export const injectThemeCmd = (settings: PadSettings): Cmd<Msg> => {
+export const injectThemeCmd = (settings: PathSetting): Cmd<Msg> => {
   return Task.attempt(
     Task.fromPromise(() => {
       runInjectTheme(settings)
