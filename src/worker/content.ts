@@ -23,16 +23,35 @@ import {
   matchUrlPattern,
 } from '../storage/storage'
 
+// Cached path matching rule for the active page
 let currentSettings: PathSetting | null = null
+
+// Cached global settings
 let currentGlobalSetting: GlobalSetting | null = null
+
+// Cached domain-specific toggle setting
 let currentDomainSetting: DomainSetting | null = null
 
+// Dynamic CSS style block injected into head
 let styleElement: HTMLStyleElement | null = null
+
+// Layout spacing block for left padding
 let leftPadPlaceholderElement: HTMLDivElement | null = null
+
+// Visual left pad overlay element
 let leftPadElement: HTMLDivElement | null = null
+
+// Layout spacing block for right padding
 let rightPadPlaceholderElement: HTMLDivElement | null = null
+
+// Visual right pad overlay element
 let rightPadElement: HTMLDivElement | null = null
+
+// Centered layout alignment ruler element
 let rulerElement: HTMLDivElement | null = null
+
+// Timer ID for debouncing window resize events (waits for OS snapping animations to settle)
+let resizeTimeoutId: any
 
 const systemThemeMedia = window.matchMedia('(prefers-color-scheme: dark)')
 
@@ -282,21 +301,32 @@ const getScreenPhysicalFirefox = (zoom: number) => {
   }
 }
 
-const calculateIsNotMaximized = (): boolean => {
-  const isSafari =
-    navigator.userAgent.includes('Safari') &&
-    !navigator.userAgent.includes('Chrome')
+/**
+ * Checks window maximization state for macOS and Windows platforms.
+ *
+ * Why this function exists:
+ * macOS and Windows allow querying standard browser outer dimensions via window.outerWidth/Height
+ * which are consistent and independent of browser zoom. This allows us to perform a simple
+ * and reliable comparison against screen.availWidth/Height, bypassing High DPI Retina
+ * or fractional screen scaling scale factor differences.
+ */
+const calculateIsNotMaximizedMacWindows = (): boolean => {
+  const isMaximized =
+    window.outerWidth >= screen.availWidth - 50 &&
+    window.outerHeight >= screen.availHeight - 150
+  return !isMaximized
+}
 
-  if (isSafari) {
-    // Safari does not scale devicePixelRatio with page zoom.
-    // However, window.outerWidth/Height and screen.availWidth/Height
-    // remain consistent relative to zoom.
-    const isMaximized =
-      window.outerWidth >= screen.availWidth - 50 &&
-      window.outerHeight >= screen.availHeight - 150
-    return !isMaximized
-  }
-
+/**
+ * Checks window maximization state for Linux platforms.
+ *
+ * Why this function exists:
+ * Linux Chromium has a known compositor limitation under Wayland where window.outerWidth/Height
+ * always return the full screen dimensions regardless of actual window sizing. To work around this
+ * limitation, we must use viewport inner dimensions multiplied by the devicePixelRatio zoom factor
+ * to calculate the actual physical layout space.
+ */
+const calculateIsNotMaximizedLinux = (): boolean => {
   const zoom = window.devicePixelRatio || 1
   const isFirefox = navigator.userAgent.includes('Firefox')
 
@@ -304,14 +334,24 @@ const calculateIsNotMaximized = (): boolean => {
     ? getScreenPhysicalFirefox(zoom)
     : getScreenPhysicalChrome(zoom)
 
-  // Linux Chrome has a known bug under Wayland where window.outerWidth/Height
-  // always return full screen dimensions. We use viewport inner dimensions instead,
-  // which are always accurate and represent the actual space available to the page.
   const isMaximized =
     window.innerWidth * zoom >= screenPhysicalWidth - 50 &&
     window.innerHeight * zoom >= screenPhysicalHeight - 250
 
   return !isMaximized
+}
+
+const calculateIsNotMaximized = (): boolean => {
+  const userAgent = navigator.userAgent
+  const isSafari = userAgent.includes('Safari') && !userAgent.includes('Chrome')
+  const isMac = userAgent.includes('Macintosh')
+  const isWindows = userAgent.includes('Windows')
+
+  if (isSafari || isMac || isWindows) {
+    return calculateIsNotMaximizedMacWindows()
+  } else {
+    return calculateIsNotMaximizedLinux()
+  }
 }
 
 /**
@@ -400,9 +440,10 @@ const runInit = () => {
           : defaultGlobalSetting
       const settingsList = padEither._tag === 'Right' ? padEither.right : []
 
-      const domainSetting = settingsList.find(
-        (item): item is DomainSetting => item._tag === 'DomainSetting',
-      ) || defaultDomainSetting
+      const domainSetting =
+        settingsList.find(
+          (item): item is DomainSetting => item._tag === 'DomainSetting',
+        ) || defaultDomainSetting
 
       const pathSettings = settingsList.filter(
         (item): item is PathSetting => item._tag === 'PathSetting',
@@ -518,13 +559,21 @@ if (document.readyState === 'loading') {
 
 // Re-evaluate styles if the window is resized (to detect maximization shifts)
 window.addEventListener('resize', () => {
-  if (currentSettings && currentGlobalSetting) {
-    runUpdateStyles(
-      currentSettings,
-      currentGlobalSetting,
-      currentDomainSetting || defaultDomainSetting,
-    )
+  if (resizeTimeoutId) {
+    window.clearTimeout(resizeTimeoutId)
   }
+
+  // Defer execution by 150ms to allow OS snapping animations to settle
+  // and ensure Chrome queries the correct final window dimensions.
+  resizeTimeoutId = window.setTimeout(() => {
+    if (currentSettings && currentGlobalSetting) {
+      runUpdateStyles(
+        currentSettings,
+        currentGlobalSetting,
+        currentDomainSetting || defaultDomainSetting,
+      )
+    }
+  }, 150)
 })
 
 // Re-evaluate styles if the document enters or exits fullscreen mode
