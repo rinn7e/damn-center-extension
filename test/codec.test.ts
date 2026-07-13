@@ -3,7 +3,11 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import { describe, expect, it } from 'vitest'
-import { PaddingSettingCodec, defaultPathSetting } from '../src/common/type/pad-setting'
+
+import {
+  PaddingSettingCodec,
+  defaultPathSetting,
+} from '../src/common/type/pad-setting'
 
 describe('PaddingSettingCodec', () => {
   it('correctly decodes a DomainSetting', () => {

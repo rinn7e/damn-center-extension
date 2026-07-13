@@ -16,13 +16,13 @@ import {
 import { type Hostname } from './common/type/hostname'
 import {
   type DomainSetting,
-  type PathSetting,
-  type PaddingSetting,
   type PadSide,
+  type PaddingSetting,
   PaddingSettingCodec,
+  type PathSetting,
   createDefaultPathSetting,
-  defaultPathSetting,
   defaultDomainSetting,
+  defaultPathSetting,
 } from './common/type/pad-setting'
 import { injectTheme, themes } from './common/type/theme'
 import {
@@ -855,10 +855,10 @@ const queryActiveTabAndSettings = (): Promise<{
               padSettingList,
             })
           },
-        );
-      });
+        )
+      })
     }
-  });
+  })
 }
 
 export const loadInitialDataCmd = (): Cmd<Msg> => {
@@ -867,16 +867,21 @@ export const loadInitialDataCmd = (): Cmd<Msg> => {
     (res): Msg => {
       if (res.tag === 'Ok') {
         const rawList = res.value.padSettingList
-        const domainSetting = rawList.find(
-          (item): item is DomainSetting => item._tag === 'DomainSetting',
-        ) || defaultDomainSetting
+        const domainSetting =
+          rawList.find(
+            (item): item is DomainSetting => item._tag === 'DomainSetting',
+          ) || defaultDomainSetting
         const pathSettings = rawList.filter(
           (item): item is PathSetting => item._tag === 'PathSetting',
         )
         const finalPathSettings =
           pathSettings.length > 0
             ? pathSettings
-            : [createDefaultPathSetting('https://' + res.value.hostname + '/**')]
+            : [
+                createDefaultPathSetting(
+                  'https://' + res.value.hostname + '/**',
+                ),
+              ]
 
         return {
           _tag: 'Init',
@@ -935,9 +940,10 @@ const persistSettingsAndMessageTab = (
                   ...defaultPathSetting,
                   enabled: false,
                 }
-                const settingsToInject = (globalSetting.enabled && domainSetting.enabled)
-                  ? activeSettings
-                  : { ...activeSettings, enabled: false }
+                const settingsToInject =
+                  globalSetting.enabled && domainSetting.enabled
+                    ? activeSettings
+                    : { ...activeSettings, enabled: false }
                 try {
                   chrome.tabs.sendMessage(
                     activeTab.id,

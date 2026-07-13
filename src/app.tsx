@@ -723,116 +723,120 @@ const footerView = (
   return (
     <div className='pt-[4px]'>
       <div className='border-theme-border-card flex flex-col gap-[12px] border-t pt-[16px]'>
-      <div className='flex items-center justify-between'>
-        <button
-          type='button'
-          onClick={() => dispatch({ _tag: 'ToggleDisableWhenNotMaximized' })}
-          className='text-theme-text-dim hover:text-theme-text-muted flex cursor-pointer items-center gap-[6px] text-[0.8125rem] font-semibold transition-all select-none'
-          title='Disable extension when window is not maximized'
-        >
-          {customCheckboxView(globalSetting.disableWhenNotMaximized)}
-          <span>Disable when not maximized</span>
-        </button>
+        <div className='flex items-center justify-between'>
+          <button
+            type='button'
+            onClick={() => dispatch({ _tag: 'ToggleDisableWhenNotMaximized' })}
+            className='text-theme-text-dim hover:text-theme-text-muted flex cursor-pointer items-center gap-[6px] text-[0.8125rem] font-semibold transition-all select-none'
+            title='Disable extension when window is not maximized'
+          >
+            {customCheckboxView(globalSetting.disableWhenNotMaximized)}
+            <span>Disable when not maximized</span>
+          </button>
+        </div>
 
-        {/* Font Size Controller */}
-        <div className='text-theme-text-dim flex items-center gap-[6px] text-[0.8125rem] font-semibold select-none'>
-          <span>Font Size:</span>
-          <button
-            type='button'
-            onClick={() =>
-              dispatch({ _tag: 'SetFontSize', fontSize: currentFontSize - 1 })
-            }
-            disabled={currentFontSize <= 12}
-            className='hover:text-theme-primary px-[4px] transition-all disabled:cursor-not-allowed disabled:opacity-40'
-            title='Decrease Font Size'
-          >
-            -
-          </button>
-          <span className='w-[38px] text-center font-mono'>
-            {currentFontSize}px
+        <div className='flex items-center justify-between'>
+          <span className='text-theme-text-dim text-[0.8125rem] font-semibold select-none'>
+            Font Size
           </span>
-          <button
-            type='button'
-            onClick={() =>
-              dispatch({ _tag: 'SetFontSize', fontSize: currentFontSize + 1 })
-            }
-            disabled={currentFontSize >= 32}
-            className='hover:text-theme-primary px-[4px] transition-all disabled:cursor-not-allowed disabled:opacity-40'
-            title='Increase Font Size'
-          >
-            +
-          </button>
-        </div>
-      </div>
-      <div className='flex items-center justify-between'>
-        <a
-          href='https://github.com/rinn7e/damn-center-extension'
-          target='_blank'
-          rel='noopener noreferrer'
-          className='text-theme-text-dim hover:text-theme-primary text-[0.8125rem] font-normal underline transition-all'
-        >
-          Source Code
-        </a>
-        <div className='flex items-center gap-[12px]'>
-          <button
-            type='button'
-            onClick={() => dispatch({ _tag: 'ExportConfig' })}
-            className='text-theme-text-dim hover:text-theme-primary cursor-pointer text-[0.8125rem] font-semibold transition-all'
-          >
-            Export Config
-          </button>
-          <div className='bg-theme-border-input h-[10px] w-[1px]' />
-          <label
-            onClick={(e) => {
-              const isPopup =
-                typeof chrome !== 'undefined' &&
-                chrome.extension &&
-                chrome.extension.getViews &&
-                chrome.extension.getViews({ type: 'popup' }).includes(window)
-              if (isPopup && chrome.tabs && chrome.tabs.create) {
-                e.preventDefault()
-                chrome.tabs.create({
-                  url: chrome.runtime.getURL('index.html?mode=tab'),
-                })
+          {/* Font Size Controller */}
+          <div className='text-theme-text-dim flex items-center gap-[6px] text-[0.8125rem] font-semibold select-none'>
+            <button
+              type='button'
+              onClick={() =>
+                dispatch({ _tag: 'SetFontSize', fontSize: currentFontSize - 1 })
               }
-            }}
-            className='text-theme-text-dim hover:text-theme-primary cursor-pointer text-[0.8125rem] font-semibold transition-all'
-          >
-            Import Config
-            <input
-              type='file'
-              accept='.json'
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) {
-                  const reader = new FileReader()
-                  reader.onload = (event) => {
-                    const text = event.target?.result as string
-                    dispatch({ _tag: 'ImportConfig', jsonText: text })
-                  }
-                  reader.readAsText(file)
-                }
-                e.target.value = ''
-              }}
-              className='hidden'
-            />
-          </label>
+              disabled={currentFontSize <= 12}
+              className='hover:text-theme-primary px-[4px] transition-all disabled:cursor-not-allowed disabled:opacity-40'
+              title='Decrease Font Size'
+            >
+              -
+            </button>
+            <span className='w-[38px] text-center font-mono'>
+              {currentFontSize}px
+            </span>
+            <button
+              type='button'
+              onClick={() =>
+                dispatch({ _tag: 'SetFontSize', fontSize: currentFontSize + 1 })
+              }
+              disabled={currentFontSize >= 32}
+              className='hover:text-theme-primary px-[4px] transition-all disabled:cursor-not-allowed disabled:opacity-40'
+              title='Increase Font Size'
+            >
+              +
+            </button>
+          </div>
         </div>
-      </div>
-      <div className='text-theme-text-dim text-[0.75rem] font-normal leading-relaxed text-center px-[4px] border-theme-border-card border-t pt-[8px]'>
-        If you like this extension, you can buy me a coffee at{' '}
-        <a
-          href='https://github.com/sponsors/rinn7e'
-          target='_blank'
-          rel='noopener noreferrer'
-          className='text-theme-primary hover:underline font-semibold inline-flex items-center gap-[4px] align-middle'
-        >
-          <span>GitHub Sponsors</span>
-          <HeartIcon />
-        </a>
+        <div className='flex items-center justify-between'>
+          <a
+            href='https://github.com/rinn7e/damn-center-extension'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='text-theme-text-dim hover:text-theme-primary text-[0.8125rem] font-normal underline transition-all'
+          >
+            Source Code
+          </a>
+          <div className='flex items-center gap-[12px]'>
+            <button
+              type='button'
+              onClick={() => dispatch({ _tag: 'ExportConfig' })}
+              className='text-theme-text-dim hover:text-theme-primary cursor-pointer text-[0.8125rem] font-semibold transition-all'
+            >
+              Export Config
+            </button>
+            <div className='bg-theme-border-input h-[10px] w-[1px]' />
+            <label
+              onClick={(e) => {
+                const isPopup =
+                  typeof chrome !== 'undefined' &&
+                  chrome.extension &&
+                  chrome.extension.getViews &&
+                  chrome.extension.getViews({ type: 'popup' }).includes(window)
+                if (isPopup && chrome.tabs && chrome.tabs.create) {
+                  e.preventDefault()
+                  chrome.tabs.create({
+                    url: chrome.runtime.getURL('index.html?mode=tab'),
+                  })
+                }
+              }}
+              className='text-theme-text-dim hover:text-theme-primary cursor-pointer text-[0.8125rem] font-semibold transition-all'
+            >
+              Import Config
+              <input
+                type='file'
+                accept='.json'
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    const reader = new FileReader()
+                    reader.onload = (event) => {
+                      const text = event.target?.result as string
+                      dispatch({ _tag: 'ImportConfig', jsonText: text })
+                    }
+                    reader.readAsText(file)
+                  }
+                  e.target.value = ''
+                }}
+                className='hidden'
+              />
+            </label>
+          </div>
+        </div>
+        <div className='text-theme-text-dim border-theme-border-card border-t px-[4px] pt-[8px] text-center text-[0.75rem] leading-relaxed font-normal'>
+          If you like this extension, you can buy me a coffee at{' '}
+          <a
+            href='https://github.com/sponsors/rinn7e'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='text-theme-primary inline-flex items-center gap-[4px] align-middle font-semibold hover:underline'
+          >
+            <span>GitHub Sponsors</span>
+            <HeartIcon />
+          </a>
+        </div>
       </div>
     </div>
-  </div>
   )
 }
 

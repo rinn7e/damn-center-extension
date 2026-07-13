@@ -5,9 +5,9 @@
 import type { GlobalSetting } from './common/type/global-setting'
 import type { Hostname } from './common/type/hostname'
 import type {
+  DomainSetting,
   PadBgType,
   PadThemeMode,
-  DomainSetting,
   PathSetting,
 } from './common/type/pad-setting'
 

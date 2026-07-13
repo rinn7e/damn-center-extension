@@ -148,4 +148,3 @@ export const PaddingSettingCodec = new t.Type<PaddingSetting, unknown, unknown>(
   },
   (output) => output,
 )
-
