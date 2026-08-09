@@ -586,3 +586,23 @@ document.addEventListener('fullscreenchange', () => {
     )
   }
 })
+
+// Re-evaluate styles when the tab becomes active/visible (fixes background tab initialization)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    if (resizeTimeoutId) {
+      window.clearTimeout(resizeTimeoutId)
+    }
+    resizeTimeoutId = window.setTimeout(() => {
+      if (currentSettings && currentGlobalSetting) {
+        runUpdateStyles(
+          currentSettings,
+          currentGlobalSetting,
+          currentDomainSetting || defaultDomainSetting,
+        )
+      } else {
+        runInit()
+      }
+    }, 150)
+  }
+})
