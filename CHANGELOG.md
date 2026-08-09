@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ## [Unreleased]
 
+### Added
+
+---
+
+## [1.0.5] - 2026-08-09
+
 ### Fixed
 
 - **Background Tab Initialization Bug**: Fixed an issue where the extension failed to apply padding on pages opened in the background (which initially report `0` for window dimensions) by adding a deferred `150ms` re-evaluation when the tab transitions to the foreground (`visibilitychange` event).
