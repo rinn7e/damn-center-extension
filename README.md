@@ -2,6 +2,8 @@
 
 # Damn Center - the page !
 
+[![AI-DECLARATION: assist](https://img.shields.io/badge/䷼%20AI--DECLARATION-assist-fef9c3?labelColor=fef9c3)](AI-DECLARATION.md)
+
 A layout-centering browser extension designed to prevent neck and eye strain by bringing web content into a balanced, comfortable view. Ideal for widescreen and ultrawide monitors, it shifts off-centered web layouts to the absolute center, making reading long articles, code, and documentation a comfortable experience.
 
 Damn Center adds customizable left and right padding to web pages on the fly. Adjust padding widths, overlay vertical alignment rulers, select side shifting, customize base colors, and choose beautiful SVG background patterns that automatically synchronize with your system's light/dark mode preference.
@@ -198,6 +200,13 @@ The following websites are currently known to be incompatible with the extension
 ## Video Showcase
 
 [![Damn Center Showcase](https://img.youtube.com/vi/Yc29sO4jF9g/0.jpg)](https://www.youtube.com/watch?v=Yc29sO4jF9g)
+
+---
+
+## AI declaration
+
+This project declares its AI usage in [AI-DECLARATION.md](AI-DECLARATION.md), following the
+[AI-DECLARATION.md](https://ai-declaration.md) standard (level: `assist`).
 
 ---
 
