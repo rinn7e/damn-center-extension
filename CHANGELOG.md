@@ -16,11 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ### Internal
 
-- **CI**: Type check, lint, format check, tests and release build run on every push and pull request. Dependabot proposes npm and GitHub Actions updates monthly.
-- **Releases**: Pushing a `v*` tag builds the Chrome and Firefox zips in CI and creates a draft GitHub release with the notes from this changelog. The version lives only in `package.json` and is written into each manifest at build time.
-- **Build Scripts**: Zips are rebuilt from scratch instead of updated in place, and the source zip contains exactly the files tracked in git. Development builds always show the build date in the popup.
-- **Safari**: `generate:safari` builds the Xcode project from the release build, and the README documents it.
-- **Docs**: Added `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `AGENTS.md`, issue and pull request templates. The security doc now describes the content script's all-sites access accurately.
+- New CI and tag-triggered release workflow, `package.json` as the single version source, Dependabot, contributor docs, and a documented Safari app build.
 
 ---
 

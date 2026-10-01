@@ -36,22 +36,24 @@ To prove to users that Damn Center is secure, we implement the following transpa
 ### Open-Source Codebase and Audits
 
 - **Public Repository**: Keep the source code public on GitHub, allowing developers to inspect every line of code, dependency, and configuration.
-- **Dependency Audit**: The project uses `pnpm-lock.yaml` to pin exact dependency versions and hashes, making the build repeatable. Dependabot proposes dependency and GitHub Actions updates each month, and CI checks every one.
+- **Dependency Audit**: The project uses `pnpm-lock.yaml` to pin exact dependency versions and hashes, making the build repeatable. Dependabot proposes dependency and GitHub Actions updates each month, raises alerts for known vulnerabilities and opens fix pull requests for them, and CI checks every one.
 
 ### Verifiable and Reproducible Builds
 
 - **Unpacked Installation Instructions**: Explain clearly in the main `README.md` how users can load the unpacked extension in developer mode directly from the source code.
 - **Minified, Not Obfuscated**: Release builds are minified by Vite but not obfuscated. Anyone can rebuild from source with `pnpm run build:release` and compare the output with the store package.
 
-### Robust Content Security Policy (CSP)
+### Content Security Policy (CSP) and Remote Code
 
-- All three manifests (`manifests/manifest.{chrome,firefox,safari}.json`) set a strict CSP that prevents the execution of remote scripts:
+- All three manifests (`manifests/manifest.{chrome,firefox,safari}.json`) set a strict CSP for the extension's own pages:
   ```json
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self';"
   }
   ```
-  This guarantees that even if a dependency had a vulnerability, the browser would block it from executing arbitrary inline scripts or fetching code from remote domains.
+  This applies to the popup: it can only run scripts bundled with the extension, never inline or remote ones. It doesn't cover the content script, which runs inside each web page under that page's own rules, and it doesn't restrict network requests.
+- Manifest V3 itself forbids remotely hosted code everywhere in the extension, including the content script: everything that runs ships inside the reviewed package.
+- The content script's safety comes from what it does, which you can audit in `src/worker/content.ts`: it only reads your settings from local storage and adds the padding elements and a `<style>` tag, as described under [Permissions](#permissions).
 
 ### Clear and Legally-Binding Privacy Policy
 
