@@ -51,7 +51,7 @@ let rightPadElement: HTMLDivElement | null = null
 let rulerElement: HTMLDivElement | null = null
 
 // Timer ID for debouncing window resize events (waits for OS snapping animations to settle)
-let resizeTimeoutId: any
+let resizeTimeoutId: number | undefined
 
 const systemThemeMedia = window.matchMedia('(prefers-color-scheme: dark)')
 
@@ -263,7 +263,7 @@ const runUpdateRuler = (
       const positions = ['25%', '50%', '75%']
       positions.forEach((pos) => {
         const line = document.createElement('div')
-        line.style.cssText = `position:absolute !important; top:0 !important; bottom:0 !important; left:${pos} !important; width:1px !important; background-color:rgba(239, 68, 68, 0.6) !important; pointer-events:none !important;'`
+        line.style.cssText = `position:absolute !important; top:0 !important; bottom:0 !important; left:${pos} !important; width:1px !important; background-color:rgba(239, 68, 68, 0.6) !important; pointer-events:none !important;`
         rulerElement!.appendChild(line)
       })
       document.documentElement.appendChild(rulerElement)
@@ -277,10 +277,6 @@ const runUpdateRuler = (
   }
 }
 
-/**
- * Calculates whether the browser window is currently not maximized.
- * Utilizes a zoom-aware heuristic with a small tolerance.
- */
 /**
  * Calculates physical screen available dimensions for Chrome.
  */
@@ -341,6 +337,10 @@ const calculateIsNotMaximizedLinux = (): boolean => {
   return !isMaximized
 }
 
+/**
+ * Calculates whether the browser window is currently not maximized.
+ * Utilizes a zoom-aware heuristic with a small tolerance.
+ */
 const calculateIsNotMaximized = (): boolean => {
   const userAgent = navigator.userAgent
   const isSafari = userAgent.includes('Safari') && !userAgent.includes('Chrome')
@@ -411,7 +411,8 @@ const runUpdateStyles = (
     // Retrieve matching background colors and patterns based on current mode
     const activePadTheme = getActivePadTheme(settings)
 
-    // Apply layout configuration based on strategy
+    // Flexbox is the only strategy so far. 'Placeholder' is reserved for a
+    // future one; nothing in the popup selects it yet
     if (settings.shiftingStrategy._tag === 'Placeholder') {
       runApplyPlaceholderShifting()
     } else {
@@ -423,6 +424,18 @@ const runUpdateStyles = (
       )
     }
   }
+}
+
+// Used when no rule applies to the page: hides the pads and the ruler
+const noMatchSetting: PathSetting = {
+  _tag: 'PathSetting',
+  enabled: false,
+  side: { _tag: 'Left', width: 0 },
+  themeMode: 'system',
+  light: { bgType: 'transparent', bgColor: '', bgPattern: '' },
+  dark: { bgType: 'transparent', bgColor: '', bgPattern: '' },
+  matchPattern: '',
+  shiftingStrategy: { _tag: 'Flexbox' },
 }
 
 /**
@@ -450,20 +463,7 @@ const runInit = () => {
       )
 
       if (!globalSetting.enabled || !domainSetting.enabled) {
-        runUpdateStyles(
-          {
-            _tag: 'PathSetting',
-            enabled: false,
-            side: { _tag: 'Left', width: 0 },
-            themeMode: 'system',
-            light: { bgType: 'transparent', bgColor: '', bgPattern: '' },
-            dark: { bgType: 'transparent', bgColor: '', bgPattern: '' },
-            matchPattern: '',
-            shiftingStrategy: { _tag: 'Flexbox' },
-          },
-          globalSetting,
-          domainSetting,
-        )
+        runUpdateStyles(noMatchSetting, globalSetting, domainSetting)
         return
       }
 
@@ -474,20 +474,7 @@ const runInit = () => {
       if (matched) {
         runUpdateStyles(matched, globalSetting, domainSetting)
       } else {
-        runUpdateStyles(
-          {
-            _tag: 'PathSetting',
-            enabled: false,
-            side: { _tag: 'Left', width: 0 },
-            themeMode: 'system',
-            light: { bgType: 'transparent', bgColor: '', bgPattern: '' },
-            dark: { bgType: 'transparent', bgColor: '', bgPattern: '' },
-            matchPattern: '',
-            shiftingStrategy: { _tag: 'Flexbox' },
-          },
-          globalSetting,
-          domainSetting,
-        )
+        runUpdateStyles(noMatchSetting, globalSetting, domainSetting)
       }
     },
   )
