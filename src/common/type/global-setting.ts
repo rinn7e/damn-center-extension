@@ -8,7 +8,7 @@ import { DEFAULT_FONT_SIZE } from '../env'
 
 export type GlobalSetting = {
   // Tracks storage structure schema version. Useful for future storage migrations.
-  // See: [publish_checklist.md](/doc/publish_checklist.md) for strategy details.
+  // See: [publish-checklist.md](/doc/publish-checklist.md) for strategy details.
   schema_version: number
   enabled: boolean
   showRuler: boolean

@@ -1,0 +1,40 @@
+name: Bug report
+description: Something doesn't look or work right
+labels: [bug]
+body:
+  - type: input
+    id: url
+    attributes:
+      label: Website
+      description: The page where it happens (leave out anything private).
+      placeholder: https://example.com/docs
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options: [Chrome, Firefox, Safari, Edge, Brave, Other Chromium]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Extension version
+      description: Shown in the popup header.
+      placeholder: 2.0.0
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      description: Screenshots help a lot, especially of layout issues.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Set width to ...
+        3. ...

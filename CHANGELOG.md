@@ -10,9 +10,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ### Added
 
+- **Continuous Integration**: Type check, lint, format check, tests and release build run on every push and pull request.
+- **Contributor Docs**: `CONTRIBUTING.md`, `SECURITY.md` and issue templates.
+
+### Changed
+
+- **Build Scripts**: Release zip names now follow the version in `package.json`, so a version bump no longer needs edits to every script.
+
 ---
 
 ## [2.0.0] - 2026-10-01
+
+The 2.0 version marks the Damn Center rebrand: new icon, refreshed store listing and a new showcase video. There are no breaking changes, and existing settings carry over as they are.
 
 ### Changed
 

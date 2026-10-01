@@ -7,13 +7,13 @@ stay in sync.
 
 ## Generated assets
 
-| Asset | File |
-|---|---|
-| Extension icons | `public/icon{16,32,48,128}.png` |
-| Development icons (orange DEV badge, used by dev builds) | `public/icon{16,32,48,128}-dev.png` |
-| README screenshot | `doc/images/readme-screenshot.png` |
-| Chrome Web Store small promo tile (440×280) and store screenshots (1280×800) | not stored in this repo |
-| YouTube thumbnail and showcase video | not stored in this repo |
+| Asset                                                                        | File                                |
+| ---------------------------------------------------------------------------- | ----------------------------------- |
+| Extension icons                                                              | `public/icon{16,32,48,128}.png`     |
+| Development icons (orange DEV badge, used by dev builds)                     | `public/icon{16,32,48,128}-dev.png` |
+| README screenshot                                                            | `doc/images/readme-screenshot.png`  |
+| Chrome Web Store small promo tile (440×280) and store screenshots (1280×800) | not stored in this repo             |
+| YouTube thumbnail and showcase video                                         | not stored in this repo             |
 
 Screenshots and videos are captured from `dist/chrome`, so build the version
 you want to show first (`pnpm run build:release` for clean shots without the

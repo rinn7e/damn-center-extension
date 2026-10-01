@@ -2,9 +2,20 @@
   <img src="public/icon128.png" alt="Damn Center Logo" width="128" height="128">
 </p>
 
-<h1 align="center">Damn Center - the page !</h1>
+<h1 align="center">Damn Center - the page!</h1>
 
 <p align="center">
+  Center any website on your widescreen or ultrawide monitor, for Chrome, Firefox and Safari.
+</p>
+
+<p align="center">
+  <a href="https://github.com/rinn7e/damn-center-extension/actions/workflows/ci.yml"><img src="https://github.com/rinn7e/damn-center-extension/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://chromewebstore.google.com/detail/damn-center/jljnmcioeicnlafnjmgknjgegnaccaii"><img src="https://img.shields.io/chrome-web-store/v/jljnmcioeicnlafnjmgknjgegnaccaii?label=chrome%20web%20store" alt="Chrome Web Store version"></a>
+  <a href="https://chromewebstore.google.com/detail/damn-center/jljnmcioeicnlafnjmgknjgegnaccaii"><img src="https://img.shields.io/chrome-web-store/rating/jljnmcioeicnlafnjmgknjgegnaccaii" alt="Chrome Web Store rating"></a>
+  <a href="https://chromewebstore.google.com/detail/damn-center/jljnmcioeicnlafnjmgknjgegnaccaii"><img src="https://img.shields.io/chrome-web-store/users/jljnmcioeicnlafnjmgknjgegnaccaii?label=chrome%20users" alt="Chrome Web Store users"></a>
+  <a href="https://addons.mozilla.org/en-US/firefox/addon/damn-center/"><img src="https://img.shields.io/amo/v/damn-center?label=firefox%20add-ons" alt="Firefox Add-ons version"></a>
+  <a href="https://addons.mozilla.org/en-US/firefox/addon/damn-center/"><img src="https://img.shields.io/amo/users/damn-center?label=firefox%20users" alt="Firefox Add-ons users"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/rinn7e/damn-center-extension" alt="License: GPL-3.0"></a>
   <a href="AI-DECLARATION.md"><img src="https://img.shields.io/badge/䷼%20AI--DECLARATION-assist-fef9c3?labelColor=fef9c3" alt="AI-DECLARATION: assist"></a>
 </p>
 
@@ -12,7 +23,11 @@ A layout-centering browser extension designed to prevent neck and eye strain by 
 
 Damn Center adds customizable left and right padding to web pages on the fly. Adjust padding widths, overlay vertical alignment rulers, select side shifting, customize base colors, and choose beautiful SVG background patterns that automatically synchronize with your system's light/dark mode preference.
 
-Built with **React**, **Vite**, **TypeScript**, **Tailwind CSS**, **react-tea-cup**, and **fp-ts**.
+## Install
+
+- **Chrome, Edge, Brave and other Chromium browsers**: [Chrome Web Store](https://chromewebstore.google.com/detail/damn-center/jljnmcioeicnlafnjmgknjgegnaccaii)
+- **Firefox**: [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/damn-center/)
+- **Safari**: coming soon to the Mac App Store. Until then, [build it from source](#build-from-source).
 
 ## Screenshot
 
@@ -22,144 +37,10 @@ Built with **React**, **Vite**, **TypeScript**, **Tailwind CSS**, **react-tea-cu
 
 [![Damn Center 2.0 Showcase](https://img.youtube.com/vi/GnFG-Eb1EGc/maxresdefault.jpg)](https://www.youtube.com/watch?v=GnFG-Eb1EGc)
 
-## Getting Started
-
-### 1. Install Dependencies
-
-Install dependencies using `pnpm`:
-
-```bash
-pnpm install
-```
-
-### 2. Set Up Environment Variables
-
-Copy the example environment file to configure your local environment settings:
-
-```bash
-cp .env.example .env.development
-# and/or
-cp .env.example .env.production
-```
-
-### 3. Development
-
-Run the development server:
-
-```bash
-pnpm run dev
-```
-
-### 4. Build
-
-Compile production bundles for Chrome, Firefox, and Safari:
-
-```bash
-pnpm run build
-```
-
-The build scripts output compiled extension bundles to `./dist/chrome`, `./dist/firefox`, and `./dist/safari` containing browser-specific manifests and assets.
-
-### 5. Development Build
-
-Compile development bundles for Chrome, Firefox, and Safari (which load `.env.development` variables and preserve source maps, without zipping):
-
-```bash
-pnpm run build:dev
-```
-
----
-
-## Installation
-
-### Web Stores (Recommended)
-
-- **Chrome Web Store**: [https://chromewebstore.google.com/detail/damn-center/jljnmcioeicnlafnjmgknjgegnaccaii](https://chromewebstore.google.com/detail/damn-center/jljnmcioeicnlafnjmgknjgegnaccaii)
-- **Firefox Add-ons**: [https://addons.mozilla.org/en-US/firefox/addon/damn-center/](https://addons.mozilla.org/en-US/firefox/addon/damn-center/)
-- **Mac App Store (Safari)**: Coming soon!
-
----
-
-### Manual Build & Installation
-
-If you prefer to compile and install the extension yourself, follow these steps:
-
-#### 1. Build from Source
-
-Ensure you have [Node.js](https://nodejs.org/) and [pnpm](https://pnpm.io/) installed.
-
-```bash
-# Install dependencies
-pnpm install
-
-# Build the production bundles for all browsers
-pnpm run build
-```
-
-This compiles the extension code and outputs target directories:
-
-- `./dist/chrome` for Chrome and Chromium-based browsers.
-- `./dist/firefox` for Firefox.
-- `./dist/safari` for Safari.
-
-#### 2. Load the Extension into Your Browser
-
-##### For Chrome and Chromium-based Browsers (Brave, Edge, Vivaldi, Opera)
-
-1. Open the browser and navigate to `chrome://extensions/`.
-2. Enable **Developer mode** using the toggle in the top-right corner.
-3. Click the **Load unpacked** button in the top-left corner.
-4. Select the `./dist/chrome` directory from this repository.
-
-##### For Firefox
-
-1. Open the browser and navigate to `about:debugging#/runtime/this-firefox`.
-2. Click the **Load Temporary Add-on...** button.
-3. Select the `manifest.json` file inside the `./dist/firefox` directory.
-
-##### For Safari
-
-1. Open the browser and open **Settings** (or **Preferences**).
-2. Go to the **Advanced** tab and ensure **"Show features for web developers"** (or **"Show Develop menu in menu bar"**) is checked.
-3. In the new **Develop** menu in your system menu bar, check **"Allow Unsigned Extensions"**.
-4. Go to **Safari Settings > Developer** (or under **Develop** in the menu bar) and click **"Add Temporary Extension..."**.
-5. Select the `./dist/safari` directory from this repository.
-
----
-
-## Environment Variables
-
-The project loads configurations from environment files based on the build target mode (`.env.development` or `.env.production`). These files are ignored by git to protect local preferences.
-
-To set up your environment variables:
-
-1. Copy the example environment file:
-   ```bash
-   cp .env.example .env.development
-   # and/or
-   cp .env.example .env.production
-   ```
-2. Configure the variables as desired inside the newly created files:
-
-| Variable Name            | Description                                                                                                   | Default / Example Value      |
-| :----------------------- | :------------------------------------------------------------------------------------------------------------ | :--------------------------- |
-| `VITE_UI_THEME_ID`       | Theme identifier for the extension's popup UI.                                                                | `solarizedLight`             |
-| `VITE_DISABLE_LOG`       | Strips all `console.*` (log, warn, error, info, debug) calls from compiled bundles if set to `true`.          | `true` (prod), `false` (dev) |
-| `VITE_SHOW_BUILD_DATE`   | Displays the formatted date/time of the build under the extension title in the popup header if set to `true`. | `true`, `false`              |
-| `VITE_DEFAULT_FONT_SIZE` | Defines the default root font size in pixels (e.g. 16) for scaling the extension's popup UI.                  | `16`                         |
-
----
-
-## Code Convention
-
-Please refer to the [Code Convention Document](doc/code-convention.md) for details on code design principles and style conventions adhered to in this project.
-
-## Design Assets
-
-The icons, screenshots, store graphics and showcase video are generated. See [Design Assets](doc/assets.md) for where each one comes from and how to regenerate it.
-
 ## Features
 
+- **Per-Site Matches**: Save different settings per site or path with URL patterns. **+ New Match** adds a rule for the current page in one click, and a domain toggle switches all of a site's matches on or off.
+- **Import & Export**: Back up and restore all your matches and settings.
 - **Width Adjustment**: Scale padding width dynamically using the popup slider.
 - **Side Selection**: Apply padding to the left side, right side, or both sides.
 - **Alignment Ruler**: Toggle a vertical centered ruler guide to assist with layout alignment.
@@ -172,11 +53,75 @@ The icons, screenshots, store graphics and showcase video are generated. See [De
 - **Collapsible Matches**: Collapse list items in the popup UI to organize configuration matches.
 - **Dynamic Version Header**: Displays manifest version and build date inside the popup UI.
 
-For a detailed list of changes across releases, see the [CHANGELOG.md](CHANGELOG.md).
+See the [CHANGELOG](CHANGELOG.md) for changes in each release.
+
+## Known Incompatibilities
+
+The following websites are currently known to be incompatible with the extension's layout shifting mechanism:
+
+- [YouTube Studio](https://studio.youtube.com/)
+- [Gmail](https://mail.google.com/mail/)
+
+Found another one? [Open an issue](https://github.com/rinn7e/damn-center-extension/issues/new/choose).
 
 ---
 
-## Layout Shifting Mechanism
+## Development
+
+Built with **React**, **Vite**, **TypeScript**, **Tailwind CSS**, **react-tea-cup**, and **fp-ts**. See [CONTRIBUTING.md](CONTRIBUTING.md) for the checks to run before opening a pull request.
+
+### Build from Source
+
+You need [Node.js](https://nodejs.org/) 24+ and [pnpm](https://pnpm.io/).
+
+```bash
+pnpm install
+cp .env.example .env.development
+cp .env.example .env.production
+```
+
+| Command                  | Output                                                                                                                                                            |
+| :----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run dev`           | Vite dev server for the popup UI.                                                                                                                                 |
+| `pnpm run build`         | Development builds (`.env.development`, DEV icons, build date in the popup) for all browsers in `./dist/chrome`, `./dist/firefox` and `./dist/safari`, plus zips. |
+| `pnpm run build:chrome`  | The development build for one browser (also `build:firefox`, `build:safari`).                                                                                     |
+| `pnpm run build:release` | Release builds (`.env.production`) for all browsers, the same as the store versions, plus zips in `./dist/`.                                                      |
+
+### Load the Extension into Your Browser
+
+#### Chrome and Chromium-based browsers (Brave, Edge, Vivaldi, Opera)
+
+1. Open the browser and navigate to `chrome://extensions/`.
+2. Enable **Developer mode** using the toggle in the top-right corner.
+3. Click the **Load unpacked** button in the top-left corner.
+4. Select the `./dist/chrome` directory from this repository.
+
+#### Firefox
+
+1. Open the browser and navigate to `about:debugging#/runtime/this-firefox`.
+2. Click the **Load Temporary Add-on...** button.
+3. Select the `manifest.json` file inside the `./dist/firefox` directory.
+
+#### Safari
+
+1. Open the browser and open **Settings** (or **Preferences**).
+2. Go to the **Advanced** tab and ensure **"Show features for web developers"** (or **"Show Develop menu in menu bar"**) is checked.
+3. In the new **Develop** menu in your system menu bar, check **"Allow Unsigned Extensions"**.
+4. Go to **Safari Settings > Developer** (or under **Develop** in the menu bar) and click **"Add Temporary Extension..."**.
+5. Select the `./dist/safari` directory from this repository.
+
+### Environment Variables
+
+Builds load `.env.development` or `.env.production` depending on the mode. Both are ignored by git; copy them from `.env.example` and adjust:
+
+| Variable Name            | Description                                                                                                   | Default / Example Value      |
+| :----------------------- | :------------------------------------------------------------------------------------------------------------ | :--------------------------- |
+| `VITE_UI_THEME_ID`       | Theme identifier for the extension's popup UI.                                                                | `solarizedLight`             |
+| `VITE_DISABLE_LOG`       | Strips all `console.*` (log, warn, error, info, debug) calls from compiled bundles if set to `true`.          | `true` (prod), `false` (dev) |
+| `VITE_SHOW_BUILD_DATE`   | Displays the formatted date/time of the build under the extension title in the popup header if set to `true`. | `true`, `false`              |
+| `VITE_DEFAULT_FONT_SIZE` | Defines the default root font size in pixels (e.g. 16) for scaling the extension's popup UI.                  | `16`                         |
+
+### Layout Shifting Mechanism
 
 To shift page content dynamically without breaking absolute or sticky elements, the extension restructures the document layout at the root using CSS Flexbox:
 
@@ -198,23 +143,18 @@ To shift page content dynamically without breaking absolute or sticky elements, 
 2. **Constrained Scrollable Body**: Viewport scrolling is disabled on `html`, and shifted to `body` (`overflow-y: auto`). The body's width is constrained to make room for padding.
 3. **Flex Order Positioning**: Left and right pads are inserted as flex items with explicitly defined orders, shifting the body content to the center dynamically.
 
----
+### Project Docs
 
-## Known Incompatibilities
-
-The following websites are currently known to be incompatible with the extension's layout shifting mechanism:
-
-- [https://studio.youtube.com/](https://studio.youtube.com/) (YouTube Studio)
-- [https://mail.google.com/mail/](https://mail.google.com/mail/) (Gmail)
+- [Code Convention](doc/code-convention.md): design principles and style rules.
+- [Security](doc/security.md): the zero-network, local-storage design and permissions.
+- [Release Guide](doc/release.md): versioning, building and publishing.
+- [Design Assets](doc/assets.md): where the icons, screenshots and store graphics come from.
 
 ---
 
-## AI declaration
+## AI Declaration
 
-This project declares its AI usage in [AI-DECLARATION.md](AI-DECLARATION.md), following the
-[AI-DECLARATION.md](https://ai-declaration.md) standard (level: `assist`).
-
----
+This project declares its AI usage in [AI-DECLARATION.md](AI-DECLARATION.md), following the [AI-DECLARATION.md](https://ai-declaration.md) standard (level: `assist`).
 
 ## License
 

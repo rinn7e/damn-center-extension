@@ -34,7 +34,7 @@ pnpm run build:chrome
 
 The extension version must be synchronized across these files. Update the version string (e.g., `1.0.1` -> `1.0.2`):
 
-1. **`package.json`**: Update the `"version"` field and the zip file names in the `build:*` and `zip-source-code` scripts.
+1. **`package.json`**: Update the `"version"` field (the zip file names follow it).
 2. **`manifests/manifest.chrome.json`**: Update the `"version"` field.
 3. **`manifests/manifest.firefox.json`**: Update the `"version"` field.
 4. **`manifests/manifest.safari.json`**: Update the `"version"` field.
