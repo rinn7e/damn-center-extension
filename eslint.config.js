@@ -56,6 +56,24 @@ export default tseslint.config([
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       'unused-imports/no-unused-imports': 'error',
+      // Import fp-ts and io-ts modules by name ('fp-ts/TaskEither'), so the
+      // bundler picks their tree-shakeable ES module build
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                'fp-ts/lib/*',
+                'fp-ts/es6/*',
+                'io-ts/lib/*',
+                'io-ts/es6/*',
+              ],
+              message: "Import from 'fp-ts/<Module>' instead.",
+            },
+          ],
+        },
+      ],
       'unused-imports/no-unused-vars': [
         'warn',
         {

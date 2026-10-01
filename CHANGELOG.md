@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 ### Changed
 
 - **Page Elements**: The padding, ruler and style elements the extension adds to pages now use `damn-center-*` ids instead of the old `symmetry-pad-*` names. If you wrote custom user styles for those ids, update them.
-- **Smaller Packages**: Removed old backup icons and screenshots that were being copied into the extension packages.
+- **Smaller and Faster**: The script that runs on every page is less than half its old size (117 KB → 53 KB), because fp-ts is now imported as tree-shakeable ES modules. Old backup icons and screenshots are no longer copied into the packages.
 - **Firefox 140+**: The Firefox version now requires Firefox 140 or later (the current ESR), which supports the add-on's data-collection declaration.
 - **Popup Font**: The popup now asks for the system UI font directly; it used to name Inter, which was never bundled, so most users already saw the system font.
 

@@ -2,8 +2,8 @@
  * Copyright (C) 2026 Moremi Vannak
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import * as TE from 'fp-ts/lib/TaskEither'
-import { pipe } from 'fp-ts/lib/function'
+import * as TE from 'fp-ts/TaskEither'
+import { pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
 import { Cmd, Task } from 'tea-cup-fp'
 

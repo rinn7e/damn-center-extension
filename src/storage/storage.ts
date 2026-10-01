@@ -2,7 +2,7 @@
  * Copyright (C) 2026 Moremi Vannak
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import * as TE from 'fp-ts/lib/TaskEither'
+import * as TE from 'fp-ts/TaskEither'
 import * as t from 'io-ts'
 import picomatch from 'picomatch'
 
