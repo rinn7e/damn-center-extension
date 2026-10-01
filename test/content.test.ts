@@ -176,6 +176,7 @@ describe('Content script', () => {
     vi.unstubAllGlobals()
     delete (document as { fullscreenElement?: unknown }).fullscreenElement
     delete (document as { visibilityState?: unknown }).visibilityState
+    delete (document as { readyState?: unknown }).readyState
     document.documentElement.innerHTML = '<head></head><body></body>'
   })
 
@@ -202,6 +203,45 @@ describe('Content script', () => {
     expect(byId('damn-center-style')!.textContent).toContain(
       'max-width: calc(100vw - 280px)',
     )
+  })
+
+  it('applies the padding before the page has finished loading', async () => {
+    setProperty(document, 'readyState', 'loading')
+    await loadContentScript(storageWith([pathSetting()]))
+
+    expect(isShown('damn-center-left')).toBe(true)
+  })
+
+  it('removes elements left by an earlier copy of the script', async () => {
+    // What a 2.0.0 copy (symmetry-pad-*) or an earlier 2.1+ copy leaves behind
+    // when Firefox injects the script again after an update
+    for (const id of [
+      'symmetry-pad-left',
+      'symmetry-pad-style',
+      'damn-center-left-placeholder',
+      'damn-center-ruler',
+    ]) {
+      const leftover = document.createElement('div')
+      leftover.id = id
+      document.documentElement.appendChild(leftover)
+    }
+
+    await loadContentScript(storageWith([]))
+
+    expect(
+      document.querySelector('[id^="damn-center"], [id^="symmetry-pad"]'),
+    ).toBeNull()
+  })
+
+  it('keeps a single set of pads when the script is injected again', async () => {
+    const storage = storageWith([pathSetting()])
+    await loadContentScript(storage)
+    await loadContentScript(storage)
+
+    expect(
+      document.querySelectorAll('#damn-center-left-placeholder'),
+    ).toHaveLength(1)
+    expect(document.querySelectorAll('#damn-center-style')).toHaveLength(1)
   })
 
   it('adds nothing to a site that has no rules', async () => {
@@ -344,6 +384,19 @@ describe('Content script', () => {
       await settle()
 
       expect(vi.getTimerCount()).toBe(0)
+    })
+
+    it('still re-reads them when a resize follows', async () => {
+      // Restoring a minimized window fires visibilitychange, then resize
+      const storage = storageWith([pathSetting()], turnedOff)
+      await loadContentScript(storage)
+
+      storage.global_settings = defaultGlobalSetting
+      setProperty(document, 'visibilityState', 'visible')
+      document.dispatchEvent(new Event('visibilitychange'))
+      window.dispatchEvent(new Event('resize'))
+
+      await vi.waitFor(() => expect(isShown('damn-center-left')).toBe(true))
     })
 
     it('keeps the padding when storage can no longer be read', async () => {

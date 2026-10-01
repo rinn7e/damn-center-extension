@@ -132,7 +132,7 @@ gh attestation verify damn-center-chrome-v<VERSION>.zip -R rinn7e/damn-center-ex
 2. Submit a new version of the extension.
 3. Upload `damn-center-firefox-v<VERSION>.zip` from the GitHub release.
 4. When asked whether the code is compiled or minified, answer **Yes** and upload the release's **Source code (zip)** from GitHub (every file tracked in git at the tag).
-5. Build instructions for the reviewer: "Install Node.js 24+ and pnpm 11 (`corepack enable` sets up the version in `package.json`), run `pnpm install --frozen-lockfile`, `cp .env.example .env.production`, then `pnpm run build:firefox:release`. The output is in `dist/firefox/`."
+5. Build instructions for the reviewer: "Install Node.js 24 and pnpm 11.9.0 (`npm install -g pnpm@11.9.0`), run `pnpm install --frozen-lockfile`, `cp .env.example .env.production`, then `pnpm run build:firefox:release`. The output is in `dist/firefox/`."
 6. Follow the steps for listing review. The license is GPL-3.0.
 
 ### Store listing assets

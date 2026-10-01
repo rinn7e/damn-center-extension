@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "Damn Center",
   "description": "Center any website on your widescreen or ultrawide monitor, with per-site padding, rulers, themes and background patterns.",
+  "homepage_url": "https://github.com/rinn7e/damn-center-extension",
   "permissions": ["storage", "activeTab"],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self';"

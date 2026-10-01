@@ -754,7 +754,9 @@ const triggerExportCmd = (): Cmd<Msg> => {
               a.href = url
               a.download = 'damn-center-backup.json'
               a.click()
-              URL.revokeObjectURL(url)
+              // Revoke later: revoking right after click() can cancel the
+              // download in Firefox
+              setTimeout(() => URL.revokeObjectURL(url), 60_000)
             } catch (e) {
               console.error('[Damn Center] Export error:', e)
             }

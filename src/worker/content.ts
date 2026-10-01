@@ -24,6 +24,15 @@ import {
   matchUrlPattern,
 } from '../storage/storage'
 
+// Remove elements left by an earlier copy of this script. Firefox injects the
+// content script into open tabs again when the add-on is installed, updated or
+// re-enabled, but the old copy's elements stay on the page and this copy can't
+// control them (doubled padding that won't turn off). 'symmetry-pad-*' is the
+// id prefix used before 2.1.0.
+document
+  .querySelectorAll('[id^="damn-center-"], [id^="symmetry-pad-"]')
+  .forEach((element) => element.remove())
+
 // Cached path matching rule for the active page
 let currentSettings: PathSetting | null = null
 
@@ -53,6 +62,10 @@ let rulerElement: HTMLDivElement | null = null
 
 // Timer ID for debouncing window resize events (waits for OS snapping animations to settle)
 let resizeTimeoutId: number | undefined
+
+// Timer for re-reading settings when the tab becomes visible; separate from
+// the resize timer so that restoring a window can't cancel the re-read
+let visibilityTimeoutId: number | undefined
 
 const systemThemeMedia = window.matchMedia('(prefers-color-scheme: dark)')
 
@@ -601,12 +614,11 @@ if (
   })
 }
 
-// Run immediately or wait for DOM
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', runInit)
-} else {
-  runInit()
-}
+// Read the settings straight away instead of waiting for DOMContentLoaded, so
+// the padding is in place before the page first paints rather than the page
+// jumping once it has loaded. Everything this script adds is attached to
+// <html>, which already exists at document_start.
+runInit()
 
 // Re-evaluate styles if the window is resized (to detect maximization shifts)
 window.addEventListener('resize', () => {
@@ -641,11 +653,11 @@ document.addEventListener('fullscreenchange', () => {
 // Re-evaluate styles when the tab becomes active/visible (fixes background tab initialization)
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
-    if (resizeTimeoutId) {
-      window.clearTimeout(resizeTimeoutId)
+    if (visibilityTimeoutId) {
+      window.clearTimeout(visibilityTimeoutId)
     }
     // Re-read the settings rather than reusing the cached ones: they may have
     // changed in the popup while this tab was in the background
-    resizeTimeoutId = window.setTimeout(runInit, 150)
+    visibilityTimeoutId = window.setTimeout(runInit, 150)
   }
 })

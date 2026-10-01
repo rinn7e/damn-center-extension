@@ -24,16 +24,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ### Fixed
 
+- **No Jump on Load**: The padding is applied as the page starts loading, instead of after it finishes, so pages no longer shift sideways once they appear.
+- **Firefox Updates**: After the add-on updates, open tabs no longer end up with doubled padding that can't be turned off; leftovers from the previous version are removed.
+- **Export in Firefox**: Exporting a backup could fail to download in Firefox.
+- **Browser Pages**: Settings changed while on a browser or extension page (such as `about:newtab`) are no longer saved under a stray site name.
 - **Safer Import**: Import used to clear all settings before saving the backup, so a failed save could leave you with none. It now saves the backup first and only then removes what the file doesn't contain.
 - **Popup Font**: The popup named the Inter font without bundling it; it now asks for the system UI font directly, which most users already saw.
 
-### Internal
+### Project
 
-- CI, CodeQL code scanning (code and workflows) and a tag-triggered release workflow with checksums and signed build provenance, with GitHub Actions pinned to exact commits and release tags protected.
-- `package.json` is the single source of the version.
-- Tests for the content script, import and the popup's update logic, and `web-ext lint` in CI.
-- Dependabot for minor and patch updates, and all dependencies updated past known vulnerabilities.
-- Contributor docs and a documented Safari app build.
+- Behind the scenes: automated checks, security scanning and signed release builds, plus more tests. See the [repository](https://github.com/rinn7e/damn-center-extension) for details.
 
 ---
 

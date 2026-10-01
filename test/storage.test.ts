@@ -49,6 +49,15 @@ describe('Storage Helpers', () => {
       expect(getHostname('')).toBe('system-settings')
     })
 
+    it('groups every other non-web page under system-settings', () => {
+      expect(getHostname('about:newtab')).toBe('system-settings')
+      expect(getHostname('file:///Users/me/notes.html')).toBe('system-settings')
+      expect(
+        getHostname('moz-extension://0b1c2d3e-uuid/index.html?mode=tab'),
+      ).toBe('system-settings')
+      expect(getHostname('edge://settings')).toBe('system-settings')
+    })
+
     it('returns unknown-domain for invalid non-empty URLs', () => {
       expect(getHostname('not-a-valid-url')).toBe('unknown-domain')
     })

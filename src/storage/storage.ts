@@ -21,20 +21,23 @@ import {
  * Extracts the clean hostname from a URL string.
  */
 export const getHostname = (urlStr: string): Hostname => {
-  try {
-    if (
-      !urlStr ||
-      urlStr.startsWith('chrome://') ||
-      urlStr.startsWith('chrome-extension://') ||
-      urlStr.startsWith('safari-web-extension://')
-    ) {
-      return 'system-settings' as Hostname
-    } else {
-      const url = new URL(urlStr)
-      return url.hostname as Hostname
+  if (!urlStr) {
+    return 'system-settings' as Hostname
+  } else {
+    let url: URL
+    try {
+      url = new URL(urlStr)
+    } catch {
+      return 'unknown-domain' as Hostname
     }
-  } catch {
-    return 'unknown-domain' as Hostname
+    // Only web pages get their own settings. Browser and extension pages
+    // (chrome://, about:, file://, moz-extension://, …) share one key, so edits
+    // made there don't land under empty or per-install keys
+    return (
+      url.protocol === 'http:' || url.protocol === 'https:'
+        ? url.hostname
+        : 'system-settings'
+    ) as Hostname
   }
 }
 
