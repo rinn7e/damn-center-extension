@@ -12,7 +12,7 @@ Built with **React**, **Vite**, **TypeScript**, **Tailwind CSS**, **react-tea-cu
 
 ## Screenshot
 
-![Damn Center Screenshot](public/screenshot/screenshot2.png)
+![Damn Center Screenshot](doc/images/readme-screenshot.png)
 
 ## Getting Started
 

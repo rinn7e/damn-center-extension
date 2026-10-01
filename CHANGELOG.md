@@ -12,6 +12,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ---
 
+## [2.0.0] - 2026-10-01
+
+### Changed
+
+- **New Icon & Brand**: Replaced the `{|}` icon with a new "page with pads" mark (a cream reading column between striped teal padding) in the popup's Solarized palette, with pixel-tuned 16px and 32px versions and matching development (`-dev`) icons.
+
+---
+
 ## [1.0.5] - 2026-08-09
 
 ### Fixed
