@@ -34,7 +34,8 @@ cookies, and it doesn't record your browsing history.
 ## Exporting and importing
 
 **Export** saves your settings to a JSON file on your computer, and **Import**
-reads a file you choose. Both happen locally; nothing is uploaded.
+reads a file you choose and, after you confirm, replaces your settings with it.
+Both happen locally; nothing is uploaded.
 
 ## Removing your data
 

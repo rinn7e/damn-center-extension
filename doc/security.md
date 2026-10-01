@@ -51,4 +51,5 @@ The manifests request only two permissions, plus one content script:
 
 - `pnpm-lock.yaml` pins exact dependency versions and hashes, so builds use exactly the reviewed dependencies.
 - Dependabot proposes minor and patch updates for dependencies and GitHub Actions each month, and opens pull requests for known vulnerabilities. Major upgrades are done by hand. Branch protection requires CI to pass before any of them can merge.
+- GitHub CodeQL scans the code for security issues on every push, every pull request and once a week.
 - The extension packages contain only Damn Center's code and the runtime libraries listed under `dependencies` in `package.json` (React, fp-ts, io-ts, picomatch and a few small helpers); build and test tools never ship.

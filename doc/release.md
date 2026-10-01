@@ -44,7 +44,10 @@ If the release changes the storage schema, follow the
 The version lives only in **`package.json`**. The build writes it into each
 browser's `manifest.json`, and the zip names follow it, so bump it there:
 
-1. **`package.json`**: update the `"version"` field (e.g. `2.0.0` → `2.1.0`).
+1. **`package.json`**: update the `"version"` field. Follow [Semantic Versioning](https://semver.org/):
+   - **patch** (`2.0.0` → `2.0.1`) for bug fixes only,
+   - **minor** (`2.0.0` → `2.1.0`) for new features, or changes users may notice, such as a higher minimum browser version or renamed page element ids,
+   - **major** (`2.0.0` → `3.0.0`) when saved settings or behavior stop being compatible.
 2. **`CHANGELOG.md`**:
    - Rename `## [Unreleased]` to `## [<VERSION>] - <YYYY-MM-DD>` and add a new, empty `## [Unreleased]` above it.
    - At the bottom, point `[Unreleased]` at `compare/v<VERSION>...HEAD` and add `[<VERSION>]: .../compare/v<PREVIOUS>...v<VERSION>`.

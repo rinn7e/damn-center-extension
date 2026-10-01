@@ -12,6 +12,7 @@ import {
   buildGlobPatternFromSegments,
   determineIsDarkPure,
   getActivePadSettingIndex,
+  keysMissingFromBackup,
   parseUrlSegments,
   resolveNewSidePure,
   resolveNewWidthPure,
@@ -153,6 +154,26 @@ describe('Update Helpers', () => {
     it('returns original list when indices are out of bounds', () => {
       expect(swapArrayElements(list, -1, 1)).toBe(list)
       expect(swapArrayElements(list, 0, 3)).toBe(list)
+    })
+  })
+
+  describe('keysMissingFromBackup', () => {
+    it('lists stored keys the backup does not contain', () => {
+      expect(
+        keysMissingFromBackup(
+          ['global_settings', 'example.com', 'old-site.org'],
+          { global_settings: {}, 'example.com': [] },
+        ),
+      ).toEqual(['old-site.org'])
+    })
+
+    it('keeps everything when the backup has all stored keys', () => {
+      expect(
+        keysMissingFromBackup(['example.com'], {
+          'example.com': [],
+          'new-site.org': [],
+        }),
+      ).toEqual([])
     })
   })
 

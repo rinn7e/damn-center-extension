@@ -8,19 +8,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ## [Unreleased]
 
+### Added
+
+- **Privacy Policy**: [PRIVACY.md](https://github.com/rinn7e/damn-center-extension/blob/master/PRIVACY.md) spells out that Damn Center collects nothing and keeps your settings on your device.
+- **Import Confirmation**: Importing a backup now asks before replacing your settings.
+
 ### Changed
 
 - **Page Elements**: The padding, ruler and style elements the extension adds to pages now use `damn-center-*` ids instead of the old `symmetry-pad-*` names. If you wrote custom user styles for those ids, update them.
-- **Smaller and Faster**: The script that runs on every page is less than half its old size (117 KB → 53 KB), because fp-ts is now imported as tree-shakeable ES modules. Old backup icons and screenshots are no longer copied into the packages.
 - **Firefox 140+**: The Firefox version now requires Firefox 140 or later (an ESR release), or Firefox for Android 142 or later, the first versions that support the add-on's data-collection declaration.
+- **Smaller and Faster**: The script that runs on every page is less than half its old size (117 KB → 53 KB), because fp-ts is now imported as tree-shakeable ES modules. Old backup icons and screenshots are no longer copied into the packages.
 - **Quieter on Other Sites**: The content script only checks for in-page URL changes on sites that have rules, instead of every 500 ms on every website.
 - **Description**: The extension's description now reads "Center any website on your widescreen or ultrawide monitor, with per-site padding, rulers, themes and background patterns."
-- **Privacy Policy**: Added [PRIVACY.md](PRIVACY.md), which spells out that Damn Center collects nothing and keeps settings on your device.
-- **Popup Font**: The popup now asks for the system UI font directly; it used to name Inter, which was never bundled, so most users already saw the system font.
+
+### Fixed
+
+- **Safer Import**: Import used to clear all settings before saving the backup, so a failed save could leave you with none. It now saves the backup first and only then removes what the file doesn't contain.
+- **Popup Font**: The popup named the Inter font without bundling it; it now asks for the system UI font directly, which most users already saw.
 
 ### Internal
 
-- New CI and tag-triggered release workflow, `package.json` as the single version source, Dependabot, contributor docs, a documented Safari app build, tests for the content script, `web-ext lint` in CI, release checksums, and all dependencies updated past known vulnerabilities, and GitHub Actions pinned to exact commits.
+- CI, CodeQL code scanning and a tag-triggered release workflow with checksums, with GitHub Actions pinned to exact commits.
+- `package.json` is the single source of the version.
+- Tests for the content script, and `web-ext lint` in CI.
+- Dependabot for minor and patch updates, and all dependencies updated past known vulnerabilities.
+- Contributor docs and a documented Safari app build.
 
 ---
 

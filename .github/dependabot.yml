@@ -27,3 +27,10 @@ updates:
       interval: monthly
     cooldown:
       default-days: 3
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+    groups:
+      github-actions:
+        patterns: ['*']
+        update-types: ['minor', 'patch']

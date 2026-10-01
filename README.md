@@ -39,19 +39,14 @@ Damn Center collects no data and makes no network requests. See the [privacy pol
 
 ## Features
 
-- **Per-Site Matches**: Save different settings per site or path with URL patterns. **+ New Match** adds a rule for the current page in one click, and a domain toggle switches all of a site's matches on or off.
-- **Import & Export**: Back up and restore all your matches and settings.
-- **Width Adjustment**: Scale padding width dynamically using the popup slider.
-- **Side Selection**: Apply padding to the left side, right side, or both sides.
-- **Alignment Ruler**: Toggle a vertical centered ruler guide to assist with layout alignment.
-- **Layout Shifting**: Restructures the page with CSS Flexbox so the padding never overlaps content, while keeping absolute and sticky elements in place (see [how it works](#layout-shifting-mechanism)).
-- **Theme Compatibility**: Supports independent configurations for Light and Dark modes. Can sync with system preferences (`prefers-color-scheme`) or force a specific mode.
-- **SVG Patterns**: Apply customizable SVG background patterns (grids, dots, stripes, carbon, or lattice) over background colors.
-- **Disable when Not Maximized**: Automatically suspends padding and alignment rules when the window is tiled, restored, or not fully maximized. Bypasses OS-level and fractional browser zoom discrepancies (such as Chrome on Linux Wayland bugs) to keep window space fully optimized.
-- **Auto-Disable on Fullscreen**: Automatically suspends padding and alignment rules when a website enters fullscreen mode (resolves Youtube and other fullscreen video viewport conflicts).
-- **Popup UI Font Size Controller**: Adjust the root font size of the extension's popup UI (`12px` to `32px` in `1px` steps, default `18px`) for clean text scaling.
-- **Collapsible Matches**: Collapse list items in the popup UI to organize configuration matches.
-- **Version Header**: Shows the extension version in the popup header (development builds also show the build date).
+- **Per-Site Matches**: Save different settings per site or path with URL patterns. **+ New Match** adds a rule for the current page in one click, and a domain toggle switches a whole site on or off.
+- **Width and Side**: Set the padding width with a slider, on the left, the right or both sides.
+- **Layout-Safe Shifting**: Restructures the page with CSS Flexbox so the padding never covers content, while absolute and sticky elements stay in place (see [how it works](#layout-shifting-mechanism)).
+- **Colors and Patterns**: Fill the padding with a color or an SVG pattern (grid, dots, stripes, carbon or lattice), with separate light and dark versions that follow your system or a mode you pick.
+- **Alignment Ruler**: Overlay guide lines at 25%, 50% and 75% of the window to check the layout.
+- **Steps Aside When Needed**: Pauses while a page is fullscreen (such as YouTube videos) and, if you like, whenever the window isn't maximized, including on Linux Wayland, where browsers misreport the window size.
+- **Backup**: Export all your matches and settings to a file, and import them on another browser or computer.
+- **Adjustable Popup**: Scale the popup's text from 12 to 32 px, and collapse the match list to keep it tidy.
 
 See the [CHANGELOG](CHANGELOG.md) for changes in each release.
 
