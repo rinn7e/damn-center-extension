@@ -24,6 +24,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ### Fixed
 
+- **Scroll Position**: Turning padding on or off (from the popup, when the window is un-maximized, or when moving between pages with and without a rule) no longer jumps the page to a different scroll position.
+- **Pages That Rebuild Themselves**: If a page replaces its whole document, the padding is put back instead of silently disappearing.
+- **SVG and XML Files**: Opening an `.svg` or XML file on a site with a matching rule no longer causes an error.
+- **Chrome Version**: The extension now declares Chrome 111 as its minimum, the first version that shows the popup's styling correctly.
 - **No Jump on Load**: The padding is applied as the page starts loading, instead of after it finishes, so pages no longer shift sideways once they appear.
 - **Firefox Updates**: After the add-on updates, open tabs no longer end up with doubled padding that can't be turned off; leftovers from the previous version are removed.
 - **Export in Firefox**: Exporting a backup could fail to download in Firefox.

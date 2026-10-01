@@ -50,6 +50,7 @@ const settle = async () => {
 // Loads src/worker/content.ts against a fresh DOM and a fake chrome.storage
 const loadContentScript = async (
   storage: Record<string, unknown>,
+  { expectedReads = 2 } = {},
 ): Promise<{
   sendMessage: MessageListener
   changeStorage: (changes: Record<string, unknown>) => void
@@ -93,7 +94,7 @@ const loadContentScript = async (
   vi.resetModules()
   await import('../src/worker/content')
   // The script reads the global and the site settings, then applies them
-  await vi.waitFor(() => expect(storageReads).toBe(2))
+  await vi.waitFor(() => expect(storageReads).toBe(expectedReads))
   await settle()
   return {
     sendMessage: (message) =>
@@ -177,6 +178,8 @@ describe('Content script', () => {
     delete (document as { fullscreenElement?: unknown }).fullscreenElement
     delete (document as { visibilityState?: unknown }).visibilityState
     delete (document as { readyState?: unknown }).readyState
+    delete (document.body as { scrollTop?: unknown }).scrollTop
+    delete (window as { scrollY?: unknown }).scrollY
     document.documentElement.innerHTML = '<head></head><body></body>'
   })
 
@@ -242,6 +245,101 @@ describe('Content script', () => {
       document.querySelectorAll('#damn-center-left-placeholder'),
     ).toHaveLength(1)
     expect(document.querySelectorAll('#damn-center-style')).toHaveLength(1)
+  })
+
+  it('leaves SVG and XML documents alone', async () => {
+    const html = document.documentElement
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    document.replaceChild(svg, html)
+    try {
+      await loadContentScript(storageWith([pathSetting()]), {
+        expectedReads: 0,
+      })
+      await settle()
+
+      expect(document.querySelector('[id^="damn-center"]')).toBeNull()
+    } finally {
+      document.replaceChild(html, svg)
+    }
+  })
+
+  it('puts its elements back if the page removes them', async () => {
+    const { sendMessage } = await loadContentScript(
+      storageWith([pathSetting()]),
+    )
+    // e.g. document.open(), or a framework replacing the whole page
+    document.documentElement.innerHTML = '<head></head><body></body>'
+
+    sendMessage({
+      type: 'SETTINGS_UPDATED',
+      settings: pathSetting(),
+      globalSetting: { ...defaultGlobalSetting, showRuler: true },
+      domainSetting: { _tag: 'DomainSetting', enabled: true },
+    })
+
+    expect(isShown('damn-center-left')).toBe(true)
+    expect(isShown('damn-center-left-placeholder')).toBe(true)
+    expect(byId('damn-center-style')).not.toBeNull()
+    expect(isShown('damn-center-ruler')).toBe(true)
+  })
+
+  describe('scroll position', () => {
+    // jsdom doesn't lay out or scroll, so record what the script sets
+    let bodyScrollTop = 0
+    const scrollTo = vi.fn()
+
+    beforeEach(() => {
+      bodyScrollTop = 0
+      scrollTo.mockReset()
+      Object.defineProperty(document.body, 'scrollTop', {
+        configurable: true,
+        get: () => bodyScrollTop,
+        set: (value: number) => {
+          bodyScrollTop = value
+        },
+      })
+      vi.stubGlobal('scrollTo', scrollTo)
+    })
+
+    it('is kept when the padding turns on', async () => {
+      setProperty(window, 'scrollY', 1500)
+      await loadContentScript(storageWith([pathSetting()]))
+
+      expect(bodyScrollTop).toBe(1500)
+    })
+
+    it('is kept when the padding turns off', async () => {
+      const { sendMessage } = await loadContentScript(
+        storageWith([pathSetting()]),
+      )
+      bodyScrollTop = 900
+
+      sendMessage({
+        type: 'SETTINGS_UPDATED',
+        settings: pathSetting({ enabled: false }),
+        globalSetting: defaultGlobalSetting,
+        domainSetting: { _tag: 'DomainSetting', enabled: true },
+      })
+
+      expect(scrollTo).toHaveBeenCalledWith(0, 900)
+    })
+
+    it('is left alone when the padding only changes width', async () => {
+      const { sendMessage } = await loadContentScript(
+        storageWith([pathSetting()]),
+      )
+      bodyScrollTop = 900
+
+      sendMessage({
+        type: 'SETTINGS_UPDATED',
+        settings: pathSetting({ side: { _tag: 'Left', width: 200 } }),
+        globalSetting: defaultGlobalSetting,
+        domainSetting: { _tag: 'DomainSetting', enabled: true },
+      })
+
+      expect(bodyScrollTop).toBe(900)
+      expect(scrollTo).not.toHaveBeenCalled()
+    })
   })
 
   it('adds nothing to a site that has no rules', async () => {

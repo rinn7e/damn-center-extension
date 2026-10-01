@@ -82,7 +82,7 @@ export const loadPadSettings = (
 ): TE.TaskEither<Error, PaddingSetting[]> => {
   return TE.tryCatch(
     async () => {
-      return new Promise<PaddingSetting[]>((resolve) => {
+      return new Promise<PaddingSetting[]>((resolve, reject) => {
         if (
           typeof chrome === 'undefined' ||
           !chrome.storage ||
@@ -91,6 +91,16 @@ export const loadPadSettings = (
           resolve([])
         } else {
           chrome.storage.local.get([hostname], (res) => {
+            // A failed read (e.g. after the extension was updated under an
+            // open page) must fail the task rather than leave it pending
+            if (chrome.runtime?.lastError || !res) {
+              reject(
+                new Error(
+                  chrome.runtime?.lastError?.message ?? 'Storage read failed',
+                ),
+              )
+              return
+            }
             const raw = res[hostname]
             if (!raw) {
               resolve([])
@@ -150,7 +160,7 @@ export const savePadSettings = (
 export const loadGlobalSetting = (): TE.TaskEither<Error, GlobalSetting> => {
   return TE.tryCatch(
     async () => {
-      return new Promise<GlobalSetting>((resolve) => {
+      return new Promise<GlobalSetting>((resolve, reject) => {
         if (
           typeof chrome === 'undefined' ||
           !chrome.storage ||
@@ -159,6 +169,16 @@ export const loadGlobalSetting = (): TE.TaskEither<Error, GlobalSetting> => {
           resolve(defaultGlobalSetting)
         } else {
           chrome.storage.local.get(['global_settings'], (res) => {
+            // A failed read (e.g. after the extension was updated under an
+            // open page) must fail the task rather than leave it pending
+            if (chrome.runtime?.lastError || !res) {
+              reject(
+                new Error(
+                  chrome.runtime?.lastError?.message ?? 'Storage read failed',
+                ),
+              )
+              return
+            }
             const raw = res['global_settings']
             if (!raw) {
               resolve(defaultGlobalSetting)

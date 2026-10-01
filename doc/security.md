@@ -43,7 +43,7 @@ The manifests request only two permissions, plus one content script:
 
 - **Open source**: all code, dependencies and build configuration are in this repository, under the GPL-3.0.
 - **Build from source**: the [README](../README.md#build-from-source) explains how to build the extension and load it unpacked, instead of installing it from a store.
-- **Reproducible builds**: release builds are minified by Vite but not obfuscated, and the build is reproducible. Rebuild with `pnpm run build:release` and the files match the ones inside the store package byte for byte.
+- **Reproducible builds**: release builds are minified by Vite but not obfuscated, and the build is reproducible: rebuilding a tag with `pnpm run build:release` gives files identical, byte for byte, to the ones in that GitHub release's zips. The store packages contain the same code, but the stores add their own files (Chrome, for example, adds an `update_url` to `manifest.json`), so compare against the GitHub release.
 - **Checksums and provenance**: each GitHub release is built by CI from a tagged commit on `master`. It lists the SHA-256 of its zips in `SHA256SUMS.txt`, and GitHub signs a build provenance attestation for them. Check a downloaded zip with `gh attestation verify <zip> -R rinn7e/damn-center-extension`.
 - **Store review**: Mozilla reviewers receive the full source of each release and rebuild it to confirm the package matches.
 

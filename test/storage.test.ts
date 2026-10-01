@@ -2,11 +2,14 @@
  * Copyright (C) 2026 Moremi Vannak
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { type Hostname } from '../src/common/type/hostname'
 import {
   getGlobError,
   getHostname,
+  loadGlobalSetting,
+  loadPadSettings,
   matchUrlPattern,
 } from '../src/storage/storage'
 
@@ -113,5 +116,39 @@ describe('Storage Helpers', () => {
         mockState.forceThrow = false
       }
     })
+  })
+})
+
+describe('Storage reads', () => {
+  // What chrome.storage does when the read fails, e.g. in a page whose
+  // extension was updated: no result, and runtime.lastError set
+  const stubFailingStorage = () =>
+    vi.stubGlobal('chrome', {
+      runtime: { lastError: { message: 'Extension context invalidated.' } },
+      storage: {
+        local: {
+          // Asynchronous, like the real API
+          get: (_keys: string[], callback: (res?: object) => void) =>
+            setTimeout(() => callback(undefined), 0),
+        },
+      },
+    })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('fails loadGlobalSetting instead of hanging', async () => {
+    stubFailingStorage()
+    const result = await loadGlobalSetting()()
+
+    expect(result._tag).toBe('Left')
+  })
+
+  it('fails loadPadSettings instead of hanging', async () => {
+    stubFailingStorage()
+    const result = await loadPadSettings('example.com' as Hostname)()
+
+    expect(result._tag).toBe('Left')
   })
 })

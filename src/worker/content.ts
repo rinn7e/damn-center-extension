@@ -33,6 +33,22 @@ document
   .querySelectorAll('[id^="damn-center-"], [id^="symmetry-pad-"]')
   .forEach((element) => element.remove())
 
+// Only regular HTML pages get padding. In SVG or XML documents, opened
+// directly in a tab, createElement() doesn't return HTML elements
+const isHtmlDocument = () => document.documentElement instanceof HTMLHtmlElement
+
+// Re-attaches an element the page removed, e.g. with document.open() or by
+// replacing <html> while a framework takes over the page
+const runEnsureAttached = (element: HTMLElement) => {
+  if (!element.isConnected) {
+    document.documentElement.appendChild(element)
+  }
+}
+
+// Whether the flexbox shift (which moves scrolling from the window to <body>)
+// is currently applied
+let isShiftApplied = false
+
 // Cached path matching rule for the active page
 let currentSettings: PathSetting | null = null
 
@@ -181,6 +197,12 @@ const runApplyFlexboxShifting = (
         'position:fixed; right:0; top:0; height:100vh; z-index:0; pointer-events:none !important; transition: width 0.15s ease-out, background 0.15s ease-out;'
       document.documentElement.appendChild(rightPadElement)
     }
+    ;[
+      leftPadPlaceholderElement,
+      leftPadElement,
+      rightPadPlaceholderElement,
+      rightPadElement,
+    ].forEach(runEnsureAttached)
   }
 
   runEnsurePadDivs()
@@ -263,7 +285,6 @@ const runHideAllPads = () => {
  * Handles ruler creation and toggling (3 lines dividing screen into 4 equal parts).
  */
 const runUpdateRuler = (
-  settings: PathSetting,
   globalSetting: GlobalSetting,
   isEffectivelyEnabled: boolean,
 ) => {
@@ -282,6 +303,7 @@ const runUpdateRuler = (
       })
       document.documentElement.appendChild(rulerElement)
     } else {
+      runEnsureAttached(rulerElement)
       rulerElement.style.display = 'block'
     }
   } else {
@@ -294,7 +316,7 @@ const runUpdateRuler = (
 /**
  * Calculates physical screen available dimensions for Chrome.
  */
-const getScreenPhysicalChrome = (_zoom: number) => {
+const getScreenPhysicalChrome = () => {
   return {
     screenPhysicalWidth: screen.availWidth,
     screenPhysicalHeight: screen.availHeight,
@@ -342,7 +364,7 @@ const calculateIsNotMaximizedLinux = (): boolean => {
 
   const { screenPhysicalWidth, screenPhysicalHeight } = isFirefox
     ? getScreenPhysicalFirefox(zoom)
-    : getScreenPhysicalChrome(zoom)
+    : getScreenPhysicalChrome()
 
   const isMaximized =
     window.innerWidth * zoom >= screenPhysicalWidth - 50 &&
@@ -394,6 +416,10 @@ const runUpdateStyles = (
   globalSetting: GlobalSetting,
   domainSetting: DomainSetting,
 ) => {
+  if (!isHtmlDocument()) {
+    return
+  }
+
   // Cache settings locally for event listener callbacks
   currentSettings = settings
   currentGlobalSetting = globalSetting
@@ -407,9 +433,22 @@ const runUpdateStyles = (
   )
 
   // Update layout ruler line elements
-  runUpdateRuler(settings, globalSetting, isEffectivelyEnabled)
+  runUpdateRuler(globalSetting, isEffectivelyEnabled)
 
   const { leftWidth, rightWidth } = resolvePadWidths(settings.side)
+
+  // Turning the shift on or off moves scrolling between the window and
+  // <body>, so carry the scroll position across instead of jumping
+  const shouldShift =
+    isEffectivelyEnabled &&
+    (leftWidth > 0 || rightWidth > 0) &&
+    settings.shiftingStrategy._tag === 'Flexbox'
+  const scrollTop =
+    shouldShift === isShiftApplied
+      ? undefined
+      : isShiftApplied
+        ? (document.body?.scrollTop ?? 0)
+        : window.scrollY
 
   // Clear styles and hide element structures if inactive or zero-width
   if (!isEffectivelyEnabled || (leftWidth <= 0 && rightWidth <= 0)) {
@@ -428,14 +467,23 @@ const runUpdateStyles = (
       if (!styleElement) {
         styleElement = document.createElement('style')
         styleElement.id = 'damn-center-style'
-        document.documentElement.appendChild(styleElement)
       }
+      runEnsureAttached(styleElement)
       runApplyFlexboxShifting(
         styleElement,
         leftWidth,
         rightWidth,
         activePadTheme,
       )
+    }
+  }
+
+  isShiftApplied = shouldShift
+  if (scrollTop !== undefined) {
+    if (shouldShift) {
+      if (document.body) document.body.scrollTop = scrollTop
+    } else {
+      window.scrollTo(window.scrollX, scrollTop)
     }
   }
 }
@@ -475,6 +523,9 @@ const runStopUrlCheck = () => {
  * Initializes settings on current page.
  */
 const runInit = () => {
+  if (!isHtmlDocument()) {
+    return
+  }
   const hostname = getHostname(window.location.href)
   console.log('[Damn Center] Initializing content script for host:', hostname)
 
