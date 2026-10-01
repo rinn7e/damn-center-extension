@@ -8,11 +8,19 @@ updates:
     # only propose versions that have been out for a few days
     cooldown:
       default-days: 3
+    # Major versions have breaking changes (TypeScript 5 → 7, ESLint 9 → 10, …),
+    # so upgrade those by hand; monthly batches only carry minor and patch
+    # updates. Security fixes still come through as their own pull requests.
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     groups:
       dev-dependencies:
         dependency-type: development
+        update-types: ['minor', 'patch']
       dependencies:
         dependency-type: production
+        update-types: ['minor', 'patch']
   - package-ecosystem: github-actions
     directory: /
     schedule:
