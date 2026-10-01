@@ -109,7 +109,7 @@ Upload the zips from the release to the stores, not a local build, so the stores
 
 ### Chrome Web Store (Chrome Developer Dashboard)
 
-1. Log in to the [Chrome Developer Dashboard](https://developer.chrome.com/dashboard).
+1. Log in to the [Chrome Developer Dashboard](https://chrome.google.com/webstore/devconsole).
 2. Click on the **Damn Center** item.
 3. Go to the **Package** section and upload `damn-center-chrome-v<VERSION>.zip` from the GitHub release.
 4. Fill in store listing metadata if changed, and submit for review.
