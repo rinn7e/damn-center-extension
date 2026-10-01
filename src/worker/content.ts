@@ -29,6 +29,15 @@ import {
 // re-enabled, but the old copy's elements stay on the page and this copy can't
 // control them (doubled padding that won't turn off). 'symmetry-pad-*' is the
 // id prefix used before 2.1.0.
+//
+// While an old copy's padding is applied, the page scrolls inside <body>;
+// removing its style resets that, so remember the position first and carry it
+// over when this copy applies its own padding.
+let leftoverScrollTop: number | undefined = document.querySelector(
+  '#damn-center-style, #symmetry-pad-style',
+)
+  ? document.body?.scrollTop
+  : undefined
 document
   .querySelectorAll('[id^="damn-center-"], [id^="symmetry-pad-"]')
   .forEach((element) => element.remove())
@@ -48,6 +57,46 @@ const runEnsureAttached = (element: HTMLElement) => {
 // Whether the flexbox shift (which moves scrolling from the window to <body>)
 // is currently applied
 let isShiftApplied = false
+
+// Puts the padding back as soon as the page removes it (document.open(), or a
+// framework replacing <html> or its children). Only started once this page has
+// padding or a ruler, and it only watches the top two levels of the document,
+// so other pages and ordinary DOM updates cost nothing.
+let removalObserver: MutationObserver | undefined
+
+const runWatchForRemoval = () => {
+  if (removalObserver) {
+    return
+  }
+  removalObserver = new MutationObserver(() => {
+    const ours = [
+      styleElement,
+      leftPadPlaceholderElement,
+      leftPadElement,
+      rightPadPlaceholderElement,
+      rightPadElement,
+      rulerElement,
+    ]
+    // Watch the new <html> too, if the page replaced it
+    if (document.documentElement) {
+      removalObserver?.observe(document.documentElement, { childList: true })
+    }
+    if (
+      isHtmlDocument() &&
+      currentSettings &&
+      currentGlobalSetting &&
+      ours.some((element) => element && !element.isConnected)
+    ) {
+      runUpdateStyles(
+        currentSettings,
+        currentGlobalSetting,
+        currentDomainSetting || defaultDomainSetting,
+      )
+    }
+  })
+  removalObserver.observe(document, { childList: true })
+  removalObserver.observe(document.documentElement, { childList: true })
+}
 
 // Cached path matching rule for the active page
 let currentSettings: PathSetting | null = null
@@ -444,11 +493,14 @@ const runUpdateStyles = (
     (leftWidth > 0 || rightWidth > 0) &&
     settings.shiftingStrategy._tag === 'Flexbox'
   const scrollTop =
-    shouldShift === isShiftApplied
-      ? undefined
-      : isShiftApplied
-        ? (document.body?.scrollTop ?? 0)
-        : window.scrollY
+    leftoverScrollTop !== undefined
+      ? leftoverScrollTop
+      : shouldShift === isShiftApplied
+        ? undefined
+        : isShiftApplied
+          ? (document.body?.scrollTop ?? 0)
+          : window.scrollY
+  leftoverScrollTop = undefined
 
   // Clear styles and hide element structures if inactive or zero-width
   if (!isEffectivelyEnabled || (leftWidth <= 0 && rightWidth <= 0)) {
@@ -479,6 +531,9 @@ const runUpdateStyles = (
   }
 
   isShiftApplied = shouldShift
+  if (shouldShift || rulerElement) {
+    runWatchForRemoval()
+  }
   if (scrollTop !== undefined) {
     if (shouldShift) {
       if (document.body) document.body.scrollTop = scrollTop

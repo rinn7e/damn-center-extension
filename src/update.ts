@@ -855,13 +855,14 @@ const triggerImportCmd = (jsonText: string): Cmd<Msg> => {
   )
 }
 
-const queryActiveTabAndSettings = (): Promise<{
+export const queryActiveTabAndSettings = (): Promise<{
   hostname: Hostname
   currentUrl: string
   globalSetting: GlobalSetting
   padSettingList: PaddingSetting[]
 }> => {
   return new Promise((resolve) => {
+    // Sample page for the `pnpm dev` preview only, where there are no tabs
     const defaultUrl =
       'https://some-extremely-long-subdomain.and-even-longer-domain-name.co.uk/'
     const defaultHost = getHostname(defaultUrl)
@@ -876,7 +877,10 @@ const queryActiveTabAndSettings = (): Promise<{
     } else {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const activeTab = tabs[0]
-        const url = (activeTab && activeTab.url) || defaultUrl
+        // Browsers don't give the popup the URL of restricted pages (e.g.
+        // chrome://settings); '' maps to the shared 'system-settings' key, so
+        // edits there don't land under the dev preview's sample site
+        const url = activeTab?.url ?? ''
         const host = getHostname(url)
         Promise.all([loadGlobalSetting()(), loadPadSettings(host)()]).then(
           ([globalEither, padEither]) => {

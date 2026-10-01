@@ -28,6 +28,17 @@ const addedListeners: Array<{
   listener: EventListenerOrEventListenerObject
 }> = []
 
+// Mutation observers each loaded copy starts, disconnected after every test
+// for the same reason
+const startedObservers: MutationObserver[] = []
+const RealMutationObserver = globalThis.MutationObserver
+class RecordedMutationObserver extends RealMutationObserver {
+  constructor(callback: MutationCallback) {
+    super(callback)
+    startedObservers.push(this)
+  }
+}
+
 const recordListeners = (target: EventTarget) => {
   // A test that loads the script twice keeps the first wrapper
   if (vi.isMockFunction(target.addEventListener)) return
@@ -89,8 +100,12 @@ const loadContentScript = async (
       },
     },
   })
+  // A previously loaded copy stops working when a new one is injected (the
+  // browser destroys its context), so its observers stop too
+  startedObservers.splice(0).forEach((observer) => observer.disconnect())
   recordListeners(window)
   recordListeners(document)
+  vi.stubGlobal('MutationObserver', RecordedMutationObserver)
   vi.resetModules()
   await import('../src/worker/content')
   // The script reads the global and the site settings, then applies them
@@ -166,6 +181,7 @@ describe('Content script', () => {
   })
 
   afterEach(() => {
+    startedObservers.splice(0).forEach((observer) => observer.disconnect())
     addedListeners
       .splice(0)
       .forEach(({ target, type, listener }) =>
@@ -283,19 +299,57 @@ describe('Content script', () => {
     expect(isShown('damn-center-ruler')).toBe(true)
   })
 
+  it('puts its elements back as soon as the page removes them', async () => {
+    await loadContentScript(
+      storageWith([pathSetting()], {
+        ...defaultGlobalSetting,
+        showRuler: true,
+      }),
+    )
+
+    // No settings change: only the page wiping its document
+    document.documentElement.innerHTML = '<head></head><body></body>'
+
+    await vi.waitFor(() => {
+      expect(isShown('damn-center-left')).toBe(true)
+      expect(isShown('damn-center-ruler')).toBe(true)
+    })
+    expect(byId('damn-center-style')).not.toBeNull()
+  })
+
+  it('follows the page when it replaces <html> itself', async () => {
+    await loadContentScript(storageWith([pathSetting()]))
+    const original = document.documentElement
+    const replacement = document.createElement('html')
+    replacement.innerHTML = '<head></head><body></body>'
+
+    document.replaceChild(replacement, original)
+    try {
+      await vi.waitFor(() =>
+        expect(replacement.querySelector('#damn-center-left')).not.toBeNull(),
+      )
+    } finally {
+      document.replaceChild(original, replacement)
+    }
+  })
+
   describe('scroll position', () => {
     // jsdom doesn't lay out or scroll, so record what the script sets
     let bodyScrollTop = 0
+    // Every value the script writes, so a test can't pass by doing nothing
+    const bodyScrollWrites: number[] = []
     const scrollTo = vi.fn()
 
     beforeEach(() => {
       bodyScrollTop = 0
+      bodyScrollWrites.splice(0)
       scrollTo.mockReset()
       Object.defineProperty(document.body, 'scrollTop', {
         configurable: true,
         get: () => bodyScrollTop,
         set: (value: number) => {
           bodyScrollTop = value
+          bodyScrollWrites.push(value)
         },
       })
       vi.stubGlobal('scrollTo', scrollTo)
@@ -305,7 +359,7 @@ describe('Content script', () => {
       setProperty(window, 'scrollY', 1500)
       await loadContentScript(storageWith([pathSetting()]))
 
-      expect(bodyScrollTop).toBe(1500)
+      expect(bodyScrollWrites).toEqual([1500])
     })
 
     it('is kept when the padding turns off', async () => {
@@ -322,6 +376,18 @@ describe('Content script', () => {
       })
 
       expect(scrollTo).toHaveBeenCalledWith(0, 900)
+    })
+
+    it('is kept when Firefox injects the script again after an update', async () => {
+      // The old copy's padding is applied, so the page scrolls inside <body>
+      const leftoverStyle = document.createElement('style')
+      leftoverStyle.id = 'symmetry-pad-style'
+      document.documentElement.appendChild(leftoverStyle)
+      bodyScrollTop = 700
+
+      await loadContentScript(storageWith([pathSetting()]))
+
+      expect(bodyScrollWrites).toEqual([700])
     })
 
     it('is left alone when the padding only changes width', async () => {

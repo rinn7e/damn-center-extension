@@ -25,13 +25,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 ### Fixed
 
 - **Scroll Position**: Turning padding on or off (from the popup, when the window is un-maximized, or when moving between pages with and without a rule) no longer jumps the page to a different scroll position.
-- **Pages That Rebuild Themselves**: If a page replaces its whole document, the padding is put back instead of silently disappearing.
+- **Pages That Rebuild Themselves**: If a page replaces or wipes its whole document, the padding and ruler are put back right away instead of silently disappearing.
 - **SVG and XML Files**: Opening an `.svg` or XML file on a site with a matching rule no longer causes an error.
 - **Chrome Version**: The extension now declares Chrome 111 as its minimum, the first version that shows the popup's styling correctly.
 - **No Jump on Load**: The padding is applied as the page starts loading, instead of after it finishes, so pages no longer shift sideways once they appear.
-- **Firefox Updates**: After the add-on updates, open tabs no longer end up with doubled padding that can't be turned off; leftovers from the previous version are removed.
+- **Firefox Updates**: After the add-on updates, open tabs no longer end up with doubled padding that can't be turned off; leftovers from the previous version are removed, and the page keeps its scroll position.
 - **Export in Firefox**: Exporting a backup could fail to download in Firefox.
-- **Browser Pages**: Settings changed while on a browser or extension page (such as `about:newtab`) are no longer saved under a stray site name.
+- **Browser Pages**: Settings changed while on a browser or extension page (such as `about:newtab` or `chrome://settings`) are no longer saved under a stray site name.
 - **Safer Import**: Import used to clear all settings before saving the backup, so a failed save could leave you with none. It now saves the backup first and only then removes what the file doesn't contain.
 - **Popup Font**: The popup named the Inter font without bundling it; it now asks for the system UI font directly, which most users already saw.
 
