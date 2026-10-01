@@ -40,6 +40,13 @@ const recordListeners = (target: EventTarget) => {
   )
 }
 
+// Lets pending storage callbacks and the work they trigger finish
+const settle = async () => {
+  for (let i = 0; i < 3; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  }
+}
+
 // Loads src/worker/content.ts against a fresh DOM and a fake chrome.storage
 const loadContentScript = async (
   storage: Record<string, unknown>,
@@ -47,17 +54,27 @@ const loadContentScript = async (
   sendMessage: MessageListener
   changeStorage: (changes: Record<string, unknown>) => void
   storageReads: () => number
+  breakStorage: () => void
 }> => {
   const listeners: MessageListener[] = []
   const storageListeners: Array<(changes: object, areaName: string) => void> =
     []
   let storageReads = 0
+  let storageBroken = false
   vi.stubGlobal('chrome', {
     storage: {
       local: {
+        // Like the real API: answers asynchronously, and throws once the
+        // extension has been updated or reloaded under a running page
         get: (keys: string[], callback: (res: object) => void) => {
+          if (storageBroken) {
+            throw new Error('Extension context invalidated.')
+          }
           storageReads += 1
-          callback(Object.fromEntries(keys.map((key) => [key, storage[key]])))
+          const result = Object.fromEntries(
+            keys.map((key) => [key, structuredClone(storage[key])]),
+          )
+          setTimeout(() => callback(result), 0)
         },
       },
       onChanged: {
@@ -77,19 +94,25 @@ const loadContentScript = async (
   await import('../src/worker/content')
   // The script reads the global and the site settings, then applies them
   await vi.waitFor(() => expect(storageReads).toBe(2))
-  await new Promise((resolve) => setTimeout(resolve, 0))
+  await settle()
   return {
     sendMessage: (message) =>
       listeners.forEach((listener) => listener(message)),
     // Saves new values, as the popup would from any tab
     changeStorage: (changes) => {
-      Object.assign(storage, changes)
       const event = Object.fromEntries(
-        Object.entries(changes).map(([key, newValue]) => [key, { newValue }]),
+        Object.entries(changes).map(([key, newValue]) => [
+          key,
+          { oldValue: storage[key], newValue },
+        ]),
       )
+      Object.assign(storage, changes)
       storageListeners.forEach((listener) => listener(event, 'local'))
     },
     storageReads: () => storageReads,
+    breakStorage: () => {
+      storageBroken = true
+    },
   }
 }
 
@@ -132,7 +155,7 @@ const setPrefersDark = (prefersDark: boolean) =>
 
 describe('Content script', () => {
   beforeEach(() => {
-    vi.useFakeTimers({ toFake: ['setInterval'] })
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
     window.history.replaceState(null, '', PAGE_URL)
     setPrefersDark(false)
     setProperty(window.screen, 'availWidth', 1920)
@@ -296,6 +319,49 @@ describe('Content script', () => {
       changeStorage({ 'other-site.org': [] })
 
       expect(storageReads()).toBe(readsBefore)
+    })
+
+    it('skips changes that only affect the popup font size', async () => {
+      const { changeStorage, storageReads } = await loadContentScript(
+        storageWith([pathSetting()]),
+      )
+      const readsBefore = storageReads()
+
+      changeStorage({
+        global_settings: { ...defaultGlobalSetting, fontSize: 24 },
+      })
+
+      expect(storageReads()).toBe(readsBefore)
+    })
+
+    it('stops polling for URL changes once the last rule is deleted', async () => {
+      const { changeStorage } = await loadContentScript(
+        storageWith([pathSetting()]),
+      )
+      expect(vi.getTimerCount()).toBe(1)
+
+      changeStorage({ 'example.com': [] })
+      await settle()
+
+      expect(vi.getTimerCount()).toBe(0)
+    })
+
+    it('keeps the padding when storage can no longer be read', async () => {
+      // e.g. a tab left open while the extension was updated
+      const { changeStorage, breakStorage } = await loadContentScript(
+        storageWith([pathSetting()]),
+      )
+      expect(isShown('damn-center-left')).toBe(true)
+      breakStorage()
+
+      setProperty(document, 'visibilityState', 'visible')
+      document.dispatchEvent(new Event('visibilitychange'))
+      await new Promise((resolve) => setTimeout(resolve, 200))
+      changeStorage({ global_settings: defaultGlobalSetting })
+      await settle()
+
+      expect(isShown('damn-center-left')).toBe(true)
+      expect(byId('damn-center-left')!.style.width).toBe('120px')
     })
 
     it('re-reads them when the tab becomes visible', async () => {

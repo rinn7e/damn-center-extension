@@ -35,3 +35,23 @@ export const defaultGlobalSetting: GlobalSetting = {
   disableWhenNotMaximized: false,
   fontSize: DEFAULT_FONT_SIZE,
 }
+
+/**
+ * True when a stored global setting changed in a way that matters to web
+ * pages. The popup font size only affects the popup, so a change to it alone
+ * doesn't need every open tab to re-read its settings.
+ */
+export const globalSettingChangeAffectsPages = (
+  oldValue: unknown,
+  newValue: unknown,
+): boolean => {
+  const withoutFontSize = (value: unknown) => {
+    if (typeof value !== 'object' || value === null) return value
+    const { fontSize: _fontSize, ...rest } = value as Record<string, unknown>
+    return rest
+  }
+  return (
+    JSON.stringify(withoutFontSize(oldValue)) !==
+    JSON.stringify(withoutFontSize(newValue))
+  )
+}

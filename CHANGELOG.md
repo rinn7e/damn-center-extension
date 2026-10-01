@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 - **Privacy Policy**: [PRIVACY.md](https://github.com/rinn7e/damn-center-extension/blob/master/PRIVACY.md) spells out that Damn Center collects nothing and keeps your settings on your device.
 - **Import Confirmation**: Importing a backup now asks before replacing your settings.
-- **Changes Reach Every Tab**: Turning the extension on or off, or editing a site's matches, now updates every open tab right away, not only the one you're on. Switching to a tab also re-reads the latest settings.
+- **Changes Reach Every Tab**: Turning the extension on or off, or editing a site's matches, now updates every open tab right away, not only the one you're on. Switching to a tab also re-reads the latest settings. Tabs left open across an extension update keep their padding instead of losing it.
 
 ### Changed
 
@@ -29,7 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ### Internal
 
-- CI, CodeQL code scanning and a tag-triggered release workflow with checksums and signed build provenance, with GitHub Actions pinned to exact commits.
+- CI, CodeQL code scanning (code and workflows) and a tag-triggered release workflow with checksums and signed build provenance, with GitHub Actions pinned to exact commits and release tags protected.
 - `package.json` is the single source of the version.
 - Tests for the content script, import and the popup's update logic, and `web-ext lint` in CI.
 - Dependabot for minor and patch updates, and all dependencies updated past known vulnerabilities.

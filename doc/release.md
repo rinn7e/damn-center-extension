@@ -106,7 +106,7 @@ Pushing the tag runs the [Release workflow](../.github/workflows/release.yml). I
 
 Building and publishing are separate jobs: the build runs with a read-only token, and only the publish step, which runs no project code, can create the release.
 
-Open the draft under **Releases**, add a one-line summary at the top if you like, and click **Publish release**. If the workflow fails, fix the problem, delete and re-push the tag (`git tag -d v<VERSION> && git push origin :v<VERSION>`), then tag again.
+Open the draft under **Releases**, add a one-line summary at the top if you like, and click **Publish release**. If the workflow fails, fix the problem, delete and re-push the tag (`git tag -d v<VERSION> && git push origin :v<VERSION>`), then tag again. Release tags (`v*`) are protected by a ruleset: they can't be moved, and only repository admins can delete them.
 
 Upload the zips from the release to the stores, not a local build, so the stores and GitHub get identical files. Anyone can check a zip's origin with:
 

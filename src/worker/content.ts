@@ -10,6 +10,7 @@ import {
 import {
   type GlobalSetting,
   defaultGlobalSetting,
+  globalSettingChangeAffectsPages,
 } from '../common/type/global-setting'
 import {
   type DomainSetting,
@@ -450,6 +451,13 @@ const runStartUrlCheck = () => {
   }
 }
 
+const runStopUrlCheck = () => {
+  if (urlCheckIntervalId !== undefined) {
+    clearInterval(urlCheckIntervalId)
+    urlCheckIntervalId = undefined
+  }
+}
+
 /**
  * Initializes settings on current page.
  */
@@ -459,11 +467,18 @@ const runInit = () => {
 
   Promise.all([loadGlobalSetting()(), loadPadSettings(hostname)()]).then(
     ([globalEither, padEither]) => {
-      const globalSetting =
-        globalEither._tag === 'Right'
-          ? globalEither.right
-          : defaultGlobalSetting
-      const settingsList = padEither._tag === 'Right' ? padEither.right : []
+      // If storage can't be read, keep the page as it is. This happens in tabs
+      // that were open when the extension was updated or reloaded: their old
+      // content script can no longer reach storage ("Extension context
+      // invalidated"), and treating that as "no rules" would strip the padding
+      if (globalEither._tag === 'Left' || padEither._tag === 'Left') {
+        console.warn(
+          '[Damn Center] Could not read settings; leaving the page unchanged',
+        )
+        return
+      }
+      const globalSetting = globalEither.right
+      const settingsList = padEither.right
 
       const domainSetting =
         settingsList.find(
@@ -476,6 +491,8 @@ const runInit = () => {
 
       if (pathSettings.length > 0) {
         runStartUrlCheck()
+      } else {
+        runStopUrlCheck()
       }
 
       if (!globalSetting.enabled || !domainSetting.enabled) {
@@ -560,10 +577,16 @@ if (
   chrome.storage.onChanged
 ) {
   chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== 'local') return
     const hostname = getHostname(window.location.href)
+    const globalChange = changes['global_settings']
     if (
-      areaName === 'local' &&
-      ('global_settings' in changes || hostname in changes)
+      hostname in changes ||
+      (globalChange &&
+        globalSettingChangeAffectsPages(
+          globalChange.oldValue,
+          globalChange.newValue,
+        ))
     ) {
       runInit()
     }
