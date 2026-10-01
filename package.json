@@ -2,6 +2,13 @@
   "name": "damn-center-extension",
   "private": true,
   "version": "2.0.0",
+  "description": "Center any website on your widescreen or ultrawide monitor. Per-site padding, rulers, themes and patterns for Chrome, Firefox and Safari.",
+  "homepage": "https://github.com/rinn7e/damn-center-extension#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rinn7e/damn-center-extension.git"
+  },
+  "bugs": "https://github.com/rinn7e/damn-center-extension/issues",
   "license": "GPL-3.0-only",
   "packageManager": "pnpm@11.9.0",
   "engines": {
@@ -43,6 +50,8 @@
     "@tailwindcss/vite": "^4.1.18",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/chrome": "^0.0.299",
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^24.19.0",
     "@types/picomatch": "^4.0.3",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
@@ -55,6 +64,7 @@
     "eslint-plugin-react-x": "^1.52.2",
     "eslint-plugin-unused-imports": "^4.4.1",
     "globals": "^16.2.0",
+    "jsdom": "^30.1.1",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwind-scrollbar": "^4.0.2",

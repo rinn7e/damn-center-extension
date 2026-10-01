@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import {
@@ -68,7 +69,7 @@ export default defineConfig(({ mode }) => {
         if (existsSync(destDevIcon)) {
           try {
             unlinkSync(destDevIcon)
-          } catch (e) {
+          } catch {
             // Ignore if already unlinked
           }
         }

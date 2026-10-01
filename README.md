@@ -26,7 +26,7 @@ Damn Center adds customizable left and right padding to web pages on the fly. Ad
 ## Install
 
 - **Chrome, Edge, Brave and other Chromium browsers**: [Chrome Web Store](https://chromewebstore.google.com/detail/damn-center/jljnmcioeicnlafnjmgknjgegnaccaii)
-- **Firefox**: [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/damn-center/)
+- **Firefox** (140 or later): [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/damn-center/)
 - **Safari**: coming soon to the Mac App Store. Until then, [build it from source](#build-from-source).
 
 ## Screenshot
