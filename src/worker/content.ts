@@ -546,7 +546,15 @@ systemThemeMedia.addEventListener('change', () => {
 window.addEventListener('popstate', runCheckUrlChange)
 window.addEventListener('hashchange', runCheckUrlChange)
 
-// Listen for updates from the popup
+// Listen for updates from the popup.
+//
+// Known and accepted: the active tab applies each popup change twice, once
+// from this message and once from the storage.onChanged listener below. The
+// popup saves before it sends the message, so both carry the same settings and
+// the second pass only re-applies what's already there (a few milliseconds, no
+// visible effect). Removing the message would mean changing how the popup and
+// this script talk to each other, which isn't worth it for no user-visible
+// gain.
 if (
   typeof chrome !== 'undefined' &&
   chrome.runtime &&
