@@ -116,7 +116,7 @@ Upload the zips from the release to the stores, not a local build, so the stores
 2. Click on the **Damn Center** item.
 3. Go to the **Package** section and upload `damn-center-chrome-v<VERSION>.zip` from the GitHub release.
 4. Fill in store listing metadata if changed, and submit for review.
-5. In **Privacy**, keep the declaration that the extension stores settings locally and transmits no user data.
+5. In **Privacy**, keep the declaration that the extension stores settings locally and transmits no user data, and link the privacy policy: `https://github.com/rinn7e/damn-center-extension/blob/master/PRIVACY.md`.
 
 ### Firefox Add-ons (Mozilla Developer Hub)
 

@@ -16,4 +16,5 @@ week.
 
 Damn Center makes no network requests, has no analytics and keeps every
 setting in local browser storage. See [doc/security.md](doc/security.md) for
-the full design and the permissions it asks for.
+the full design and the permissions it asks for, and the
+[privacy policy](PRIVACY.md) for what it stores.

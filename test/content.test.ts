@@ -20,6 +20,26 @@ const PAGE_URL = 'https://example.com/docs/intro'
 
 type MessageListener = (message: unknown) => void
 
+// Listeners each loaded copy of the script adds, removed after every test so
+// one test's script can't react to events fired in a later test
+const addedListeners: Array<{
+  target: EventTarget
+  type: string
+  listener: EventListenerOrEventListenerObject
+}> = []
+
+const recordListeners = (target: EventTarget) => {
+  // A test that loads the script twice keeps the first wrapper
+  if (vi.isMockFunction(target.addEventListener)) return
+  const add = target.addEventListener.bind(target)
+  vi.spyOn(target, 'addEventListener').mockImplementation(
+    (type, listener, options) => {
+      if (listener) addedListeners.push({ target, type, listener })
+      add(type, listener, options)
+    },
+  )
+}
+
 // Loads src/worker/content.ts against a fresh DOM and a fake chrome.storage
 const loadContentScript = async (
   storage: Record<string, unknown>,
@@ -38,6 +58,8 @@ const loadContentScript = async (
       },
     },
   })
+  recordListeners(window)
+  recordListeners(document)
   vi.resetModules()
   await import('../src/worker/content')
   await vi.waitFor(() => {
@@ -98,6 +120,13 @@ describe('Content script', () => {
   })
 
   afterEach(() => {
+    addedListeners
+      .splice(0)
+      .forEach(({ target, type, listener }) =>
+        target.removeEventListener(type, listener),
+      )
+    vi.restoreAllMocks()
+    vi.clearAllTimers()
     vi.useRealTimers()
     vi.unstubAllGlobals()
     delete (document as { fullscreenElement?: unknown }).fullscreenElement
@@ -195,6 +224,24 @@ describe('Content script', () => {
 
     expect(isShown('damn-center-left')).toBe(true)
     expect(byId('damn-center-left')!.style.width).toBe('160px')
+  })
+
+  it('only polls for URL changes on sites that have rules', async () => {
+    await loadContentScript(storageWith([]))
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('starts polling once the popup sends settings for the site', async () => {
+    const { sendMessage } = await loadContentScript(storageWith([]))
+
+    sendMessage({
+      type: 'SETTINGS_UPDATED',
+      settings: pathSetting(),
+      globalSetting: defaultGlobalSetting,
+      domainSetting: { _tag: 'DomainSetting', enabled: true },
+    })
+
+    expect(vi.getTimerCount()).toBe(1)
   })
 
   it('re-checks the rules when a single-page app changes the URL', async () => {

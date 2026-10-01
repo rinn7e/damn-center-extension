@@ -19,15 +19,15 @@
   <a href="AI-DECLARATION.md"><img src="https://img.shields.io/badge/䷼%20AI--DECLARATION-assist-fef9c3?labelColor=fef9c3" alt="AI-DECLARATION: assist"></a>
 </p>
 
-A layout-centering browser extension designed to prevent neck and eye strain by bringing web content into a balanced, comfortable view. Ideal for widescreen and ultrawide monitors, it shifts off-centered web layouts to the absolute center, making reading long articles, code, and documentation a comfortable experience.
-
-Damn Center adds customizable left and right padding to web pages on the fly. Adjust padding widths, overlay vertical alignment rulers, select side shifting, customize base colors, and choose beautiful SVG background patterns that automatically synchronize with your system's light/dark mode preference.
+Many websites hug the left edge, which on a widescreen or ultrawide monitor means reading with your head turned. Damn Center adds padding beside the page to bring its content to the center of your screen, and remembers your setup per site. Pick the width and side, add a ruler to line things up, and choose colors or SVG patterns for the padding that follow your system's light/dark mode.
 
 ## Install
 
 - **Chrome, Edge, Brave and other Chromium browsers**: [Chrome Web Store](https://chromewebstore.google.com/detail/damn-center/jljnmcioeicnlafnjmgknjgegnaccaii)
 - **Firefox** (140 or later): [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/damn-center/)
 - **Safari**: coming soon to the Mac App Store. Until then, [build it from source](#build-from-source).
+
+Damn Center collects no data and makes no network requests. See the [privacy policy](PRIVACY.md) and [how it's built](doc/security.md).
 
 ## Screenshot
 

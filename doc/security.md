@@ -1,25 +1,23 @@
-# Damn Center Security & User Trust Strategy
+# Security Design
 
-Browser extensions often demand broad permissions, making users cautious about potential malicious behavior (e.g., data harvesting, credential theft, or remote code execution). This document outlines the security architecture of Damn Center and strategies to build absolute trust with users.
+Browser extensions often ask for broad permissions, so it's fair to wonder what they do with them. This document describes how Damn Center is built, what it can and can't do, and how you can check it yourself. For what happens to your data, see the [privacy policy](../PRIVACY.md); to report a vulnerability, see [SECURITY.md](../SECURITY.md).
 
 ---
 
-## 1. Core Security Architecture
+## No Network Access
 
-Damn Center is designed with a "local-first, zero-network" model. The extension behaves entirely offline and lacks the capability to transmit data.
+Damn Center works entirely offline.
 
-### Zero Network Connections
+- **No background script**: the manifests declare no background script or service worker, so nothing runs when the popup is closed except the content script described below.
+- **No network requests**: the source contains no `fetch`, `XMLHttpRequest`, `WebSocket` or `sendBeacon` calls.
+- **No telemetry**: no analytics, tracking or crash-reporting code is included.
 
-- **No Background Service Workers**: Damn Center does not run a background script or service worker. Without a background process, the extension cannot coordinate background network activity.
-- **No External Fetch/XHR Calls**: The codebase contains no `fetch`, `XMLHttpRequest`, or WebSockets implementations.
-- **No Third-Party Telemetry**: There are no tracking scripts, analytics SDKs (e.g., Google Analytics), or crash-reporting libraries integrated.
+## Local Storage Only
 
-### Strictly Local Storage
+- Your matches, widths, colors and preferences are stored with `chrome.storage.local`, on your device only. They aren't synced to your browser account or sent anywhere.
+- **Export** writes a JSON file that you save yourself, and **Import** reads one you choose. Neither involves a server.
 
-- All domain configuration values, custom widths, and theme preferences are stored locally on the user's machine using `chrome.storage.local`.
-- No user data is sent to external servers, cloud databases, or syncing services.
-
-### Permissions
+## Permissions
 
 The manifests request only two permissions, plus one content script:
 
@@ -27,24 +25,7 @@ The manifests request only two permissions, plus one content script:
 - **activeTab**: lets the popup read the current tab's URL, so it can show and add the matches for that page.
 - **Content script on all `http` and `https` pages** (`"matches": ["http://*/*", "https://*/*"]`, `run_at: document_start`): this is the broad one. Because padding has to be applied as a page loads, before you open the popup, the script runs on every site. It reads your saved matches from local storage and, only on pages that match an enabled rule, adds the padding elements and a `<style>` tag. It doesn't read page content, forms or cookies, and it makes no network requests. Browsers show this as "read and change data on all websites".
 
----
-
-## 2. Strategies for Establishing User Trust
-
-To prove to users that Damn Center is secure, we implement the following transparency strategies:
-
-### Open-Source Codebase and Audits
-
-- **Public Repository**: Keep the source code public on GitHub, allowing developers to inspect every line of code, dependency, and configuration.
-- **Dependency Audit**: The project uses `pnpm-lock.yaml` to pin exact dependency versions and hashes, making the build repeatable. Dependabot proposes dependency and GitHub Actions updates each month and opens pull requests for known vulnerabilities; branch protection requires CI to pass before any of them can merge. All of these are build and test tools: none of them ship in the extension packages.
-
-### Verifiable and Reproducible Builds
-
-- **Unpacked Installation Instructions**: Explain clearly in the main `README.md` how users can load the unpacked extension in developer mode directly from the source code.
-- **Minified, Not Obfuscated**: Release builds are minified by Vite but not obfuscated. Anyone can rebuild from source with `pnpm run build:release` and compare the files with the ones inside the store package; the build is reproducible, so they match byte for byte.
-- **Checksums**: Each GitHub release is built by CI from the tagged commit and lists the SHA-256 of its zips in `SHA256SUMS.txt`.
-
-### Content Security Policy (CSP) and Remote Code
+## Content Security Policy and Remote Code
 
 - All three manifests (`manifests/manifest.{chrome,firefox,safari}.json`) set a strict CSP for the extension's own pages:
   ```json
@@ -56,16 +37,18 @@ To prove to users that Damn Center is secure, we implement the following transpa
 - Manifest V3 itself forbids remotely hosted code everywhere in the extension, including the content script: everything that runs ships inside the reviewed package.
 - The content script's safety comes from what it does, which you can audit in `src/worker/content.ts`: it only reads your settings from local storage and adds the padding elements and a `<style>` tag, as described under [Permissions](#permissions).
 
-### Clear and Legally-Binding Privacy Policy
-
-- Provide a simple, jargon-free Privacy Policy document in the store listings stating:
-  > "Damn Center does not collect, store, or transmit any personal data, browsing history, or configuration settings. All settings are kept locally on your browser via local storage and never leave your device."
-
 ---
 
-## 3. Review Submission Strategy
+## Verifying It Yourself
 
-When submitting updates to browser extension stores:
+- **Open source**: all code, dependencies and build configuration are in this repository, under the GPL-3.0.
+- **Build from source**: the [README](../README.md#build-from-source) explains how to build the extension and load it unpacked, instead of installing it from a store.
+- **Reproducible builds**: release builds are minified by Vite but not obfuscated, and the build is reproducible. Rebuild with `pnpm run build:release` and the files match the ones inside the store package byte for byte.
+- **Checksums**: each GitHub release is built by CI from the tagged commit and lists the SHA-256 of its zips in `SHA256SUMS.txt`.
+- **Store review**: Mozilla reviewers receive the full source of each release and rebuild it to confirm the package matches.
 
-- **Chrome Web Store Developer Console**: In the "Single Purpose" and "Privacy" sections, explicitly declare that the extension only stores local website configurations and operates entirely offline.
-- **Mozilla AMO Submission**: Since Mozilla manually reviews extensions using compilers/bundlers, we submit the source code (every file tracked in git at the release tag; see the [release guide](release.md#6-submit-to-browser-web-stores)) with clear instructions. This allows Mozilla's reviewers to build the files themselves and verify that the binary on the store exactly matches the audited source code.
+## Dependencies
+
+- `pnpm-lock.yaml` pins exact dependency versions and hashes, so builds use exactly the reviewed dependencies.
+- Dependabot proposes dependency and GitHub Actions updates each month and opens pull requests for known vulnerabilities. Branch protection requires CI to pass before any of them can merge.
+- The extension packages contain only Damn Center's code and the runtime libraries listed under `dependencies` in `package.json` (React, fp-ts, io-ts, picomatch and a few small helpers); build and test tools never ship.

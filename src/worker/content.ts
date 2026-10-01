@@ -438,6 +438,18 @@ const noMatchSetting: PathSetting = {
   shiftingStrategy: { _tag: 'Flexbox' },
 }
 
+// Timer for the periodic URL check below, started only when needed
+let urlCheckIntervalId: ReturnType<typeof setInterval> | undefined
+
+// Single-page apps change the URL without reloading the page, so poll for it.
+// Rules belong to a hostname, which can't change without a reload, so this
+// only runs on sites with at least one rule (or once the popup sends some).
+const runStartUrlCheck = () => {
+  if (urlCheckIntervalId === undefined) {
+    urlCheckIntervalId = setInterval(() => runCheckUrlChange(), 500)
+  }
+}
+
 /**
  * Initializes settings on current page.
  */
@@ -461,6 +473,10 @@ const runInit = () => {
       const pathSettings = settingsList.filter(
         (item): item is PathSetting => item._tag === 'PathSetting',
       )
+
+      if (pathSettings.length > 0) {
+        runStartUrlCheck()
+      }
 
       if (!globalSetting.enabled || !domainSetting.enabled) {
         runUpdateStyles(noMatchSetting, globalSetting, domainSetting)
@@ -513,9 +529,6 @@ systemThemeMedia.addEventListener('change', () => {
 window.addEventListener('popstate', runCheckUrlChange)
 window.addEventListener('hashchange', runCheckUrlChange)
 
-// Periodic check for client-side routing transitions
-setInterval(runCheckUrlChange, 500)
-
 // Listen for updates from the popup
 if (
   typeof chrome !== 'undefined' &&
@@ -524,6 +537,7 @@ if (
 ) {
   chrome.runtime.onMessage.addListener((message) => {
     if (message.type === 'SETTINGS_UPDATED') {
+      runStartUrlCheck()
       console.log(
         '[Damn Center] Settings updated from popup:',
         message.settings,
