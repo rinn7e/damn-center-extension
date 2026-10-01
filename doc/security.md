@@ -36,7 +36,7 @@ To prove to users that Damn Center is secure, we implement the following transpa
 ### Open-Source Codebase and Audits
 
 - **Public Repository**: Keep the source code public on GitHub, allowing developers to inspect every line of code, dependency, and configuration.
-- **Dependency Audit**: The project uses `pnpm-lock.yaml` to pin exact, audited dependency hashes, making the build chain transparent and repeatable.
+- **Dependency Audit**: The project uses `pnpm-lock.yaml` to pin exact dependency versions and hashes, making the build repeatable. Dependabot proposes dependency and GitHub Actions updates each month, and CI checks every one.
 
 ### Verifiable and Reproducible Builds
 
@@ -45,7 +45,7 @@ To prove to users that Damn Center is secure, we implement the following transpa
 
 ### Robust Content Security Policy (CSP)
 
-- Configure a strict CSP inside both `manifest.chrome.json` and `manifest.firefox.json` that prevents the execution of remote scripts:
+- All three manifests (`manifests/manifest.{chrome,firefox,safari}.json`) set a strict CSP that prevents the execution of remote scripts:
   ```json
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self';"
@@ -65,4 +65,4 @@ To prove to users that Damn Center is secure, we implement the following transpa
 When submitting updates to browser extension stores:
 
 - **Chrome Web Store Developer Console**: In the "Single Purpose" and "Privacy" sections, explicitly declare that the extension only stores local website configurations and operates entirely offline.
-- **Mozilla AMO Submission**: Since Mozilla manually reviews extensions using compilers/bundlers, we submit the source (`dist/damn-center-source-v<VERSION>.zip`, every file tracked in git) with clear instructions. This allows Mozilla's reviewers to build the files themselves and verify that the binary on the store exactly matches the audited source code.
+- **Mozilla AMO Submission**: Since Mozilla manually reviews extensions using compilers/bundlers, we submit the source code (every file tracked in git at the release tag; see the [release guide](release.md#6-submit-to-browser-web-stores)) with clear instructions. This allows Mozilla's reviewers to build the files themselves and verify that the binary on the store exactly matches the audited source code.

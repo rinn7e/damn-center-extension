@@ -112,14 +112,14 @@ cp .env.example .env.production
 
 ### Environment Variables
 
-Builds load `.env.development` or `.env.production` depending on the mode. Both are ignored by git. `.env.example` holds the release values; after copying it to `.env.development`, set `VITE_SHOW_BUILD_DATE=true` (and `VITE_DISABLE_LOG=false` if you want console logs) so dev builds are easy to tell apart.
+Builds load `.env.development` or `.env.production` depending on the mode. Both are ignored by git. `.env.example` holds the release values; set `VITE_DISABLE_LOG=false` in `.env.development` if you want console logs. Development builds always show the build date and use the DEV icons, so they're easy to tell apart from store builds.
 
-| Variable                 | Description                                                                    | `.env.example`   |
-| :----------------------- | :----------------------------------------------------------------------------- | :--------------- |
-| `VITE_UI_THEME_ID`       | Theme for the popup UI.                                                        | `solarizedLight` |
-| `VITE_DISABLE_LOG`       | Strips all `console.*` calls from the bundles when `true`.                     | `true`           |
-| `VITE_SHOW_BUILD_DATE`   | Shows the build date and time under the title in the popup header when `true`. | `false`          |
-| `VITE_DEFAULT_FONT_SIZE` | Default popup font size in pixels, until the user changes it (16 if unset).    | `18`             |
+| Variable                 | Description                                                                                                                 | `.env.example`   |
+| :----------------------- | :-------------------------------------------------------------------------------------------------------------------------- | :--------------- |
+| `VITE_UI_THEME_ID`       | Theme for the popup UI.                                                                                                     | `solarizedLight` |
+| `VITE_DISABLE_LOG`       | Strips all `console.*` calls from the bundles when `true`.                                                                  | `true`           |
+| `VITE_SHOW_BUILD_DATE`   | Shows the build date under the title in the popup header in release builds when `true` (development builds always show it). | `false`          |
+| `VITE_DEFAULT_FONT_SIZE` | Default popup font size in pixels, until the user changes it (16 if unset).                                                 | `18`             |
 
 ### Layout Shifting Mechanism
 

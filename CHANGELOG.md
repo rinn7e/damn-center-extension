@@ -19,6 +19,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 - **Build Scripts**: Release zip names now follow the version in `package.json`, so a version bump no longer needs edits to every script. Each zip is rebuilt from scratch instead of updated in place, and the source zip now contains exactly the files tracked in git.
 - **Packages**: Removed old backup icons and screenshots that were being copied into the extension packages.
 - **Page Elements**: The padding, ruler and style elements the extension adds to pages now use `damn-center-*` ids instead of the old `symmetry-pad-*` names.
+- **Single Version Source**: The build now writes the version from `package.json` into each browser's manifest, so a release bumps one file.
+- **Development Builds**: Always show the build date in the popup, whatever `.env.development` says.
+- **Dependencies**: Dependabot proposes npm and GitHub Actions updates monthly.
 - **Safari**: `generate:safari` now builds the Xcode project from the release build instead of the development build.
 
 ### Fixed

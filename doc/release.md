@@ -40,13 +40,15 @@ If the release changes the storage schema, follow the
 
 ## 2. Version Bumping
 
-The extension version must be synchronized across these files. Update the version string (e.g., `1.0.1` -> `1.0.2`):
+The version lives only in **`package.json`**. The build writes it into each
+browser's `manifest.json`, and the zip names follow it, so bump it there:
 
-1. **`package.json`**: Update the `"version"` field (the zip file names follow it).
-2. **`manifests/manifest.chrome.json`**: Update the `"version"` field.
-3. **`manifests/manifest.firefox.json`**: Update the `"version"` field.
-4. **`manifests/manifest.safari.json`**: Update the `"version"` field.
-5. **`CHANGELOG.md`**: Add a `## [<VERSION>] - <date>` entry.
+1. **`package.json`**: update the `"version"` field (e.g. `2.0.0` → `2.1.0`).
+2. **`CHANGELOG.md`**:
+   - Rename `## [Unreleased]` to `## [<VERSION>] - <YYYY-MM-DD>` and add a new, empty `## [Unreleased]` above it.
+   - At the bottom, point `[Unreleased]` at `compare/v<VERSION>...HEAD` and add `[<VERSION>]: .../compare/v<PREVIOUS>...v<VERSION>`.
+
+The release workflow fails if the tag doesn't match `package.json` or if `CHANGELOG.md` has no section for the version.
 
 ---
 
@@ -66,7 +68,7 @@ This script compiles `dist/chrome`, `dist/firefox` and `dist/safari`, and output
 - `dist/damn-center-chrome-v<VERSION>.zip` (Chrome extension package)
 - `dist/damn-center-firefox-v<VERSION>.zip` (Firefox extension package)
 - `dist/damn-center-safari-v<VERSION>.zip` (Safari extension package)
-- `dist/damn-center-source-v<VERSION>.zip` (source code for store review: every file tracked in git, with your working-tree changes)
+- `dist/damn-center-source-v<VERSION>.zip` (every file tracked in git, with your working-tree changes; handy for checking locally, while AMO gets the release's **Source code (zip)**)
 
 ---
 
@@ -76,7 +78,7 @@ Commit the version bump changes, create a git tag, and push them to the reposito
 
 ```bash
 # 1. Stage and commit version bump files
-git add package.json CHANGELOG.md manifests/
+git add package.json CHANGELOG.md
 git commit -m "[Release] bump version to v<VERSION>"
 
 # 2. Create an annotated git tag
@@ -118,7 +120,7 @@ Upload the zips from the release to the stores, not a local build, so the stores
 1. Log in to the [Firefox Add-on Developer Hub](https://addons.mozilla.org/developers/).
 2. Submit a new version of the extension.
 3. Upload `damn-center-firefox-v<VERSION>.zip` from the GitHub release.
-4. When asked whether the code is compiled or minified, answer **Yes** and upload the source: the release's **Source code (zip)** (every file tracked in git at the tag), or `dist/damn-center-source-v<VERSION>.zip` from a local `build:release`.
+4. When asked whether the code is compiled or minified, answer **Yes** and upload the release's **Source code (zip)** from GitHub (every file tracked in git at the tag).
 5. Build instructions for the reviewer: "Install Node.js 24+ and pnpm, run `pnpm install`, `cp .env.example .env.production`, then `pnpm run build:firefox:release`. The output is in `dist/firefox/`."
 6. Follow the steps for listing review. The license is GPL-3.0.
 

@@ -1,6 +1,13 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { copyFileSync, existsSync, mkdirSync, unlinkSync } from 'fs'
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  unlinkSync,
+  writeFileSync,
+} from 'fs'
 import { resolve } from 'path'
 import { defineConfig, loadEnv } from 'vite'
 
@@ -9,6 +16,18 @@ export default defineConfig(({ mode }) => {
   const isContent = process.env.BUILD_TARGET === 'content'
   const target = process.env.TARGET || 'chrome'
   const outDir = resolve(process.cwd(), `dist/${target}`)
+  const { version } = JSON.parse(
+    readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'),
+  )
+  // Development builds always show the build date so they're easy to tell apart
+  const showBuildDate =
+    mode === 'development' || env.VITE_SHOW_BUILD_DATE === 'true'
+  const define = {
+    'import.meta.env.VITE_BUILD_DATE': JSON.stringify(new Date().toISOString()),
+    'import.meta.env.VITE_SHOW_BUILD_DATE': JSON.stringify(
+      String(showBuildDate),
+    ),
+  }
 
   const copyManifestPlugin = () => ({
     name: 'copy-manifest-plugin',
@@ -17,10 +36,16 @@ export default defineConfig(({ mode }) => {
         mkdirSync(outDir, { recursive: true })
       }
 
-      // Copy the target-specific manifest
-      copyFileSync(
-        resolve(process.cwd(), `manifests/manifest.${target}.json`),
+      // Write the target-specific manifest, with the version from package.json
+      const manifest = JSON.parse(
+        readFileSync(
+          resolve(process.cwd(), `manifests/manifest.${target}.json`),
+          'utf8',
+        ),
+      )
+      writeFileSync(
         resolve(outDir, 'manifest.json'),
+        JSON.stringify({ ...manifest, version }, null, 2) + '\n',
       )
 
       // Swap development icons if building in development mode
@@ -54,11 +79,7 @@ export default defineConfig(({ mode }) => {
   if (isContent) {
     return {
       plugins: [copyManifestPlugin()],
-      define: {
-        'import.meta.env.VITE_BUILD_DATE': JSON.stringify(
-          new Date().toISOString(),
-        ),
-      },
+      define,
       build: {
         outDir,
         emptyOutDir: false, // Keep the popup files
@@ -97,11 +118,7 @@ export default defineConfig(({ mode }) => {
   // Popup build configuration
   return {
     plugins: [react(), tailwindcss(), copyManifestPlugin()],
-    define: {
-      'import.meta.env.VITE_BUILD_DATE': JSON.stringify(
-        new Date().toISOString(),
-      ),
-    },
+    define,
     build: {
       outDir,
       emptyOutDir: true, // Clean dist before building popup

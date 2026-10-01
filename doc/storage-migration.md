@@ -1,12 +1,12 @@
 # Storage Migration Strategy
 
-In the event that the storage data structures (e.g., `PadSettings` or `GlobalSetting` schemas in `src/common/type/`) need to be updated in a future version, follow this migration strategy to prevent user data loss:
+Settings are stored in `chrome.storage.local` and decoded with the `io-ts` codecs in `src/common/type/`. When a future version changes those structures (e.g. `PadSetting` or `GlobalSetting`), follow this strategy so users don't lose their settings.
 
 ## Schema Versioning
 
-- Define a `schema_version` key inside the `global_settings` storage namespace.
-- Initialize the current version (e.g., `schema_version: 1`).
-- On extension startup (or database initialization), check the existing `schema_version` before loading/decoding other values.
+- `GlobalSetting` already carries `schema_version`, currently `1` (`src/common/type/global-setting.ts`). It's stored under the `global_settings` key.
+- Nothing reads it yet, because there has been no migration so far.
+- With the first migration, check `schema_version` on startup, before decoding the other values, and bump the default in `global-setting.ts`.
 
 ## Migration Implementation Patterns
 
