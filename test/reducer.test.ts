@@ -28,6 +28,7 @@ const initMsg: Extract<Msg, { _tag: 'Init' }> = {
   globalSetting: defaultGlobalSetting,
   domainSetting: { _tag: 'DomainSetting', enabled: true },
   padSettingList: [blogRule, docsRule],
+  isDefaultRuleUnsaved: false,
 }
 
 // Runs messages through update() starting from Init, returning the model
