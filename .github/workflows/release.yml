@@ -32,9 +32,9 @@ jobs:
       - name: Write release notes from CHANGELOG.md
         run: |
           version="${GITHUB_REF_NAME#v}"
-          awk -v v="$version" '
-            $0 ~ "^## \\[" v "\\]" { found = 1; next }
-            found && /^## \[/ { exit }
+          awk -v header="## [$version]" '
+            index($0, header) == 1 { found = 1; next }
+            found && (/^## \[/ || /^\[/) { exit }
             found && /^---$/ { next }
             found { print }
           ' CHANGELOG.md > notes.md
@@ -50,5 +50,4 @@ jobs:
             --title "Damn Center $GITHUB_REF_NAME" \
             --notes-file notes.md \
             dist/damn-center-chrome-$GITHUB_REF_NAME.zip \
-            dist/damn-center-firefox-$GITHUB_REF_NAME.zip \
-            dist/damn-center-safari-$GITHUB_REF_NAME.zip
+            dist/damn-center-firefox-$GITHUB_REF_NAME.zip

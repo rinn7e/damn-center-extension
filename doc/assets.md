@@ -28,4 +28,4 @@ you want to show first (`pnpm run build:release` for clean shots without the
   never in `public/`: everything in `public/` is copied into the extension
   package.
 - **Brand:** the Solarized palette used by the popup (teal `#2aa198`, cream
-  `#fdf6e3`, navy `#002b36` / `#073642`) and the Inter font.
+  `#fdf6e3`, navy `#002b36` / `#073642`) and the system UI font (no web fonts are bundled).

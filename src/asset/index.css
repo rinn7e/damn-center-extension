@@ -20,8 +20,8 @@
   --color-text-muted: #475569;
   --color-text-dim: #64748b;
 
-  --font-header: 'Inter', sans-serif;
-  --font-normal: 'Inter', sans-serif;
+  --font-header: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-normal: system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 @theme {

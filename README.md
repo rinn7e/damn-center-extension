@@ -110,6 +110,14 @@ cp .env.example .env.production
 4. Go to **Safari Settings > Developer** (or under **Develop** in the menu bar) and click **"Add Temporary Extension..."**.
 5. Select the `./dist/safari` directory from this repository.
 
+A temporary extension is removed when Safari quits. To keep it installed, build the Safari app wrapper instead (macOS with Xcode installed):
+
+```bash
+pnpm run generate:safari
+```
+
+This runs `build:safari:release` and converts `dist/safari` into an Xcode project in `./safari-extension/` (git-ignored). Open `safari-extension/Damn Center/Damn Center.xcodeproj`, run the **Damn Center** app once, then turn the extension on in **Safari Settings > Extensions**. Unsigned local builds still need **Allow Unsigned Extensions** enabled.
+
 ### Environment Variables
 
 Builds load `.env.development` or `.env.production` depending on the mode. Both are ignored by git. `.env.example` holds the release values; set `VITE_DISABLE_LOG=false` in `.env.development` if you want console logs. Development builds always show the build date and use the DEV icons, so they're easy to tell apart from store builds.

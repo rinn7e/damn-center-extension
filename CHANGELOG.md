@@ -8,25 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ## [Unreleased]
 
-### Added
-
-- **Continuous Integration**: Type check, lint, format check, tests and release build run on every push and pull request.
-- **Release Workflow**: Pushing a `v*` tag builds the zips in CI and creates a draft GitHub release with the notes from this changelog.
-- **Contributor Docs**: `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, issue templates and a pull request template.
-
 ### Changed
 
-- **Build Scripts**: Release zip names now follow the version in `package.json`, so a version bump no longer needs edits to every script. Each zip is rebuilt from scratch instead of updated in place, and the source zip now contains exactly the files tracked in git.
-- **Packages**: Removed old backup icons and screenshots that were being copied into the extension packages.
-- **Page Elements**: The padding, ruler and style elements the extension adds to pages now use `damn-center-*` ids instead of the old `symmetry-pad-*` names.
-- **Single Version Source**: The build now writes the version from `package.json` into each browser's manifest, so a release bumps one file.
-- **Development Builds**: Always show the build date in the popup, whatever `.env.development` says.
-- **Dependencies**: Dependabot proposes npm and GitHub Actions updates monthly.
-- **Safari**: `generate:safari` now builds the Xcode project from the release build instead of the development build.
+- **Page Elements**: The padding, ruler and style elements the extension adds to pages now use `damn-center-*` ids instead of the old `symmetry-pad-*` names. If you wrote custom user styles for those ids, update them.
+- **Smaller Packages**: Removed old backup icons and screenshots that were being copied into the extension packages.
+- **Popup Font**: The popup now asks for the system UI font directly; it used to name Inter, which was never bundled, so most users already saw the system font.
 
-### Fixed
+### Internal
 
-- **Docs**: The security doc now describes the content script's all-sites access accurately, and the README's environment variable defaults match `.env.example`.
+- **CI**: Type check, lint, format check, tests and release build run on every push and pull request. Dependabot proposes npm and GitHub Actions updates monthly.
+- **Releases**: Pushing a `v*` tag builds the Chrome and Firefox zips in CI and creates a draft GitHub release with the notes from this changelog. The version lives only in `package.json` and is written into each manifest at build time.
+- **Build Scripts**: Zips are rebuilt from scratch instead of updated in place, and the source zip contains exactly the files tracked in git. Development builds always show the build date in the popup.
+- **Safari**: `generate:safari` builds the Xcode project from the release build, and the README documents it.
+- **Docs**: Added `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `AGENTS.md`, issue and pull request templates. The security doc now describes the content script's all-sites access accurately.
 
 ---
 

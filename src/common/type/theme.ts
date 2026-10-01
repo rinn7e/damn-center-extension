@@ -36,8 +36,8 @@ export const themes: Record<string, Theme> = {
   neon: {
     id: 'neon',
     name: 'Neon Green',
-    headerFont: "'Inter', sans-serif",
-    normalFont: "'Inter', sans-serif",
+    headerFont: "system-ui, -apple-system, 'Segoe UI', sans-serif",
+    normalFont: "system-ui, -apple-system, 'Segoe UI', sans-serif",
 
     // Light Mode
     primaryColor: '#10b981', // emerald-500
@@ -64,8 +64,8 @@ export const themes: Record<string, Theme> = {
   solarizedLight: {
     id: 'solarizedLight',
     name: 'Solarized Light',
-    headerFont: "'Inter', sans-serif",
-    normalFont: "'Inter', sans-serif",
+    headerFont: "system-ui, -apple-system, 'Segoe UI', sans-serif",
+    normalFont: "system-ui, -apple-system, 'Segoe UI', sans-serif",
 
     // Light Mode (light base3 background, base2 card background, base01/base00 text, blue primary)
     primaryColor: '#2aa198', // solarized cyan

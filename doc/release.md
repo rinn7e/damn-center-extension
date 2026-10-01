@@ -67,7 +67,7 @@ This script compiles `dist/chrome`, `dist/firefox` and `dist/safari`, and output
 
 - `dist/damn-center-chrome-v<VERSION>.zip` (Chrome extension package)
 - `dist/damn-center-firefox-v<VERSION>.zip` (Firefox extension package)
-- `dist/damn-center-safari-v<VERSION>.zip` (Safari extension package)
+- `dist/damn-center-safari-v<VERSION>.zip` (Safari extension files; not attached to releases, since Safari users need the app wrapper from `pnpm run generate:safari`)
 - `dist/damn-center-source-v<VERSION>.zip` (every file tracked in git, with your working-tree changes; handy for checking locally, while AMO gets the release's **Source code (zip)**)
 
 ---
@@ -97,7 +97,7 @@ Pushing the tag runs the [Release workflow](../.github/workflows/release.yml). I
 
 1. checks that the tag matches the `package.json` version,
 2. runs the type check and tests, then `build:release`,
-3. creates a **draft** release titled `Damn Center v<VERSION>`, with this version's `CHANGELOG.md` section as the notes and the Chrome, Firefox and Safari zips attached.
+3. creates a **draft** release titled `Damn Center v<VERSION>`, with this version's `CHANGELOG.md` section as the notes and the Chrome and Firefox zips attached.
 
 Open the draft under **Releases**, add a one-line summary at the top if you like, and click **Publish release**. If the workflow fails, fix the problem, delete and re-push the tag (`git tag -d v<VERSION> && git push origin :v<VERSION>`), then tag again.
 
