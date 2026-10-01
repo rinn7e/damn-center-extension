@@ -18,6 +18,10 @@ Built with **React**, **Vite**, **TypeScript**, **Tailwind CSS**, **react-tea-cu
 
 ![Damn Center Screenshot](doc/images/readme-screenshot.png)
 
+## Video Showcase
+
+[![Damn Center 2.0 Showcase](https://img.youtube.com/vi/GnFG-Eb1EGc/maxresdefault.jpg)](https://www.youtube.com/watch?v=GnFG-Eb1EGc)
+
 ## Getting Started
 
 ### 1. Install Dependencies
@@ -150,6 +154,10 @@ To set up your environment variables:
 
 Please refer to the [Code Convention Document](doc/code-convention.md) for details on code design principles and style conventions adhered to in this project.
 
+## Design Assets
+
+The icons, screenshots, store graphics and showcase video are generated. See [Design Assets](doc/assets.md) for where each one comes from and how to regenerate it.
+
 ## Features
 
 - **Width Adjustment**: Scale padding width dynamically using the popup slider.
@@ -198,12 +206,6 @@ The following websites are currently known to be incompatible with the extension
 
 - [https://studio.youtube.com/](https://studio.youtube.com/) (YouTube Studio)
 - [https://mail.google.com/mail/](https://mail.google.com/mail/) (Gmail)
-
----
-
-## Video Showcase
-
-[![Damn Center 2.0 Showcase](https://img.youtube.com/vi/GnFG-Eb1EGc/maxresdefault.jpg)](https://www.youtube.com/watch?v=GnFG-Eb1EGc)
 
 ---
 

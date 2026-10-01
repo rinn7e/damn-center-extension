@@ -11,13 +11,13 @@ Before packaging the extension, run final quality assurance checks in the projec
 - [ ] **Type Check**: Run `pnpm run check` and verify that there are zero TypeScript compiler errors.
 - [ ] **Lint Check**: Run `pnpm run lint` and verify that there are zero ESLint warnings or errors.
 - [ ] **Formatting**: Run `pnpm run format` to ensure consistency in code styling.
-- [ ] **Clean Production Build**: Run `pnpm run build` to compile the final files. Verify that the output directories `dist/chrome/` and `dist/firefox/` contain all compiled assets (HTML, CSS, JS, and icons).
+- [ ] **Clean Production Build**: Run `pnpm run build:release` to compile the final files (`pnpm run build` is a development build with `-dev` icons). Verify that the output directories `dist/chrome/` and `dist/firefox/` contain all compiled assets (HTML, CSS, JS, and icons).
 
 ---
 
 ## 2. Store Listing Assets
 
-Prepare the required graphical and textual assets for the store listing page.
+Prepare the required graphical and textual assets for the store listing page. The icon, promo tile and screenshots are generated; see [Design Assets](assets.md).
 
 ### Chrome Web Store Assets
 
@@ -83,7 +83,7 @@ To upload the extension, the compiled target files must be compressed into separ
 5. Upload the packaged `firefox-extension.zip` file.
 6. When prompted if the extension uses compiled, minified, or obfuscated source code, select **Yes**.
 7. Upload the `source-code.zip` file containing the source code and configuration files.
-8. Enter a brief explanation of how to build the files (e.g., "Run `pnpm install` and `pnpm run build` to output the bundled files to `dist/firefox/`").
+8. Enter a brief explanation of how to build the files (e.g., "Run `pnpm install` and `pnpm run build:firefox:release` to output the bundled files to `dist/firefox/`").
 9. Fill in the listing details (Description, License, Categories).
 10. Click **Submit**.
 

@@ -20,21 +20,25 @@ pnpm run check
 pnpm run test
 ```
 
-Ensure everything compiles in development mode without issues:
+Ensure everything compiles in development mode without issues (load
+`dist/chrome` unpacked to try it; dev builds use the `-dev` icons and show the
+build date in the popup):
 
 ```bash
-pnpm run build:dev
+pnpm run build:chrome
 ```
 
 ---
 
 ## 2. Version Bumping
 
-The extension version must be synchronized across three files. Update the version string (e.g., `1.0.1` -> `1.0.2`):
+The extension version must be synchronized across these files. Update the version string (e.g., `1.0.1` -> `1.0.2`):
 
-1. **`package.json`**: Update the `"version"` field.
+1. **`package.json`**: Update the `"version"` field and the zip file names in the `build:*` and `zip-source-code` scripts.
 2. **`manifests/manifest.chrome.json`**: Update the `"version"` field.
 3. **`manifests/manifest.firefox.json`**: Update the `"version"` field.
+4. **`manifests/manifest.safari.json`**: Update the `"version"` field.
+5. **`CHANGELOG.md`**: Add a `## [<VERSION>] - <date>` entry.
 
 ---
 
@@ -43,14 +47,18 @@ The extension version must be synchronized across three files. Update the versio
 Compile the production bundles and auto-package the zip files:
 
 ```bash
-pnpm run build
+pnpm run build:release
 ```
 
-This script will compile files into `dist/chrome` and `dist/firefox`, and then output three zipped archives in the `./dist/` directory:
+Use `build:release`, not `build`: `build` compiles in development mode, so its
+zips would contain the `-dev` icons and the build-date line.
+
+This script compiles `dist/chrome`, `dist/firefox` and `dist/safari`, and outputs these archives in `./dist/`:
 
 - `dist/damn-center-chrome-v<VERSION>.zip` (Chrome extension package)
 - `dist/damn-center-firefox-v<VERSION>.zip` (Firefox extension package)
-- `dist/damn-center-source-v<VERSION>.zip` (Source code package for store review, excluding `node_modules`, `dist`, `.git`, `backup`, `.github`, and `scratch`)
+- `dist/damn-center-safari-v<VERSION>.zip` (Safari extension package)
+- `dist/damn-center-source-v<VERSION>.zip` (Source code package for store review, excluding `node_modules`, `dist`, `.git`, `backup`, `.github`, `scratch` and `.claude`)
 
 ---
 
@@ -60,8 +68,8 @@ Commit the version bump changes, create a git tag, and push them to the reposito
 
 ```bash
 # 1. Stage and commit version bump files
-git add package.json manifests/manifest.chrome.json manifests/manifest.firefox.json
-git commit -m "chore: bump version to v<VERSION>"
+git add package.json CHANGELOG.md manifests/
+git commit -m "[Release] bump version to v<VERSION>"
 
 # 2. Create an annotated git tag
 git tag -a v<VERSION> -m "Release v<VERSION>"
@@ -83,7 +91,8 @@ git push origin v<VERSION>
 6. Drag and drop the compiled `.zip` files from your local `./dist/` directory into the **Attach binaries** box:
    - `damn-center-chrome-v<VERSION>.zip`
    - `damn-center-firefox-v<VERSION>.zip`
-7. Click **Publish release**.
+   - `damn-center-safari-v<VERSION>.zip`
+7. Click **Publish release** (or `gh release create v<VERSION> --title "Damn Center v<VERSION>" --notes-file <notes> dist/*-v<VERSION>.zip`, excluding the source zip).
 
 ### Example Configuration (for v1.0.1):
 
