@@ -551,6 +551,25 @@ if (
   })
 }
 
+// Apply changes made in the popup to every open tab, not only the active one
+// (e.g. turning the extension back on, or editing this site's matches from
+// another tab)
+if (
+  typeof chrome !== 'undefined' &&
+  chrome.storage &&
+  chrome.storage.onChanged
+) {
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    const hostname = getHostname(window.location.href)
+    if (
+      areaName === 'local' &&
+      ('global_settings' in changes || hostname in changes)
+    ) {
+      runInit()
+    }
+  })
+}
+
 // Run immediately or wait for DOM
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', runInit)
@@ -594,16 +613,8 @@ document.addEventListener('visibilitychange', () => {
     if (resizeTimeoutId) {
       window.clearTimeout(resizeTimeoutId)
     }
-    resizeTimeoutId = window.setTimeout(() => {
-      if (currentSettings && currentGlobalSetting) {
-        runUpdateStyles(
-          currentSettings,
-          currentGlobalSetting,
-          currentDomainSetting || defaultDomainSetting,
-        )
-      } else {
-        runInit()
-      }
-    }, 150)
+    // Re-read the settings rather than reusing the cached ones: they may have
+    // changed in the popup while this tab was in the background
+    resizeTimeoutId = window.setTimeout(runInit, 150)
   }
 })

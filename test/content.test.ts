@@ -43,8 +43,14 @@ const recordListeners = (target: EventTarget) => {
 // Loads src/worker/content.ts against a fresh DOM and a fake chrome.storage
 const loadContentScript = async (
   storage: Record<string, unknown>,
-): Promise<{ sendMessage: MessageListener }> => {
+): Promise<{
+  sendMessage: MessageListener
+  changeStorage: (changes: Record<string, unknown>) => void
+  storageReads: () => number
+}> => {
   const listeners: MessageListener[] = []
+  const storageListeners: Array<(changes: object, areaName: string) => void> =
+    []
   let storageReads = 0
   vi.stubGlobal('chrome', {
     storage: {
@@ -53,6 +59,10 @@ const loadContentScript = async (
           storageReads += 1
           callback(Object.fromEntries(keys.map((key) => [key, storage[key]])))
         },
+      },
+      onChanged: {
+        addListener: (listener: (changes: object, areaName: string) => void) =>
+          storageListeners.push(listener),
       },
     },
     runtime: {
@@ -71,6 +81,15 @@ const loadContentScript = async (
   return {
     sendMessage: (message) =>
       listeners.forEach((listener) => listener(message)),
+    // Saves new values, as the popup would from any tab
+    changeStorage: (changes) => {
+      Object.assign(storage, changes)
+      const event = Object.fromEntries(
+        Object.entries(changes).map(([key, newValue]) => [key, { newValue }]),
+      )
+      storageListeners.forEach((listener) => listener(event, 'local'))
+    },
+    storageReads: () => storageReads,
   }
 }
 
@@ -133,6 +152,7 @@ describe('Content script', () => {
     vi.useRealTimers()
     vi.unstubAllGlobals()
     delete (document as { fullscreenElement?: unknown }).fullscreenElement
+    delete (document as { visibilityState?: unknown }).visibilityState
     document.documentElement.innerHTML = '<head></head><body></body>'
   })
 
@@ -251,6 +271,45 @@ describe('Content script', () => {
     })
 
     expect(vi.getTimerCount()).toBe(1)
+  })
+
+  describe('settings changed outside this tab', () => {
+    const turnedOff = { ...defaultGlobalSetting, enabled: false }
+
+    it('applies them right away, even in a background tab', async () => {
+      const { changeStorage } = await loadContentScript(
+        storageWith([pathSetting()], turnedOff),
+      )
+      expect(isShown('damn-center-left')).toBe(false)
+
+      changeStorage({ global_settings: defaultGlobalSetting })
+
+      await vi.waitFor(() => expect(isShown('damn-center-left')).toBe(true))
+    })
+
+    it('ignores changes to other sites', async () => {
+      const { changeStorage, storageReads } = await loadContentScript(
+        storageWith([pathSetting()]),
+      )
+      const readsBefore = storageReads()
+
+      changeStorage({ 'other-site.org': [] })
+
+      expect(storageReads()).toBe(readsBefore)
+    })
+
+    it('re-reads them when the tab becomes visible', async () => {
+      const storage = storageWith([pathSetting()], turnedOff)
+      await loadContentScript(storage)
+      expect(isShown('damn-center-left')).toBe(false)
+
+      // Changed without an event reaching this tab
+      storage.global_settings = defaultGlobalSetting
+      setProperty(document, 'visibilityState', 'visible')
+      document.dispatchEvent(new Event('visibilitychange'))
+
+      await vi.waitFor(() => expect(isShown('damn-center-left')).toBe(true))
+    })
   })
 
   it('re-checks the rules when a single-page app changes the URL', async () => {

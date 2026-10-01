@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 - **Privacy Policy**: [PRIVACY.md](https://github.com/rinn7e/damn-center-extension/blob/master/PRIVACY.md) spells out that Damn Center collects nothing and keeps your settings on your device.
 - **Import Confirmation**: Importing a backup now asks before replacing your settings.
+- **Changes Reach Every Tab**: Turning the extension on or off, or editing a site's matches, now updates every open tab right away, not only the one you're on. Switching to a tab also re-reads the latest settings.
 
 ### Changed
 
