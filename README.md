@@ -1,8 +1,12 @@
-![Damn Center Logo](public/icon128.png)
+<p align="center">
+  <img src="public/icon128.png" alt="Damn Center Logo" width="128" height="128">
+</p>
 
-# Damn Center - the page !
+<h1 align="center">Damn Center - the page !</h1>
 
-[![AI-DECLARATION: assist](https://img.shields.io/badge/䷼%20AI--DECLARATION-assist-fef9c3?labelColor=fef9c3)](AI-DECLARATION.md)
+<p align="center">
+  <a href="AI-DECLARATION.md"><img src="https://img.shields.io/badge/䷼%20AI--DECLARATION-assist-fef9c3?labelColor=fef9c3" alt="AI-DECLARATION: assist"></a>
+</p>
 
 A layout-centering browser extension designed to prevent neck and eye strain by bringing web content into a balanced, comfortable view. Ideal for widescreen and ultrawide monitors, it shifts off-centered web layouts to the absolute center, making reading long articles, code, and documentation a comfortable experience.
 
