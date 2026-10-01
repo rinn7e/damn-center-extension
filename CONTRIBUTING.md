@@ -37,8 +37,10 @@ pnpm run test          # Vitest
 ```
 
 CI also runs `pnpm run build:release` and lints the Firefox package with
-Mozilla's `web-ext lint`. Its two `UNSAFE_VAR_ASSIGNMENT` warnings come from
-React's own code, not ours, and don't fail the check.
+Mozilla's `web-ext lint`, which fails only on errors. Three warnings are
+expected: two `UNSAFE_VAR_ASSIGNMENT` from React's own code, and
+`KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION`, which only matters for
+Firefox for Android, a platform Damn Center doesn't support.
 
 - Follow the [code convention](doc/code-convention.md): Elm architecture
   updaters in `src/update.ts`, `rem` font sizes, no margin utilities, and tests

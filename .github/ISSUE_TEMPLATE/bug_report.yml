@@ -12,16 +12,7 @@ body:
     id: browser
     attributes:
       label: Browser
-      options:
-        [
-          Chrome,
-          Firefox,
-          Firefox for Android,
-          Safari,
-          Edge,
-          Brave,
-          Other Chromium,
-        ]
+      options: [Chrome, Firefox, Safari, Edge, Brave, Other Chromium]
     validations:
       required: true
   - type: input

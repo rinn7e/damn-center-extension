@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 ### Changed
 
 - **Page Elements**: The padding, ruler and style elements the extension adds to pages now use `damn-center-*` ids instead of the old `symmetry-pad-*` names. If you wrote custom user styles for those ids, update them.
-- **Firefox 140+**: The Firefox version now requires Firefox 140 or later (an ESR release), or Firefox for Android 142 or later, the first versions that support the add-on's data-collection declaration.
+- **Firefox 140+**: The Firefox version now requires Firefox 140 or later (an ESR release), the first version that supports the add-on's data-collection declaration.
 - **Smaller and Faster**: The script that runs on every page is less than half its old size (117 KB → 53 KB), because fp-ts is now imported as tree-shakeable ES modules. Old backup icons and screenshots are no longer copied into the packages.
 - **Quieter on Other Sites**: On sites without rules, the content script no longer adds anything to the page, and it only checks for in-page URL changes on sites that have rules, instead of every 500 ms everywhere.
 - **Description**: The extension's description now reads "Center any website on your widescreen or ultrawide monitor, with per-site padding, rulers, themes and background patterns."
