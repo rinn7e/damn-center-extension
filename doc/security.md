@@ -44,12 +44,12 @@ The manifests request only two permissions, plus one content script:
 - **Open source**: all code, dependencies and build configuration are in this repository, under the GPL-3.0.
 - **Build from source**: the [README](../README.md#build-from-source) explains how to build the extension and load it unpacked, instead of installing it from a store.
 - **Reproducible builds**: release builds are minified by Vite but not obfuscated, and the build is reproducible. Rebuild with `pnpm run build:release` and the files match the ones inside the store package byte for byte.
-- **Checksums**: each GitHub release is built by CI from the tagged commit and lists the SHA-256 of its zips in `SHA256SUMS.txt`.
+- **Checksums and provenance**: each GitHub release is built by CI from a tagged commit on `master`. It lists the SHA-256 of its zips in `SHA256SUMS.txt`, and GitHub signs a build provenance attestation for them. Check a downloaded zip with `gh attestation verify <zip> -R rinn7e/damn-center-extension`.
 - **Store review**: Mozilla reviewers receive the full source of each release and rebuild it to confirm the package matches.
 
 ## Dependencies
 
 - `pnpm-lock.yaml` pins exact dependency versions and hashes, so builds use exactly the reviewed dependencies.
 - Dependabot proposes minor and patch updates for dependencies and GitHub Actions each month, and opens pull requests for known vulnerabilities. Major upgrades are done by hand. Branch protection requires CI to pass before any of them can merge.
-- GitHub CodeQL scans the code for security issues on every push, every pull request and once a week.
+- GitHub CodeQL scans the code for security issues on every push to `master`, on every pull request and once a week.
 - The extension packages contain only Damn Center's code and the runtime libraries listed under `dependencies` in `package.json` (React, fp-ts, io-ts, picomatch and a few small helpers); build and test tools never ship.

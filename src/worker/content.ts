@@ -395,13 +395,6 @@ const runUpdateStyles = (
   // Update layout ruler line elements
   runUpdateRuler(settings, globalSetting, isEffectivelyEnabled)
 
-  // Ensure override style tag exists in the head
-  if (!styleElement) {
-    styleElement = document.createElement('style')
-    styleElement.id = 'damn-center-style'
-    document.documentElement.appendChild(styleElement)
-  }
-
   const { leftWidth, rightWidth } = resolvePadWidths(settings.side)
 
   // Clear styles and hide element structures if inactive or zero-width
@@ -416,6 +409,13 @@ const runUpdateStyles = (
     if (settings.shiftingStrategy._tag === 'Placeholder') {
       runApplyPlaceholderShifting()
     } else {
+      // Add the style tag only once padding is applied, so pages without a
+      // matching rule are left untouched
+      if (!styleElement) {
+        styleElement = document.createElement('style')
+        styleElement.id = 'damn-center-style'
+        document.documentElement.appendChild(styleElement)
+      }
       runApplyFlexboxShifting(
         styleElement,
         leftWidth,

@@ -10,7 +10,9 @@ updates:
       default-days: 3
     # Major versions have breaking changes (TypeScript 5 → 7, ESLint 9 → 10, …),
     # so upgrade those by hand; monthly batches only carry minor and patch
-    # updates. Security fixes still come through as their own pull requests.
+    # updates. Security fixes still come through as their own pull requests,
+    # even when they need a major version: GitHub's docs say "update-types
+    # only affects version updates, not security updates".
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-major']

@@ -785,59 +785,68 @@ const storageCall = (call: (callback: () => void) => void): Promise<void> =>
     }),
   )
 
+/**
+ * Replaces the stored settings with a backup file's contents, after asking the
+ * user. Returns true when the import succeeded.
+ */
+export const runImport = async (jsonText: string): Promise<boolean> => {
+  if (
+    typeof chrome === 'undefined' ||
+    !chrome.storage ||
+    !chrome.storage.local
+  ) {
+    alert('Storage API is not available.')
+    return false
+  }
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(jsonText)
+  } catch {
+    alert('This file is not valid JSON.')
+    return false
+  }
+  if (!validateBackupData(parsed)) {
+    alert('This file is not a Damn Center backup.')
+    return false
+  }
+  const backup = parsed as Record<string, unknown>
+
+  if (
+    !confirm(
+      'Importing replaces all your current matches and settings with the ones in this file. Continue?',
+    )
+  ) {
+    return false
+  }
+
+  try {
+    // Write the backup first, then remove what it doesn't contain, so a
+    // failed write never leaves the user with empty settings
+    await storageCall((done) => chrome.storage.local.set(backup, done))
+    const stored = await new Promise<Record<string, unknown>>((resolve) =>
+      chrome.storage.local.get(null, resolve),
+    )
+    const staleKeys = keysMissingFromBackup(Object.keys(stored), backup)
+    if (staleKeys.length > 0) {
+      await storageCall((done) => chrome.storage.local.remove(staleKeys, done))
+    }
+    alert('Configuration imported successfully!')
+    return true
+  } catch (e) {
+    console.error('[Damn Center] Import failed:', e)
+    alert(
+      `Import failed while saving: ${e instanceof Error ? e.message : String(e)}`,
+    )
+    return false
+  }
+}
+
 const triggerImportCmd = (jsonText: string): Cmd<Msg> => {
   return Task.attempt(
     Task.fromPromise(async () => {
-      if (
-        typeof chrome === 'undefined' ||
-        !chrome.storage ||
-        !chrome.storage.local
-      ) {
-        alert('Storage API is not available.')
-        return
-      }
-
-      let parsed: unknown
-      try {
-        parsed = JSON.parse(jsonText)
-      } catch {
-        alert('This file is not valid JSON.')
-        return
-      }
-      if (!validateBackupData(parsed)) {
-        alert('This file is not a Damn Center backup.')
-        return
-      }
-      const backup = parsed as Record<string, unknown>
-
-      if (
-        !confirm(
-          'Importing replaces all your current matches and settings with the ones in this file. Continue?',
-        )
-      ) {
-        return
-      }
-
-      try {
-        // Write the backup first, then remove what it doesn't contain, so a
-        // failed write never leaves the user with empty settings
-        await storageCall((done) => chrome.storage.local.set(backup, done))
-        const stored = await new Promise<Record<string, unknown>>((resolve) =>
-          chrome.storage.local.get(null, resolve),
-        )
-        const staleKeys = keysMissingFromBackup(Object.keys(stored), backup)
-        if (staleKeys.length > 0) {
-          await storageCall((done) =>
-            chrome.storage.local.remove(staleKeys, done),
-          )
-        }
-        alert('Configuration imported successfully!')
+      if (await runImport(jsonText)) {
         window.location.reload()
-      } catch (e) {
-        console.error('[Damn Center] Import failed:', e)
-        alert(
-          `Import failed while saving: ${e instanceof Error ? e.message : String(e)}`,
-        )
       }
     }),
     (): Msg => ({ _tag: 'NoOp' }),

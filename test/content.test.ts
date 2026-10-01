@@ -45,11 +45,14 @@ const loadContentScript = async (
   storage: Record<string, unknown>,
 ): Promise<{ sendMessage: MessageListener }> => {
   const listeners: MessageListener[] = []
+  let storageReads = 0
   vi.stubGlobal('chrome', {
     storage: {
       local: {
-        get: (keys: string[], callback: (res: object) => void) =>
-          callback(Object.fromEntries(keys.map((key) => [key, storage[key]]))),
+        get: (keys: string[], callback: (res: object) => void) => {
+          storageReads += 1
+          callback(Object.fromEntries(keys.map((key) => [key, storage[key]])))
+        },
       },
     },
     runtime: {
@@ -62,9 +65,9 @@ const loadContentScript = async (
   recordListeners(document)
   vi.resetModules()
   await import('../src/worker/content')
-  await vi.waitFor(() => {
-    expect(document.getElementById('damn-center-style')).not.toBeNull()
-  })
+  // The script reads the global and the site settings, then applies them
+  await vi.waitFor(() => expect(storageReads).toBe(2))
+  await new Promise((resolve) => setTimeout(resolve, 0))
   return {
     sendMessage: (message) =>
       listeners.forEach((listener) => listener(message)),
@@ -158,6 +161,12 @@ describe('Content script', () => {
     )
   })
 
+  it('adds nothing to a site that has no rules', async () => {
+    await loadContentScript(storageWith([]))
+
+    expect(document.querySelector('[id^="damn-center"]')).toBeNull()
+  })
+
   it('leaves the page alone when no rule matches', async () => {
     await loadContentScript(
       storageWith([
@@ -166,7 +175,7 @@ describe('Content script', () => {
     )
 
     expect(isShown('damn-center-left')).toBe(false)
-    expect(byId('damn-center-style')!.textContent).toBe('')
+    expect(byId('damn-center-style')).toBeNull()
   })
 
   it('uses the first enabled rule that matches', async () => {
@@ -188,7 +197,7 @@ describe('Content script', () => {
     )
 
     expect(isShown('damn-center-left')).toBe(false)
-    expect(byId('damn-center-style')!.textContent).toBe('')
+    expect(byId('damn-center-style')).toBeNull()
   })
 
   it('does nothing when the extension is turned off', async () => {

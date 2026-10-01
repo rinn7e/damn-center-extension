@@ -9,8 +9,8 @@ Follow this guide step-by-step to compile, package, tag, and publish a new relea
 Before tagging a release, ensure the codebase is clean, type-safe, and all tests pass.
 
 ```bash
-# 1. Clean format and check lints
-pnpm run format
+# 1. Check formatting and lints (pnpm run format fixes formatting)
+pnpm run format:check
 pnpm run lint
 
 # 2. Run TypeScript type checks
@@ -99,15 +99,20 @@ git push origin v<VERSION>
 
 Pushing the tag runs the [Release workflow](../.github/workflows/release.yml). It:
 
-1. checks that the tag matches the `package.json` version,
+1. checks that the tag points to a commit on `master` and matches the `package.json` version,
 2. runs the type check, lint, format check and tests, then `build:release` and `web-ext lint` on the Firefox package,
-3. creates a **draft** release titled `Damn Center v<VERSION>`, with this version's `CHANGELOG.md` section as the notes, and the Chrome and Firefox zips plus a `SHA256SUMS.txt` attached.
+3. creates a **draft** release titled `Damn Center v<VERSION>`, with this version's `CHANGELOG.md` section as the notes, and the Chrome and Firefox zips plus a `SHA256SUMS.txt` attached,
+4. signs a [build provenance attestation](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations) for the zips, which proves they were built by this workflow from the tagged commit.
 
 Building and publishing are separate jobs: the build runs with a read-only token, and only the publish step, which runs no project code, can create the release.
 
 Open the draft under **Releases**, add a one-line summary at the top if you like, and click **Publish release**. If the workflow fails, fix the problem, delete and re-push the tag (`git tag -d v<VERSION> && git push origin :v<VERSION>`), then tag again.
 
-Upload the zips from the release to the stores, not a local build, so the stores and GitHub get identical files.
+Upload the zips from the release to the stores, not a local build, so the stores and GitHub get identical files. Anyone can check a zip's origin with:
+
+```bash
+gh attestation verify damn-center-chrome-v<VERSION>.zip -R rinn7e/damn-center-extension
+```
 
 ---
 
@@ -127,7 +132,7 @@ Upload the zips from the release to the stores, not a local build, so the stores
 2. Submit a new version of the extension.
 3. Upload `damn-center-firefox-v<VERSION>.zip` from the GitHub release.
 4. When asked whether the code is compiled or minified, answer **Yes** and upload the release's **Source code (zip)** from GitHub (every file tracked in git at the tag).
-5. Build instructions for the reviewer: "Install Node.js 24+ and pnpm, run `pnpm install --frozen-lockfile`, `cp .env.example .env.production`, then `pnpm run build:firefox:release`. The output is in `dist/firefox/`."
+5. Build instructions for the reviewer: "Install Node.js 24+ and pnpm 11 (`corepack enable` sets up the version in `package.json`), run `pnpm install --frozen-lockfile`, `cp .env.example .env.production`, then `pnpm run build:firefox:release`. The output is in `dist/firefox/`."
 6. Follow the steps for listing review. The license is GPL-3.0.
 
 ### Store listing assets
