@@ -66,8 +66,6 @@ export default tseslint.config([
           caughtErrorsIgnorePattern: '^_',
         },
       ],
-      // TODO: Fix this later
-      'react-hooks/exhaustive-deps': 'off',
 
       'react-x/no-use-context': 'off',
       'react-x/no-forward-ref': 'off',

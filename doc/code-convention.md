@@ -24,7 +24,7 @@ This document describes the code design principles and style conventions that mu
 
 ## 5. Testing Conventions
 
-- **Vitest & Coverage:** All logic sub-updater functions, helper functions, and codecs must have 100% test coverage using Vitest, with tests residing inside the `test/` directory (e.g., `test/update.test.ts`, `test/codec.test.ts`).
+- **Vitest:** New or changed sub-updater functions, helpers and codecs need Vitest tests in the `test/` directory (e.g., `test/update.test.ts`, `test/codec.test.ts`). The DOM code in `src/worker/content.ts` has no automated tests yet; check it by hand on a few real sites (see the [release guide](release.md)).
 
 ## 6. Layout & Spacing (No Margin Rule)
 

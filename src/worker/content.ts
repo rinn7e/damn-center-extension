@@ -96,7 +96,7 @@ const runApplyFlexboxShifting = (
       margin: 0 !important;
       order: 2 !important;
     }
-    #symmetry-pad-left-placeholder {
+    #damn-center-left-placeholder {
       width: ${leftWidth}px !important;
       flex-shrink: 0 !important;
       height: 100vh !important;
@@ -105,7 +105,7 @@ const runApplyFlexboxShifting = (
       background: transparent !important;
       order: 1 !important;
     }
-    #symmetry-pad-left {
+    #damn-center-left {
       position: fixed !important;
       left: 0 !important;
       top: 0 !important;
@@ -115,7 +115,7 @@ const runApplyFlexboxShifting = (
       pointer-events: none !important;
       z-index: 0 !important;
     }
-    #symmetry-pad-right-placeholder {
+    #damn-center-right-placeholder {
       width: ${rightWidth}px !important;
       flex-shrink: 0 !important;
       height: 100vh !important;
@@ -124,7 +124,7 @@ const runApplyFlexboxShifting = (
       background: transparent !important;
       order: 3 !important;
     }
-    #symmetry-pad-right {
+    #damn-center-right {
       position: fixed !important;
       right: 0 !important;
       top: 0 !important;
@@ -141,28 +141,28 @@ const runApplyFlexboxShifting = (
   const runEnsurePadDivs = () => {
     if (!leftPadPlaceholderElement) {
       leftPadPlaceholderElement = document.createElement('div')
-      leftPadPlaceholderElement.id = 'symmetry-pad-left-placeholder'
+      leftPadPlaceholderElement.id = 'damn-center-left-placeholder'
       leftPadPlaceholderElement.style.cssText =
         'flex-shrink:0; height:100vh; pointer-events:none !important; background:transparent !important; transition: width 0.15s ease-out;'
       document.documentElement.appendChild(leftPadPlaceholderElement)
     }
     if (!leftPadElement) {
       leftPadElement = document.createElement('div')
-      leftPadElement.id = 'symmetry-pad-left'
+      leftPadElement.id = 'damn-center-left'
       leftPadElement.style.cssText =
         'position:fixed; left:0; top:0; height:100vh; z-index:0; pointer-events:none !important; transition: width 0.15s ease-out, background 0.15s ease-out;'
       document.documentElement.appendChild(leftPadElement)
     }
     if (!rightPadPlaceholderElement) {
       rightPadPlaceholderElement = document.createElement('div')
-      rightPadPlaceholderElement.id = 'symmetry-pad-right-placeholder'
+      rightPadPlaceholderElement.id = 'damn-center-right-placeholder'
       rightPadPlaceholderElement.style.cssText =
         'flex-shrink:0; height:100vh; pointer-events:none !important; background:transparent !important; transition: width 0.15s ease-out;'
       document.documentElement.appendChild(rightPadPlaceholderElement)
     }
     if (!rightPadElement) {
       rightPadElement = document.createElement('div')
-      rightPadElement.id = 'symmetry-pad-right'
+      rightPadElement.id = 'damn-center-right'
       rightPadElement.style.cssText =
         'position:fixed; right:0; top:0; height:100vh; z-index:0; pointer-events:none !important; transition: width 0.15s ease-out, background 0.15s ease-out;'
       document.documentElement.appendChild(rightPadElement)
@@ -256,7 +256,7 @@ const runUpdateRuler = (
   if (isEffectivelyEnabled && globalSetting.showRuler) {
     if (!rulerElement) {
       rulerElement = document.createElement('div')
-      rulerElement.id = 'symmetry-pad-ruler'
+      rulerElement.id = 'damn-center-ruler'
       rulerElement.style.cssText =
         'position:fixed !important; top:0 !important; bottom:0 !important; left:0 !important; right:0 !important; z-index:2147483647 !important; pointer-events:none !important;'
 
@@ -398,7 +398,7 @@ const runUpdateStyles = (
   // Ensure override style tag exists in the head
   if (!styleElement) {
     styleElement = document.createElement('style')
-    styleElement.id = 'symmetry-pad-style'
+    styleElement.id = 'damn-center-style'
     document.documentElement.appendChild(styleElement)
   }
 

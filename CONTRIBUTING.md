@@ -1,7 +1,8 @@
 # Contributing
 
 Thanks for helping make Damn Center better! Bug reports, site incompatibility
-reports and pull requests are all welcome.
+reports and pull requests are all welcome. Please follow the
+[code of conduct](CODE_OF_CONDUCT.md).
 
 ## Reporting bugs and ideas
 
@@ -44,14 +45,9 @@ pnpm run test          # Vitest
 
 ## Commit messages
 
-Use a short imperative summary, with an optional tag in brackets:
-
-```
-[Feature] Add a domain toggle
-[Fix] Resolve page padding initialization in background tabs
-[Docs] Fix the release guide
-[Release] bump version to v2.1.0
-```
+Write a short summary in the imperative mood that says what the change does,
+for example `Add a domain toggle` or `Fix padding in background tabs`. Version
+bumps use `[Release] bump version to v<VERSION>`.
 
 ## License
 

@@ -49,7 +49,7 @@ Damn Center adds customizable left and right padding to web pages on the fly. Ad
 - **SVG Patterns**: Apply customizable SVG background patterns (grids, dots, stripes, carbon, or lattice) over background colors.
 - **Disable when Not Maximized**: Automatically suspends padding and alignment rules when the window is tiled, restored, or not fully maximized. Bypasses OS-level and fractional browser zoom discrepancies (such as Chrome on Linux Wayland bugs) to keep window space fully optimized.
 - **Auto-Disable on Fullscreen**: Automatically suspends padding and alignment rules when a website enters fullscreen mode (resolves Youtube and other fullscreen video viewport conflicts).
-- **Popup UI Font Size Controller**: Adjust the root font size of the extension's popup UI (clamped between `12px` and `32px` in `1px` steps, default `16px`) for clean text scaling.
+- **Popup UI Font Size Controller**: Adjust the root font size of the extension's popup UI (`12px` to `32px` in `1px` steps, default `18px`) for clean text scaling.
 - **Collapsible Matches**: Collapse list items in the popup UI to organize configuration matches.
 - **Dynamic Version Header**: Displays manifest version and build date inside the popup UI.
 
@@ -112,14 +112,14 @@ cp .env.example .env.production
 
 ### Environment Variables
 
-Builds load `.env.development` or `.env.production` depending on the mode. Both are ignored by git; copy them from `.env.example` and adjust:
+Builds load `.env.development` or `.env.production` depending on the mode. Both are ignored by git. `.env.example` holds the release values; after copying it to `.env.development`, set `VITE_SHOW_BUILD_DATE=true` (and `VITE_DISABLE_LOG=false` if you want console logs) so dev builds are easy to tell apart.
 
-| Variable Name            | Description                                                                                                   | Default / Example Value      |
-| :----------------------- | :------------------------------------------------------------------------------------------------------------ | :--------------------------- |
-| `VITE_UI_THEME_ID`       | Theme identifier for the extension's popup UI.                                                                | `solarizedLight`             |
-| `VITE_DISABLE_LOG`       | Strips all `console.*` (log, warn, error, info, debug) calls from compiled bundles if set to `true`.          | `true` (prod), `false` (dev) |
-| `VITE_SHOW_BUILD_DATE`   | Displays the formatted date/time of the build under the extension title in the popup header if set to `true`. | `true`, `false`              |
-| `VITE_DEFAULT_FONT_SIZE` | Defines the default root font size in pixels (e.g. 16) for scaling the extension's popup UI.                  | `16`                         |
+| Variable                 | Description                                                                    | `.env.example`   |
+| :----------------------- | :----------------------------------------------------------------------------- | :--------------- |
+| `VITE_UI_THEME_ID`       | Theme for the popup UI.                                                        | `solarizedLight` |
+| `VITE_DISABLE_LOG`       | Strips all `console.*` calls from the bundles when `true`.                     | `true`           |
+| `VITE_SHOW_BUILD_DATE`   | Shows the build date and time under the title in the popup header when `true`. | `false`          |
+| `VITE_DEFAULT_FONT_SIZE` | Default popup font size in pixels, until the user changes it (16 if unset).    | `18`             |
 
 ### Layout Shifting Mechanism
 

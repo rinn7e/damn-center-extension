@@ -28,6 +28,14 @@ build date in the popup):
 pnpm run build:chrome
 ```
 
+`src/worker/content.ts` has no automated tests, so try the build by hand on a
+few real sites before releasing: a docs site, a news article, a page with a
+sticky header, and fullscreen video. Check both shifting strategies and the
+ruler.
+
+If the release changes the storage schema, follow the
+[storage migration strategy](storage-migration.md) first.
+
 ---
 
 ## 2. Version Bumping
@@ -58,7 +66,7 @@ This script compiles `dist/chrome`, `dist/firefox` and `dist/safari`, and output
 - `dist/damn-center-chrome-v<VERSION>.zip` (Chrome extension package)
 - `dist/damn-center-firefox-v<VERSION>.zip` (Firefox extension package)
 - `dist/damn-center-safari-v<VERSION>.zip` (Safari extension package)
-- `dist/damn-center-source-v<VERSION>.zip` (Source code package for store review, excluding `node_modules`, `dist`, `.git`, `backup`, `.github`, `scratch` and `.claude`)
+- `dist/damn-center-source-v<VERSION>.zip` (source code for store review: every file tracked in git, with your working-tree changes)
 
 ---
 
@@ -94,32 +102,22 @@ git push origin v<VERSION>
    - `damn-center-safari-v<VERSION>.zip`
 7. Click **Publish release** (or `gh release create v<VERSION> --title "Damn Center v<VERSION>" --notes-file <notes> dist/*-v<VERSION>.zip`, excluding the source zip).
 
-### Example Configuration (for v1.0.1):
+### Release notes template
 
-- **Tag version**: `v1.0.1`
-- **Target**: `master` (or select the branch/commit)
-- **Release Title**: `Damn Center v1.0.1`
-- **Description**:
+```markdown
+## What's New in v<VERSION>
 
-  ```markdown
-  ## What's New in v1.0.1 🚀
+<One or two sentences on the main change.>
 
-  This release adds automatic window maximization detection, an alignment guide ruler, customizable background SVG patterns, and dynamic versioning.
+### Added / Changed / Fixed
 
-  ### Key Features:
+- <Copy the entries from this version's CHANGELOG section.>
 
-  - **"Disable when Not Maximized" Option**: Automatically suspends padding and alignment rules when the browser window is tiled or resized (bypasses Linux Wayland viewport bugs).
-  - **Triple-Line Alignment Ruler**: Added layout guide split lines at 25%, 50%, and 75% width.
-  - **SVG Background Patterns**: Added Dotted Grid, Diagonal Stripes, Aesthetic Grid, Carbon Fiber, and Moroccan Lattice overlays.
-  - **Dynamic Version Header**: Displays manifest version and build date inside the popup UI.
+### Install
 
-  ### Release Packages 📦
-
-  Please download the appropriate bundle for your browser and load it manually:
-
-  - `damn-center-chrome-v1.0.1.zip` (Chrome)
-  - `damn-center-firefox-v1.0.1.zip` (Firefox)
-  ```
+- Chrome Web Store / Firefox Add-ons: updates arrive automatically.
+- Manual: download the zip for your browser below and load it as described in the README.
+```
 
 ---
 
@@ -131,10 +129,20 @@ git push origin v<VERSION>
 2. Click on the **Damn Center** item.
 3. Go to the **Package** section and upload the `dist/damn-center-chrome-v<VERSION>.zip` file.
 4. Fill in store listing metadata if changed, and submit for review.
+5. In **Privacy**, keep the declaration that the extension stores settings locally and transmits no user data.
 
 ### Firefox Add-ons (Mozilla Developer Hub)
 
 1. Log in to the [Firefox Add-on Developer Hub](https://addons.mozilla.org/developers/).
 2. Submit a new version of the extension.
 3. Upload the `dist/damn-center-firefox-v<VERSION>.zip` file.
-4. Follow the steps for self-distribution or listing review.
+4. When asked whether the code is compiled or minified, answer **Yes** and upload `dist/damn-center-source-v<VERSION>.zip`.
+5. Build instructions for the reviewer: "Install Node.js 24+ and pnpm, run `pnpm install`, `cp .env.example .env.production`, then `pnpm run build:firefox:release`. The output is in `dist/firefox/`."
+6. Follow the steps for listing review. The license is GPL-3.0.
+
+### Store listing assets
+
+Update these when the UI or branding changes; see [Design Assets](assets.md) for how they're made.
+
+- **Chrome**: 128×128 icon (in the package), 1–5 screenshots at 1280×800, the 440×280 small promo tile, and the text in [store-description.md](store-description.md).
+- **Firefox**: screenshots, summary (max 250 characters) and description from [store-description.md](store-description.md).

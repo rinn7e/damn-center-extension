@@ -11,11 +11,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 ### Added
 
 - **Continuous Integration**: Type check, lint, format check, tests and release build run on every push and pull request.
-- **Contributor Docs**: `CONTRIBUTING.md`, `SECURITY.md` and issue templates.
+- **Contributor Docs**: `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, issue templates and a pull request template.
 
 ### Changed
 
-- **Build Scripts**: Release zip names now follow the version in `package.json`, so a version bump no longer needs edits to every script.
+- **Build Scripts**: Release zip names now follow the version in `package.json`, so a version bump no longer needs edits to every script. Each zip is rebuilt from scratch instead of updated in place, and the source zip now contains exactly the files tracked in git.
+- **Packages**: Removed old backup icons and screenshots that were being copied into the extension packages.
+- **Page Elements**: The padding, ruler and style elements the extension adds to pages now use `damn-center-*` ids instead of the old `symmetry-pad-*` names.
+- **Safari**: `generate:safari` now builds the Xcode project from the release build instead of the development build.
+
+### Fixed
+
+- **Docs**: The security doc now describes the content script's all-sites access accurately, and the README's environment variable defaults match `.env.example`.
 
 ---
 
@@ -44,7 +51,7 @@ The 2.0 version marks the Damn Center rebrand: new icon, refreshed store listing
 - **Domain-Specific Match Toggle (`DomainSetting`)**: Added a toggle switch directly next to the "Matches" card header to quickly enable or disable all configuration matches for the active domain at once without deleting or overriding individual path matching rules.
 - **Platform-Aware Window Maximization**: Improved the "Disable when Not Maximized" option on macOS and Windows to correctly handle High DPI Retina and scaled external displays.
 - **Debounced Window Resize Listener**: Debounced window resize event processing by 150ms to allow OS window snapping and tiling animations to settle before computing window maximization states.
-- **Safari Web Extension Support**: Added official Safari compatibility (Manifest V3) including `build:safari` and `build:safari:dev` targets, an automated Xcode app wrapper conversion shell script (`pnpm run generate:safari`), and specialized window maximization heuristics for Safari's zoom engine.
+- **Safari Web Extension Support**: Added official Safari compatibility (Manifest V3) including `build:safari` and `build:safari:dev` targets (the `:dev` targets were later replaced by `build` and `build:release`), an automated Xcode app wrapper conversion shell script (`pnpm run generate:safari`), and specialized window maximization heuristics for Safari's zoom engine.
 - **Settings Update Timestamp (`updatedAt`)**: Introduced an optional `updatedAt` property in the `PadSettings` type and codec (using `t.partial` to maintain backwards compatibility) that automatically refreshes with `Date.now()` on any rule modification, paving the way for intelligent merging of backup files.
 
 ---
@@ -66,7 +73,7 @@ The 2.0 version marks the Damn Center rebrand: new icon, refreshed store listing
 - **Dev Icon Badges**: Automatic orange "DEV" banner overlay on extension icons for development builds.
 - **Dynamic Version Header**: Displays manifest version and build date inside the popup UI.
 - **Production Logs Stripping**: Strips `console.*` outputs from production builds.
-- **Development Build Scripts**: Added `build:dev` commands to compile Chrome/Firefox targets in development mode.
+- **Development Build Scripts**: Added `build:dev` commands to compile Chrome/Firefox targets in development mode (later replaced by `build` and `build:release`).
 
 ---
 
@@ -85,6 +92,8 @@ The 2.0 version marks the Damn Center rebrand: new icon, refreshed store listing
 
 ## [1.0.0] - 2026-06-08
 
+> The v1.0.0, v1.0.1 and v1.0.2 tags were all created on the same commit, after 1.0.2 was finished, so checking out v1.0.0 or v1.0.1 gives you the 1.0.2 code.
+
 ### Added
 
 - Core implementation: Left/right page padding with dynamic slider width adjustments.
@@ -92,3 +101,12 @@ The 2.0 version marks the Damn Center rebrand: new icon, refreshed store listing
 - Domain-specific matching rules with settings Import/Export features.
 - Collapsible domain matching rules list in the popup.
 - Initial codebase unit tests.
+
+[Unreleased]: https://github.com/rinn7e/damn-center-extension/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/rinn7e/damn-center-extension/compare/v1.0.5...v2.0.0
+[1.0.5]: https://github.com/rinn7e/damn-center-extension/compare/v1.0.4...v1.0.5
+[1.0.4]: https://github.com/rinn7e/damn-center-extension/compare/v1.0.3...v1.0.4
+[1.0.3]: https://github.com/rinn7e/damn-center-extension/compare/v1.0.2...v1.0.3
+[1.0.2]: https://github.com/rinn7e/damn-center-extension/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/rinn7e/damn-center-extension/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/rinn7e/damn-center-extension/releases/tag/v1.0.0

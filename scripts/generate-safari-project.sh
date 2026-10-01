@@ -6,7 +6,7 @@ CD_PATH="$(dirname "$0")/.."
 cd "$CD_PATH"
 
 echo "Building Safari extension target..."
-pnpm run build:safari
+pnpm run build:safari:release
 
 echo "Converting extension to Safari macOS App Wrapper..."
 xcrun safari-web-extension-converter dist/safari \

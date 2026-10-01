@@ -65,7 +65,7 @@ export default defineConfig(({ mode }) => {
         minify: true,
         lib: {
           entry: resolve(process.cwd(), 'src/worker/content.ts'),
-          name: 'SymmetryPadContent',
+          name: 'DamnCenterContent',
           formats: ['iife'],
           fileName: () => 'content.js',
         },

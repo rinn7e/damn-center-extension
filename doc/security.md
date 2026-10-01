@@ -19,11 +19,13 @@ Damn Center is designed with a "local-first, zero-network" model. The extension 
 - All domain configuration values, custom widths, and theme preferences are stored locally on the user's machine using `chrome.storage.local`.
 - No user data is sent to external servers, cloud databases, or syncing services.
 
-### Permission Minimization
+### Permissions
 
-- **activeTab**: Used to dynamically apply padding styles to the current tab when the user interacts with the extension popup.
-- **storage**: Used to persist website settings across sessions.
-- **host_permissions**: Configured strictly for matching domains during automatic style injection.
+The manifests request only two permissions, plus one content script:
+
+- **storage**: saves your matches and settings in `chrome.storage.local`.
+- **activeTab**: lets the popup read the current tab's URL, so it can show and add the matches for that page.
+- **Content script on all `http` and `https` pages** (`"matches": ["http://*/*", "https://*/*"]`, `run_at: document_start`): this is the broad one. Because padding has to be applied as a page loads, before you open the popup, the script runs on every site. It reads your saved matches from local storage and, only on pages that match an enabled rule, adds the padding elements and a `<style>` tag. It doesn't read page content, forms or cookies, and it makes no network requests. Browsers show this as "read and change data on all websites".
 
 ---
 
@@ -39,7 +41,7 @@ To prove to users that Damn Center is secure, we implement the following transpa
 ### Verifiable and Reproducible Builds
 
 - **Unpacked Installation Instructions**: Explain clearly in the main `README.md` how users can load the unpacked extension in developer mode directly from the source code.
-- **No Obfuscation**: The Vite bundler config does not compress or obfuscate variables beyond standard minification. Users can inspect the compiled `dist/chrome/content.js` or `dist/firefox/content.js` and easily map it back to the original source.
+- **Minified, Not Obfuscated**: Release builds are minified by Vite but not obfuscated. Anyone can rebuild from source with `pnpm run build:release` and compare the output with the store package.
 
 ### Robust Content Security Policy (CSP)
 
@@ -63,4 +65,4 @@ To prove to users that Damn Center is secure, we implement the following transpa
 When submitting updates to browser extension stores:
 
 - **Chrome Web Store Developer Console**: In the "Single Purpose" and "Privacy" sections, explicitly declare that the extension only stores local website configurations and operates entirely offline.
-- **Mozilla AMO Submission**: Since Mozilla manually reviews extensions using compilers/bundlers, we submit the original source files (`source-code.zip`) with clear instructions. This allows Mozilla's reviewers to build the files themselves and verify that the binary on the store exactly matches the audited source code.
+- **Mozilla AMO Submission**: Since Mozilla manually reviews extensions using compilers/bundlers, we submit the source (`dist/damn-center-source-v<VERSION>.zip`, every file tracked in git) with clear instructions. This allows Mozilla's reviewers to build the files themselves and verify that the binary on the store exactly matches the audited source code.
