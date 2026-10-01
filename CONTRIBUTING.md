@@ -36,6 +36,10 @@ pnpm run format:check  # Prettier (pnpm run format fixes it)
 pnpm run test          # Vitest
 ```
 
+CI also runs `pnpm run build:release` and lints the Firefox package with
+Mozilla's `web-ext lint`. Its two `UNSAFE_VAR_ASSIGNMENT` warnings come from
+React's own code, not ours, and don't fail the check.
+
 - Follow the [code convention](doc/code-convention.md): Elm architecture
   updaters in `src/update.ts`, `rem` font sizes, no margin utilities, and tests
   for new logic in `test/`.

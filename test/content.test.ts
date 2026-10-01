@@ -69,19 +69,38 @@ const isShown = (id: string) => {
   return element !== null && element.style.display !== 'none'
 }
 
+const setProperty = (target: object, key: string, value: unknown) =>
+  Object.defineProperty(target, key, { value, configurable: true })
+
+// A maximized 1920×1080 window; jsdom's defaults are 0 or 1024×768
+const setWindowSize = (innerWidth: number, innerHeight: number) => {
+  setProperty(window, 'innerWidth', innerWidth)
+  setProperty(window, 'innerHeight', innerHeight)
+  setProperty(window, 'outerWidth', innerWidth)
+  setProperty(window, 'outerHeight', innerHeight)
+}
+
+const setPrefersDark = (prefersDark: boolean) =>
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn(() => ({ matches: prefersDark, addEventListener: vi.fn() })),
+  )
+
 describe('Content script', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['setInterval'] })
     window.history.replaceState(null, '', PAGE_URL)
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn(() => ({ matches: false, addEventListener: vi.fn() })),
-    )
+    setPrefersDark(false)
+    setProperty(window.screen, 'availWidth', 1920)
+    setProperty(window.screen, 'availHeight', 1080)
+    setProperty(window, 'devicePixelRatio', 1)
+    setWindowSize(1920, 1080)
   })
 
   afterEach(() => {
     vi.useRealTimers()
     vi.unstubAllGlobals()
+    delete (document as { fullscreenElement?: unknown }).fullscreenElement
     document.documentElement.innerHTML = '<head></head><body></body>'
   })
 
@@ -170,9 +189,111 @@ describe('Content script', () => {
     sendMessage({
       type: 'SETTINGS_UPDATED',
       settings: pathSetting({ side: { _tag: 'Left', width: 160 } }),
+      globalSetting: defaultGlobalSetting,
+      domainSetting: { _tag: 'DomainSetting', enabled: true },
     })
 
     expect(isShown('damn-center-left')).toBe(true)
     expect(byId('damn-center-left')!.style.width).toBe('160px')
+  })
+
+  it('re-checks the rules when a single-page app changes the URL', async () => {
+    await loadContentScript(storageWith([pathSetting()]))
+    expect(isShown('damn-center-left')).toBe(true)
+
+    window.history.pushState(null, '', 'https://example.com/blog/post')
+    vi.advanceTimersByTime(500)
+
+    await vi.waitFor(() => expect(isShown('damn-center-left')).toBe(false))
+  })
+
+  it('uses the light colors in light mode and the dark colors in dark mode', async () => {
+    const colors = {
+      light: { bgType: 'color', bgColor: 'rgb(253, 246, 227)', bgPattern: '' },
+      dark: { bgType: 'color', bgColor: 'rgb(0, 43, 54)', bgPattern: '' },
+    } as const
+    await loadContentScript(
+      storageWith([pathSetting({ themeMode: 'dark', ...colors })]),
+    )
+    expect(byId('damn-center-left')!.style.backgroundColor).toBe(
+      'rgb(0, 43, 54)',
+    )
+
+    document.documentElement.innerHTML = '<head></head><body></body>'
+    await loadContentScript(
+      storageWith([pathSetting({ themeMode: 'light', ...colors })]),
+    )
+    expect(byId('damn-center-left')!.style.backgroundColor).toBe(
+      'rgb(253, 246, 227)',
+    )
+  })
+
+  it('follows the system color scheme in system mode', async () => {
+    setPrefersDark(true)
+    await loadContentScript(
+      storageWith([
+        pathSetting({
+          themeMode: 'system',
+          light: {
+            bgType: 'color',
+            bgColor: 'rgb(253, 246, 227)',
+            bgPattern: '',
+          },
+          dark: { bgType: 'color', bgColor: 'rgb(0, 43, 54)', bgPattern: '' },
+        }),
+      ]),
+    )
+
+    expect(byId('damn-center-left')!.style.backgroundColor).toBe(
+      'rgb(0, 43, 54)',
+    )
+  })
+
+  it('draws a pattern background', async () => {
+    const pattern = {
+      bgType: 'pattern',
+      bgColor: '#2aa198',
+      bgPattern: 'dots',
+    } as const
+    await loadContentScript(
+      storageWith([pathSetting({ light: pattern, dark: pattern })]),
+    )
+
+    expect(byId('damn-center-left')!.style.backgroundImage).not.toBe('')
+    expect(byId('damn-center-left')!.style.backgroundImage).not.toBe('none')
+  })
+
+  it('steps aside while the page is fullscreen', async () => {
+    setProperty(document, 'fullscreenElement', document.body)
+    await loadContentScript(storageWith([pathSetting()]))
+
+    expect(isShown('damn-center-left')).toBe(false)
+  })
+
+  describe('"Disable when not maximized"', () => {
+    const notMaximizedSetting = {
+      ...defaultGlobalSetting,
+      disableWhenNotMaximized: true,
+    }
+
+    it('keeps the pads in a maximized window', async () => {
+      await loadContentScript(storageWith([pathSetting()], notMaximizedSetting))
+
+      expect(isShown('damn-center-left')).toBe(true)
+    })
+
+    it('hides the pads in a smaller window', async () => {
+      setWindowSize(1200, 800)
+      await loadContentScript(storageWith([pathSetting()], notMaximizedSetting))
+
+      expect(isShown('damn-center-left')).toBe(false)
+    })
+
+    it('ignores the window size when the option is off', async () => {
+      setWindowSize(1200, 800)
+      await loadContentScript(storageWith([pathSetting()]))
+
+      expect(isShown('damn-center-left')).toBe(true)
+    })
   })
 })

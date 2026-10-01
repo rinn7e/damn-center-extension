@@ -24,7 +24,7 @@ This document describes the code design principles and style conventions that mu
 
 ## 5. Testing Conventions
 
-- **Vitest:** New or changed sub-updater functions, helpers and codecs need Vitest tests in the `test/` directory (e.g., `test/update.test.ts`, `test/codec.test.ts`). The DOM code in `src/worker/content.ts` has no automated tests yet; check it by hand on a few real sites (see the [release guide](release.md)).
+- **Vitest:** New or changed sub-updater functions, helpers and codecs need Vitest tests in the `test/` directory (e.g., `test/update.test.ts`, `test/codec.test.ts`). The content script (`src/worker/content.ts`) is tested in `test/content.test.ts` against a simulated page (jsdom); add a case there when you change its behavior, and still check the layout by hand on real sites before a release (see the [release guide](release.md)).
 
 ## 6. Layout & Spacing (No Margin Rule)
 

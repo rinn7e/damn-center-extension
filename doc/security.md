@@ -36,12 +36,13 @@ To prove to users that Damn Center is secure, we implement the following transpa
 ### Open-Source Codebase and Audits
 
 - **Public Repository**: Keep the source code public on GitHub, allowing developers to inspect every line of code, dependency, and configuration.
-- **Dependency Audit**: The project uses `pnpm-lock.yaml` to pin exact dependency versions and hashes, making the build repeatable. Dependabot proposes dependency and GitHub Actions updates each month, raises alerts for known vulnerabilities and opens fix pull requests for them, and CI checks every one.
+- **Dependency Audit**: The project uses `pnpm-lock.yaml` to pin exact dependency versions and hashes, making the build repeatable. Dependabot proposes dependency and GitHub Actions updates each month and opens pull requests for known vulnerabilities; branch protection requires CI to pass before any of them can merge. All of these are build and test tools: none of them ship in the extension packages.
 
 ### Verifiable and Reproducible Builds
 
 - **Unpacked Installation Instructions**: Explain clearly in the main `README.md` how users can load the unpacked extension in developer mode directly from the source code.
-- **Minified, Not Obfuscated**: Release builds are minified by Vite but not obfuscated. Anyone can rebuild from source with `pnpm run build:release` and compare the output with the store package.
+- **Minified, Not Obfuscated**: Release builds are minified by Vite but not obfuscated. Anyone can rebuild from source with `pnpm run build:release` and compare the files with the ones inside the store package; the build is reproducible, so they match byte for byte.
+- **Checksums**: Each GitHub release is built by CI from the tagged commit and lists the SHA-256 of its zips in `SHA256SUMS.txt`.
 
 ### Content Security Policy (CSP) and Remote Code
 

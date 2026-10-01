@@ -5,13 +5,16 @@ on:
     tags: ['v*']
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  release:
+  # Builds and checks with a read-only token
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
@@ -27,8 +30,12 @@ jobs:
           fi
       - run: cp .env.example .env.production
       - run: pnpm run check
+      - run: pnpm run lint
+      - run: pnpm run format:check
       - run: pnpm run test
       - run: pnpm run build:release
+      - name: Lint the Firefox package
+        run: pnpm dlx web-ext@10.7.0 lint --source-dir dist/firefox
       - name: Write release notes from CHANGELOG.md
         run: |
           version="${GITHUB_REF_NAME#v}"
@@ -37,17 +44,45 @@ jobs:
             found && (/^## \[/ || /^\[/) { exit }
             found && /^---$/ { next }
             found { print }
-          ' CHANGELOG.md > notes.md
-          if [ ! -s notes.md ]; then
+          ' CHANGELOG.md > dist/notes.md
+          if [ ! -s dist/notes.md ]; then
             echo "No CHANGELOG.md section for $version"
             exit 1
           fi
+      - name: Write checksums
+        working-directory: dist
+        run: |
+          sha256sum damn-center-chrome-$GITHUB_REF_NAME.zip \
+            damn-center-firefox-$GITHUB_REF_NAME.zip > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release
+          path: |
+            dist/notes.md
+            dist/SHA256SUMS.txt
+            dist/damn-center-chrome-${{ github.ref_name }}.zip
+            dist/damn-center-firefox-${{ github.ref_name }}.zip
+          if-no-files-found: error
+
+  # Only this job can write, and it runs no project code
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: release
       - name: Create a draft release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" --draft \
+            --repo "$GITHUB_REPOSITORY" \
             --title "Damn Center $GITHUB_REF_NAME" \
             --notes-file notes.md \
-            dist/damn-center-chrome-$GITHUB_REF_NAME.zip \
-            dist/damn-center-firefox-$GITHUB_REF_NAME.zip
+            damn-center-chrome-$GITHUB_REF_NAME.zip \
+            damn-center-firefox-$GITHUB_REF_NAME.zip \
+            SHA256SUMS.txt

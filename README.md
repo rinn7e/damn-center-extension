@@ -44,7 +44,7 @@ Damn Center adds customizable left and right padding to web pages on the fly. Ad
 - **Width Adjustment**: Scale padding width dynamically using the popup slider.
 - **Side Selection**: Apply padding to the left side, right side, or both sides.
 - **Alignment Ruler**: Toggle a vertical centered ruler guide to assist with layout alignment.
-- **Layout Shifting & Strategies**: Restructures layout using CSS Flexbox shifting (preserves absolute/sticky layouts) or Classic shifting strategies to prevent padding from overlapping content.
+- **Layout Shifting**: Restructures the page with CSS Flexbox so the padding never overlaps content, while keeping absolute and sticky elements in place (see [how it works](#layout-shifting-mechanism)).
 - **Theme Compatibility**: Supports independent configurations for Light and Dark modes. Can sync with system preferences (`prefers-color-scheme`) or force a specific mode.
 - **SVG Patterns**: Apply customizable SVG background patterns (grids, dots, stripes, carbon, or lattice) over background colors.
 - **Disable when Not Maximized**: Automatically suspends padding and alignment rules when the window is tiled, restored, or not fully maximized. Bypasses OS-level and fractional browser zoom discrepancies (such as Chrome on Linux Wayland bugs) to keep window space fully optimized.

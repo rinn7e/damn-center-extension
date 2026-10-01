@@ -17,6 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
@@ -29,3 +31,5 @@ jobs:
       - run: pnpm run format:check
       - run: pnpm run test
       - run: pnpm run build:release
+      - name: Lint the Firefox package
+        run: pnpm dlx web-ext@10.7.0 lint --source-dir dist/firefox

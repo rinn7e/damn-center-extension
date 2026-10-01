@@ -4,6 +4,10 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    # pnpm refuses packages published in the last day (minimumReleaseAge), so
+    # only propose versions that have been out for a few days
+    cooldown:
+      default-days: 3
     groups:
       dev-dependencies:
         dependency-type: development
@@ -13,3 +17,5 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 3
