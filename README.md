@@ -203,7 +203,7 @@ The following websites are currently known to be incompatible with the extension
 
 ## Video Showcase
 
-[![Damn Center Showcase](https://img.youtube.com/vi/Yc29sO4jF9g/0.jpg)](https://www.youtube.com/watch?v=Yc29sO4jF9g)
+[![Damn Center 2.0 Showcase](https://img.youtube.com/vi/GnFG-Eb1EGc/maxresdefault.jpg)](https://www.youtube.com/watch?v=GnFG-Eb1EGc)
 
 ---
 
