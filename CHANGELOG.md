@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ### Fixed
 
+- **Sites You Haven't Set Up**: The popup used to show a made-up match (80px, dots) on any site without rules, and changing a setting there (on/off, ruler, "not maximized", font size, or switching the site off and on) saved it, adding padding you never asked for. Now such a site shows "No matches added yet", and a match is only added with **+ New Match**.
 - **Scroll Position**: Turning padding on or off (from the popup, when the window is un-maximized, or when moving between pages with and without a rule) no longer jumps the page to a different scroll position.
 - **Pages That Rebuild Themselves**: If a page replaces or wipes its whole document, the padding and ruler are put back right away instead of silently disappearing.
 - **SVG and XML Files**: Opening an `.svg` or XML file on a site with a matching rule no longer causes an error.

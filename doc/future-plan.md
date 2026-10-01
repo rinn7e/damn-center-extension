@@ -8,20 +8,6 @@ Ideas under consideration, in no particular order. Shipped items move to the
 - Auto-disable while the developer console is open.
 - A 4-column option for the alignment ruler.
 
-## Known bugs
-
-- **The suggested rule gets saved by unrelated toggles.** On a site with no
-  saved rules, the popup shows a suggested rule (80px, dots) that isn't saved
-  yet. Changing a global setting there (extension on/off, ruler, "disable when
-  not maximized", popup font size) or switching the site off and on saves the
-  site's whole rule list, including that suggestion. The site then gets padding
-  the user never added, and storage collects rules for every site where the
-  popup was used. Cause: those handlers in `src/update.ts` call
-  `saveSettingsCmd` with `model.padSettingList`, which on such a site is the
-  unsaved suggestion from `loadInitialDataCmd`. The popup needs to tell a
-  suggested rule apart from a saved one; how to model that is still to be
-  decided.
-
 ## Project
 
 - **Real-browser tests**: the tests run the content script in a simulated page

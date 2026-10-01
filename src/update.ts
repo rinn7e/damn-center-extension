@@ -889,9 +889,7 @@ export const queryActiveTabAndSettings = (): Promise<{
                 ? globalEither.right
                 : defaultGlobalSetting
             const padSettingList =
-              padEither._tag === 'Right'
-                ? padEither.right
-                : [createDefaultPathSetting('https://' + host + '/**')]
+              padEither._tag === 'Right' ? padEither.right : []
             resolve({
               hostname: host,
               currentUrl: url,
@@ -918,14 +916,6 @@ export const loadInitialDataCmd = (): Cmd<Msg> => {
         const pathSettings = rawList.filter(
           (item): item is PathSetting => item._tag === 'PathSetting',
         )
-        const finalPathSettings =
-          pathSettings.length > 0
-            ? pathSettings
-            : [
-                createDefaultPathSetting(
-                  'https://' + res.value.hostname + '/**',
-                ),
-              ]
 
         return {
           _tag: 'Init',
@@ -933,7 +923,9 @@ export const loadInitialDataCmd = (): Cmd<Msg> => {
           currentUrl: res.value.currentUrl,
           globalSetting: res.value.globalSetting,
           domainSetting,
-          padSettingList: finalPathSettings,
+          // A site without saved rules shows the empty state; rules are only
+          // added with + New Match
+          padSettingList: pathSettings,
         }
       } else {
         return {
@@ -942,7 +934,7 @@ export const loadInitialDataCmd = (): Cmd<Msg> => {
           currentUrl: '',
           globalSetting: defaultGlobalSetting,
           domainSetting: defaultDomainSetting,
-          padSettingList: [defaultPathSetting],
+          padSettingList: [],
         }
       }
     },
