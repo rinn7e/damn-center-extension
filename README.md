@@ -51,7 +51,7 @@ Damn Center adds customizable left and right padding to web pages on the fly. Ad
 - **Auto-Disable on Fullscreen**: Automatically suspends padding and alignment rules when a website enters fullscreen mode (resolves Youtube and other fullscreen video viewport conflicts).
 - **Popup UI Font Size Controller**: Adjust the root font size of the extension's popup UI (`12px` to `32px` in `1px` steps, default `18px`) for clean text scaling.
 - **Collapsible Matches**: Collapse list items in the popup UI to organize configuration matches.
-- **Dynamic Version Header**: Displays manifest version and build date inside the popup UI.
+- **Version Header**: Shows the extension version in the popup header (development builds also show the build date).
 
 See the [CHANGELOG](CHANGELOG.md) for changes in each release.
 

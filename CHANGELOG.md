@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 ### Added
 
 - **Continuous Integration**: Type check, lint, format check, tests and release build run on every push and pull request.
+- **Release Workflow**: Pushing a `v*` tag builds the zips in CI and creates a draft GitHub release with the notes from this changelog.
 - **Contributor Docs**: `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, issue templates and a pull request template.
 
 ### Changed

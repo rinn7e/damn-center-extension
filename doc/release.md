@@ -52,7 +52,7 @@ The extension version must be synchronized across these files. Update the versio
 
 ## 3. Build & Package Production Assets
 
-Compile the production bundles and auto-package the zip files:
+The release workflow builds the published zips for you (see step 5). Build locally first to try the release build before tagging:
 
 ```bash
 pnpm run build:release
@@ -91,33 +91,15 @@ git push origin v<VERSION>
 
 ## 5. Publish on GitHub
 
-1. Navigate to your repository on GitHub.
-2. Under **Releases** on the right sidebar, click **Create a new release** (or **Draft a new release**).
-3. Choose the tag `v<VERSION>` you just pushed.
-4. Set the Release Title to `Damn Center v<VERSION>`.
-5. Write a brief summary of the changes/features added in this release.
-6. Drag and drop the compiled `.zip` files from your local `./dist/` directory into the **Attach binaries** box:
-   - `damn-center-chrome-v<VERSION>.zip`
-   - `damn-center-firefox-v<VERSION>.zip`
-   - `damn-center-safari-v<VERSION>.zip`
-7. Click **Publish release** (or `gh release create v<VERSION> --title "Damn Center v<VERSION>" --notes-file <notes> dist/*-v<VERSION>.zip`, excluding the source zip).
+Pushing the tag runs the [Release workflow](../.github/workflows/release.yml). It:
 
-### Release notes template
+1. checks that the tag matches the `package.json` version,
+2. runs the type check and tests, then `build:release`,
+3. creates a **draft** release titled `Damn Center v<VERSION>`, with this version's `CHANGELOG.md` section as the notes and the Chrome, Firefox and Safari zips attached.
 
-```markdown
-## What's New in v<VERSION>
+Open the draft under **Releases**, add a one-line summary at the top if you like, and click **Publish release**. If the workflow fails, fix the problem, delete and re-push the tag (`git tag -d v<VERSION> && git push origin :v<VERSION>`), then tag again.
 
-<One or two sentences on the main change.>
-
-### Added / Changed / Fixed
-
-- <Copy the entries from this version's CHANGELOG section.>
-
-### Install
-
-- Chrome Web Store / Firefox Add-ons: updates arrive automatically.
-- Manual: download the zip for your browser below and load it as described in the README.
-```
+Upload the zips from the release to the stores, not a local build, so the stores and GitHub get identical files.
 
 ---
 
@@ -127,7 +109,7 @@ git push origin v<VERSION>
 
 1. Log in to the [Chrome Developer Dashboard](https://developer.chrome.com/dashboard).
 2. Click on the **Damn Center** item.
-3. Go to the **Package** section and upload the `dist/damn-center-chrome-v<VERSION>.zip` file.
+3. Go to the **Package** section and upload `damn-center-chrome-v<VERSION>.zip` from the GitHub release.
 4. Fill in store listing metadata if changed, and submit for review.
 5. In **Privacy**, keep the declaration that the extension stores settings locally and transmits no user data.
 
@@ -135,8 +117,8 @@ git push origin v<VERSION>
 
 1. Log in to the [Firefox Add-on Developer Hub](https://addons.mozilla.org/developers/).
 2. Submit a new version of the extension.
-3. Upload the `dist/damn-center-firefox-v<VERSION>.zip` file.
-4. When asked whether the code is compiled or minified, answer **Yes** and upload `dist/damn-center-source-v<VERSION>.zip`.
+3. Upload `damn-center-firefox-v<VERSION>.zip` from the GitHub release.
+4. When asked whether the code is compiled or minified, answer **Yes** and upload the source: the release's **Source code (zip)** (every file tracked in git at the tag), or `dist/damn-center-source-v<VERSION>.zip` from a local `build:release`.
 5. Build instructions for the reviewer: "Install Node.js 24+ and pnpm, run `pnpm install`, `cp .env.example .env.production`, then `pnpm run build:firefox:release`. The output is in `dist/firefox/`."
 6. Follow the steps for listing review. The license is GPL-3.0.
 
