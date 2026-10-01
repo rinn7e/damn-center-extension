@@ -285,7 +285,6 @@ const handleInit = (
       matchesCollapsed: model ? model.matchesCollapsed : defaultCollapsed,
       isInjectThemeDone: false,
       isSetFontSizeDone: false,
-      isDefaultRuleUnsaved: msg.isDefaultRuleUnsaved,
     },
     Cmd.batch([
       injectThemeCmd(activeSettings),
@@ -482,6 +481,13 @@ const handleToggleGlobalEnabled = (model: Model): [Model, Cmd<Msg>] => {
     { ...model, globalSetting: updatedGlobal },
     Cmd.batch([
       saveGlobalSettingCmd(updatedGlobal),
+      saveSettingsCmd(
+        model.hostname,
+        model.currentUrl,
+        model.padSettingList,
+        updatedGlobal,
+        model.domainSetting,
+      ),
       injectThemeCmd(activeSettings),
     ]),
   ]
@@ -501,9 +507,7 @@ const handleToggleDomainEnabled = (model: Model): [Model, Cmd<Msg>] => {
       saveSettingsCmd(
         model.hostname,
         model.currentUrl,
-        // Don't save the suggested default rule just because the site was
-        // switched off or on
-        model.isDefaultRuleUnsaved ? [] : model.padSettingList,
+        model.padSettingList,
         model.globalSetting,
         updatedDomain,
       ),
@@ -517,24 +521,6 @@ export const init = (): [Model | null, Cmd<Msg>] => {
 }
 
 export const update = (
-  msg: Msg,
-  model: Model | null,
-): [Model | null, Cmd<Msg>] => {
-  const [nextModel, cmd] = updateModel(msg, model)
-  // Any edit to the rules saves them, so the default rule is no longer unsaved
-  if (
-    model !== null &&
-    nextModel !== null &&
-    msg._tag !== 'Init' &&
-    nextModel.padSettingList !== model.padSettingList &&
-    nextModel.isDefaultRuleUnsaved
-  ) {
-    return [{ ...nextModel, isDefaultRuleUnsaved: false }, cmd]
-  }
-  return [nextModel, cmd]
-}
-
-const updateModel = (
   msg: Msg,
   model: Model | null,
 ): [Model | null, Cmd<Msg>] => {
@@ -632,6 +618,13 @@ const updateModel = (
           { ...model, globalSetting: updatedGlobal },
           Cmd.batch([
             saveGlobalSettingCmd(updatedGlobal),
+            saveSettingsCmd(
+              model.hostname,
+              model.currentUrl,
+              model.padSettingList,
+              updatedGlobal,
+              model.domainSetting,
+            ),
             injectThemeCmd(activeSettings),
           ]),
         ]
@@ -648,6 +641,13 @@ const updateModel = (
           { ...model, globalSetting: updatedGlobal },
           Cmd.batch([
             saveGlobalSettingCmd(updatedGlobal),
+            saveSettingsCmd(
+              model.hostname,
+              model.currentUrl,
+              model.padSettingList,
+              updatedGlobal,
+              model.domainSetting,
+            ),
             injectThemeCmd(activeSettings),
           ]),
         ]
@@ -677,6 +677,13 @@ const updateModel = (
           { ...model, globalSetting: updatedGlobal },
           Cmd.batch([
             saveGlobalSettingCmd(updatedGlobal),
+            saveSettingsCmd(
+              model.hostname,
+              model.currentUrl,
+              model.padSettingList,
+              updatedGlobal,
+              model.domainSetting,
+            ),
             injectThemeCmd(activeSettings),
             updateRootFontSizeCmd(clampedSize),
           ]),
@@ -927,7 +934,6 @@ export const loadInitialDataCmd = (): Cmd<Msg> => {
           globalSetting: res.value.globalSetting,
           domainSetting,
           padSettingList: finalPathSettings,
-          isDefaultRuleUnsaved: pathSettings.length === 0,
         }
       } else {
         return {
@@ -937,7 +943,6 @@ export const loadInitialDataCmd = (): Cmd<Msg> => {
           globalSetting: defaultGlobalSetting,
           domainSetting: defaultDomainSetting,
           padSettingList: [defaultPathSetting],
-          isDefaultRuleUnsaved: true,
         }
       }
     },

@@ -32,12 +32,10 @@ import {
 //
 // While an old copy's padding is applied, the page scrolls inside <body>;
 // removing its style resets that, so remember the position first and carry it
-// over when this copy applies its own padding. Only when that style actually
-// holds padding: 2.0.0 added an empty one to every page, and there the window
-// is scrolling, not <body>.
-let leftoverScrollTop: number | undefined = document
-  .querySelector('#damn-center-style, #symmetry-pad-style')
-  ?.textContent?.trim()
+// over when this copy applies its own padding.
+let leftoverScrollTop: number | undefined = document.querySelector(
+  '#damn-center-style, #symmetry-pad-style',
+)
   ? document.body?.scrollTop
   : undefined
 document

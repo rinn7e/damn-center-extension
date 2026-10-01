@@ -22,10 +22,6 @@ export interface Model {
   matchesCollapsed: boolean
   isInjectThemeDone: boolean
   isSetFontSizeDone: boolean
-  // True while padSettingList is only the suggested default rule for a site
-  // with no saved rules. It's saved once the user edits the rules, never as a
-  // side effect of a global or site-wide toggle
-  isDefaultRuleUnsaved: boolean
 }
 
 export type Msg =
@@ -36,7 +32,6 @@ export type Msg =
       globalSetting: GlobalSetting
       domainSetting: DomainSetting
       padSettingList: PathSetting[]
-      isDefaultRuleUnsaved: boolean
     }
   | { _tag: 'ToggleGlobalEnabled' }
   | { _tag: 'ToggleDomainEnabled' }
