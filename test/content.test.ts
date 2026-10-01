@@ -382,12 +382,37 @@ describe('Content script', () => {
       // The old copy's padding is applied, so the page scrolls inside <body>
       const leftoverStyle = document.createElement('style')
       leftoverStyle.id = 'symmetry-pad-style'
+      leftoverStyle.textContent = 'body { overflow-y: auto !important; }'
       document.documentElement.appendChild(leftoverStyle)
       bodyScrollTop = 700
 
       await loadContentScript(storageWith([pathSetting()]))
 
       expect(bodyScrollWrites).toEqual([700])
+    })
+
+    it('is left alone after an update when the old copy had no padding', async () => {
+      // 2.0.0 added an empty style to every page; the window was scrolling
+      const leftoverStyle = document.createElement('style')
+      leftoverStyle.id = 'symmetry-pad-style'
+      document.documentElement.appendChild(leftoverStyle)
+      setProperty(window, 'scrollY', 1500)
+
+      await loadContentScript(storageWith([]))
+
+      expect(scrollTo).not.toHaveBeenCalled()
+      expect(bodyScrollWrites).toEqual([])
+    })
+
+    it('carries the window position over after an update when padding turns on', async () => {
+      const leftoverStyle = document.createElement('style')
+      leftoverStyle.id = 'symmetry-pad-style'
+      document.documentElement.appendChild(leftoverStyle)
+      setProperty(window, 'scrollY', 1500)
+
+      await loadContentScript(storageWith([pathSetting()]))
+
+      expect(bodyScrollWrites).toEqual([1500])
     })
 
     it('is left alone when the padding only changes width', async () => {
