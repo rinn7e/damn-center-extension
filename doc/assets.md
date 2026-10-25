@@ -12,6 +12,7 @@ stay in sync.
 | Extension icons                                                              | `public/icon{16,32,48,128}.png`     |
 | Development icons (orange DEV badge, used by dev builds)                     | `public/icon{16,32,48,128}-dev.png` |
 | README screenshot                                                            | `doc/images/readme-screenshot.png`  |
+| README logo (the 128px icon without the store padding)                       | `doc/images/readme-logo.png`        |
 | Chrome Web Store small promo tile (440×280) and store screenshots (1280×800) | not stored in this repo             |
 | YouTube thumbnail and showcase video                                         | not stored in this repo             |
 

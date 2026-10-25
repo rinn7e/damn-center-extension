@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/icon128.png" alt="Damn Center Logo" width="128" height="128">
+  <img src="doc/images/readme-logo.png" alt="Damn Center Logo" width="128" height="128">
 </p>
 
 <h1 align="center">Damn Center - the page!</h1>
