@@ -10,12 +10,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ### Added
 
+- **Rules per Monitor**: Matches now belong to a monitor, told apart by its screen size, which the popup shows next to **Matches** (for example 3440x1440). Edits made on one monitor never change the padding on another, and moving the window to another monitor switches to its matches without reloading the page. Pick another monitor from that list to see its matches read only, and copy one of them, all of them (replacing yours), or only the ones you are missing; on a monitor without matches, **Copy from another monitor** gets you there. Your existing matches move to the monitor you first open the popup on after the update; on your other monitors, copy them from there.
 - **Privacy Policy**: [PRIVACY.md](https://github.com/rinn7e/damn-center-extension/blob/master/PRIVACY.md) spells out that Damn Center collects nothing and keeps your settings on your device.
 - **Import Confirmation**: Importing a backup now asks before replacing your settings.
 - **Changes Reach Every Tab**: Turning the extension on or off, or editing a site's matches, now updates every open tab right away, not only the one you're on. Switching to a tab also re-reads the latest settings. Tabs left open across an extension update keep their padding instead of losing it.
 
 ### Changed
 
+- **Settings Format**: Each site is now saved as one value holding the site switch and its matches, instead of a list mixing the two. Your settings are converted the first time you open the popup, and the old values are kept as `backup_v1_*` entries. Until then, pages keep using your old settings on every monitor. Backups made with earlier versions still import; backups made with this version need this version or later.
 - **Page Elements**: The padding, ruler and style elements the extension adds to pages now use `damn-center-*` ids instead of the old `symmetry-pad-*` names. If you wrote custom user styles for those ids, update them.
 - **Firefox 140+**: The Firefox version now requires Firefox 140 or later (an ESR release), the first version that supports the add-on's data-collection declaration.
 - **Smaller and Faster**: The script that runs on every page is less than half its old size (117 KB → 53 KB), because fp-ts is now imported as tree-shakeable ES modules. Old backup icons and screenshots are no longer copied into the packages.

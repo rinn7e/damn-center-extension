@@ -40,6 +40,7 @@ Damn Center collects no data and makes no network requests. See the [privacy pol
 ## Features
 
 - **Per-Site Matches**: Save different settings per site or path with URL patterns. **+ New Match** adds a rule for the current page in one click, and a domain toggle switches a whole site on or off.
+- **Rules per Monitor**: Each monitor keeps its own matches for a site, so padding that centers a page on a widescreen does not squeeze it on a laptop screen. Monitors are told apart by their screen size, the page switches rules when you move the window to another monitor, and the popup can show the matches of your other monitors (read only) and copy one or all of them to the monitor you are on.
 - **Width and Side**: Set the padding width with a slider, on the left, the right or both sides.
 - **Layout-Safe Shifting**: Restructures the page with CSS Flexbox so the padding never covers content, while absolute and sticky elements stay in place (see [how it works](#layout-shifting-mechanism)).
 - **Colors and Patterns**: Fill the padding with a color or an SVG pattern (grid, dots, stripes, carbon or lattice), with separate light and dark versions that follow your system or a mode you pick.
