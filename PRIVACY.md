@@ -18,6 +18,8 @@ device**, in your browser's local extension storage:
 - the URL patterns ("matches") you create, and the website names (hostnames)
   they belong to
 - padding width, side, colors, background patterns and theme mode
+- the screen sizes (for example 3440x1440) of the monitors your matches
+  belong to
 - general preferences such as the ruler, the popup font size and whether the
   extension is turned on
 
@@ -28,7 +30,8 @@ account, and the developer can't see them.
 
 To apply your settings, the extension's content script checks the address
 (URL) of each page you visit and compares it with your saved matches, entirely
-inside your browser. It doesn't read page content, form fields, passwords or
+inside your browser. It also reads the screen size, to pick the rules of the
+monitor the page is on. It doesn't read page content, form fields, passwords or
 cookies, and it doesn't record your browsing history.
 
 ## Exporting and importing

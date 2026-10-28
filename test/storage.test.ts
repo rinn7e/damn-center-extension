@@ -9,7 +9,7 @@ import {
   getGlobError,
   getHostname,
   loadGlobalSetting,
-  loadPadSettings,
+  loadSiteSetting,
   matchUrlPattern,
 } from '../src/storage/storage'
 
@@ -145,9 +145,12 @@ describe('Storage reads', () => {
     expect(result._tag).toBe('Left')
   })
 
-  it('fails loadPadSettings instead of hanging', async () => {
+  it('fails loadSiteSetting instead of hanging', async () => {
     stubFailingStorage()
-    const result = await loadPadSettings('example.com' as Hostname)()
+    const result = await loadSiteSetting('example.com' as Hostname, {
+      width: 1920,
+      height: 1080,
+    })()
 
     expect(result._tag).toBe('Left')
   })

@@ -18,7 +18,11 @@ import {
 
 const PAGE_URL = 'https://example.com/docs/intro'
 
-type MessageListener = (message: unknown) => void
+type MessageListener = (
+  message: unknown,
+  sender: unknown,
+  sendResponse: (response: unknown) => void,
+) => void
 
 // Listeners each loaded copy of the script adds, removed after every test so
 // one test's script can't react to events fired in a later test
@@ -63,7 +67,10 @@ const loadContentScript = async (
   storage: Record<string, unknown>,
   { expectedReads = 2 } = {},
 ): Promise<{
-  sendMessage: MessageListener
+  sendMessage: (
+    message: unknown,
+    sendResponse?: (response: unknown) => void,
+  ) => void
   changeStorage: (changes: Record<string, unknown>) => void
   storageReads: () => number
   breakStorage: () => void
@@ -112,8 +119,8 @@ const loadContentScript = async (
   await vi.waitFor(() => expect(storageReads).toBe(expectedReads))
   await settle()
   return {
-    sendMessage: (message) =>
-      listeners.forEach((listener) => listener(message)),
+    sendMessage: (message, sendResponse = () => undefined) =>
+      listeners.forEach((listener) => listener(message, {}, sendResponse)),
     // Saves new values, as the popup would from any tab
     changeStorage: (changes) => {
       const event = Object.fromEntries(
@@ -176,6 +183,8 @@ describe('Content script', () => {
     setPrefersDark(false)
     setProperty(window.screen, 'availWidth', 1920)
     setProperty(window.screen, 'availHeight', 1080)
+    setProperty(window.screen, 'width', 1920)
+    setProperty(window.screen, 'height', 1080)
     setProperty(window, 'devicePixelRatio', 1)
     setWindowSize(1920, 1080)
   })
@@ -274,6 +283,35 @@ describe('Content script', () => {
       await settle()
 
       expect(document.querySelector('[id^="damn-center"]')).toBeNull()
+    } finally {
+      document.replaceChild(html, svg)
+    }
+  })
+
+  it('notices a monitor change only once in SVG and XML documents', async () => {
+    const html = document.documentElement
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    document.replaceChild(svg, html)
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined)
+    try {
+      const { sendMessage } = await loadContentScript(
+        storageWith([pathSetting()]),
+        { expectedReads: 0 },
+      )
+      // Settings from the popup start the poll in any document
+      sendMessage({
+        type: 'SETTINGS_UPDATED',
+        settings: pathSetting(),
+        globalSetting: defaultGlobalSetting,
+        domainSetting: { _tag: 'DomainSetting', enabled: true },
+      })
+      setProperty(window.screen, 'width', 3440)
+      vi.advanceTimersByTime(2000)
+
+      const monitorLogs = log.mock.calls.filter(([text]) =>
+        String(text).includes('Monitor change detected'),
+      )
+      expect(monitorLogs).toHaveLength(1)
     } finally {
       document.replaceChild(html, svg)
     }
@@ -617,6 +655,126 @@ describe('Content script', () => {
       document.dispatchEvent(new Event('visibilitychange'))
 
       await vi.waitFor(() => expect(isShown('damn-center-left')).toBe(true))
+    })
+  })
+
+  describe('rules per monitor', () => {
+    const wideRule = pathSetting({ side: { _tag: 'Left', width: 400 } })
+    // The screen every test starts on (see beforeEach), and a wider one
+    const desk = { width: 1920, height: 1080 }
+    const ultrawide = { width: 3440, height: 1440 }
+    const withMonitorRules = (
+      deskRules: PathSetting[],
+      ultrawideRules: PathSetting[] = [wideRule],
+    ) => ({
+      ...storageWith([]),
+      'example.com': {
+        _tag: 'SiteSetting',
+        enabled: true,
+        monitors: [
+          ...(deskRules.length > 0
+            ? [{ monitor: desk, rules: deskRules }]
+            : []),
+          { monitor: ultrawide, rules: ultrawideRules },
+        ],
+      },
+    })
+
+    const setScreenSize = (width: number, height: number) => {
+      setProperty(window.screen, 'width', width)
+      setProperty(window.screen, 'height', height)
+    }
+
+    it('uses the rules of the monitor the page is on', async () => {
+      setScreenSize(3440, 1440)
+      await loadContentScript(withMonitorRules([pathSetting()]))
+
+      expect(byId('damn-center-left')!.style.width).toBe('400px')
+    })
+
+    it('adds nothing on a monitor without rules', async () => {
+      setScreenSize(1366, 768)
+      await loadContentScript(withMonitorRules([pathSetting()]))
+
+      expect(document.querySelector('[id^="damn-center"]')).toBeNull()
+    })
+
+    it('keeps applying settings saved by version 1 on every screen', async () => {
+      // Until the popup migrates them to the monitor it is opened on
+      setScreenSize(3440, 1440)
+      await loadContentScript(storageWith([pathSetting()]))
+
+      expect(byId('damn-center-left')!.style.width).toBe('120px')
+    })
+
+    it('switches rules when the window moves to another monitor', async () => {
+      await loadContentScript(withMonitorRules([pathSetting()]))
+      expect(byId('damn-center-left')!.style.width).toBe('120px')
+
+      // Moving a window without resizing it fires no event
+      setScreenSize(3440, 1440)
+      vi.advanceTimersByTime(500)
+      await vi.waitFor(() =>
+        expect(byId('damn-center-left')!.style.width).toBe('400px'),
+      )
+
+      setScreenSize(1920, 1080)
+      vi.advanceTimersByTime(500)
+      await vi.waitFor(() =>
+        expect(byId('damn-center-left')!.style.width).toBe('120px'),
+      )
+    })
+
+    it('switches rules when a resize comes with a monitor change', async () => {
+      await loadContentScript(withMonitorRules([pathSetting()]))
+
+      setScreenSize(3440, 1440)
+      window.dispatchEvent(new Event('resize'))
+
+      // The resize handler waits 150 ms, before the next URL poll
+      await vi.waitFor(() =>
+        expect(byId('damn-center-left')!.style.width).toBe('400px'),
+      )
+    })
+
+    it('watches for a monitor change on a site with rules for another monitor only', async () => {
+      await loadContentScript(withMonitorRules([]))
+      expect(isShown('damn-center-left')).toBe(false)
+
+      setScreenSize(3440, 1440)
+      vi.advanceTimersByTime(500)
+
+      await vi.waitFor(() =>
+        expect(byId('damn-center-left')!.style.width).toBe('400px'),
+      )
+    })
+
+    it('applies changes to the monitor rules made from another tab', async () => {
+      setScreenSize(3440, 1440)
+      const { changeStorage } = await loadContentScript(
+        withMonitorRules([pathSetting()]),
+      )
+
+      changeStorage(
+        withMonitorRules(
+          [pathSetting()],
+          [pathSetting({ side: { _tag: 'Left', width: 500 } })],
+        ),
+      )
+
+      await vi.waitFor(() =>
+        expect(byId('damn-center-left')!.style.width).toBe('500px'),
+      )
+    })
+
+    it('tells the popup which monitor the page is on', async () => {
+      setScreenSize(3440, 1440)
+      const { sendMessage } = await loadContentScript(storageWith([]))
+      const sendResponse = vi.fn()
+
+      sendMessage({ type: 'GET_MONITOR' }, sendResponse)
+
+      expect(sendResponse).toHaveBeenCalledWith(ultrawide)
     })
   })
 

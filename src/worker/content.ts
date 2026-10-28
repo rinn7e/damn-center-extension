@@ -13,14 +13,21 @@ import {
   globalSettingChangeAffectsPages,
 } from '../common/type/global-setting'
 import {
+  type Monitor,
+  formatMonitor,
+  getCurrentMonitor,
+  isSameMonitor,
+} from '../common/type/monitor'
+import {
   type DomainSetting,
   type PathSetting,
   defaultDomainSetting,
 } from '../common/type/pad-setting'
+import { rulesFor } from '../common/type/site-setting'
 import {
   getHostname,
   loadGlobalSetting,
-  loadPadSettings,
+  loadSiteSetting,
   matchUrlPattern,
 } from '../storage/storage'
 
@@ -563,9 +570,14 @@ let urlCheckIntervalId: ReturnType<typeof setInterval> | undefined
 // Single-page apps change the URL without reloading the page, so poll for it.
 // Rules belong to a hostname, which can't change without a reload, so this
 // only runs on sites with at least one rule (or once the popup sends some).
+// It also notices the window moving to a monitor of another size, which fires
+// no event when the window keeps its size.
 const runStartUrlCheck = () => {
   if (urlCheckIntervalId === undefined) {
-    urlCheckIntervalId = setInterval(() => runCheckUrlChange(), 500)
+    urlCheckIntervalId = setInterval(() => {
+      runCheckUrlChange()
+      runCheckMonitorChange()
+    }, 500)
   }
 }
 
@@ -580,61 +592,80 @@ const runStopUrlCheck = () => {
  * Initializes settings on current page.
  */
 const runInit = () => {
+  // Set before the document check, so that the monitor check doesn't call
+  // this again on every poll in documents that never get padding
+  const monitor = getCurrentMonitor()
+  lastMonitor = monitor
   if (!isHtmlDocument()) {
     return
   }
   const hostname = getHostname(window.location.href)
   console.log('[Damn Center] Initializing content script for host:', hostname)
 
-  Promise.all([loadGlobalSetting()(), loadPadSettings(hostname)()]).then(
-    ([globalEither, padEither]) => {
-      // If storage can't be read, keep the page as it is. This happens in tabs
-      // that were open when the extension was updated or reloaded: their old
-      // content script can no longer reach storage ("Extension context
-      // invalidated"), and treating that as "no rules" would strip the padding
-      if (globalEither._tag === 'Left' || padEither._tag === 'Left') {
-        console.warn(
-          '[Damn Center] Could not read settings; leaving the page unchanged',
-        )
-        return
-      }
-      const globalSetting = globalEither.right
-      const settingsList = padEither.right
-
-      const domainSetting =
-        settingsList.find(
-          (item): item is DomainSetting => item._tag === 'DomainSetting',
-        ) || defaultDomainSetting
-
-      const pathSettings = settingsList.filter(
-        (item): item is PathSetting => item._tag === 'PathSetting',
+  Promise.all([
+    loadGlobalSetting()(),
+    loadSiteSetting(hostname, monitor)(),
+  ]).then(([globalEither, siteEither]) => {
+    // If storage can't be read, keep the page as it is. This happens in tabs
+    // that were open when the extension was updated or reloaded: their old
+    // content script can no longer reach storage ("Extension context
+    // invalidated"), and treating that as "no rules" would strip the padding
+    if (globalEither._tag === 'Left' || siteEither._tag === 'Left') {
+      console.warn(
+        '[Damn Center] Could not read settings; leaving the page unchanged',
       )
+      return
+    }
+    const globalSetting = globalEither.right
+    const siteSetting = siteEither.right
 
-      if (pathSettings.length > 0) {
-        runStartUrlCheck()
-      } else {
-        runStopUrlCheck()
-      }
+    const domainSetting: DomainSetting = {
+      _tag: 'DomainSetting',
+      enabled: siteSetting.enabled,
+    }
 
-      if (!globalSetting.enabled || !domainSetting.enabled) {
-        runUpdateStyles(noMatchSetting, globalSetting, domainSetting)
-        return
-      }
+    const pathSettings = rulesFor(siteSetting, monitor)
 
-      const url = window.location.href
-      const matched = pathSettings.find(
-        (s) => s.enabled && matchUrlPattern(url, s.matchPattern),
-      )
-      if (matched) {
-        runUpdateStyles(matched, globalSetting, domainSetting)
-      } else {
-        runUpdateStyles(noMatchSetting, globalSetting, domainSetting)
-      }
-    },
-  )
+    // A site with rules for another monitor needs the check too, to switch
+    // to them when the window moves there
+    if (siteSetting.monitors.length > 0) {
+      runStartUrlCheck()
+    } else {
+      runStopUrlCheck()
+    }
+
+    if (!globalSetting.enabled || !domainSetting.enabled) {
+      runUpdateStyles(noMatchSetting, globalSetting, domainSetting)
+      return
+    }
+
+    const url = window.location.href
+    const matched = pathSettings.find(
+      (s) => s.enabled && matchUrlPattern(url, s.matchPattern),
+    )
+    if (matched) {
+      runUpdateStyles(matched, globalSetting, domainSetting)
+    } else {
+      runUpdateStyles(noMatchSetting, globalSetting, domainSetting)
+    }
+  })
 }
 
 let lastUrl = window.location.href
+
+// The monitor whose rules were last read, set by runInit
+let lastMonitor: Monitor = getCurrentMonitor()
+
+// Re-reads the rules when the window is now on a monitor of another size
+const runCheckMonitorChange = () => {
+  if (!isSameMonitor(getCurrentMonitor(), lastMonitor)) {
+    console.log(
+      '[Damn Center] Monitor change detected, re-reading rules:',
+      formatMonitor(getCurrentMonitor()),
+    )
+    runInit()
+  }
+}
 
 const runCheckUrlChange = () => {
   const url = window.location.href
@@ -681,8 +712,12 @@ if (
   chrome.runtime &&
   chrome.runtime.onMessage
 ) {
-  chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === 'SETTINGS_UPDATED') {
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    // The popup edits the rules of the monitor this page is on. It asks here
+    // because it is a separate page, whose screen size may not be the page's
+    if (message.type === 'GET_MONITOR') {
+      sendResponse(getCurrentMonitor())
+    } else if (message.type === 'SETTINGS_UPDATED') {
       runStartUrlCheck()
       console.log(
         '[Damn Center] Settings updated from popup:',
@@ -737,7 +772,9 @@ window.addEventListener('resize', () => {
   // Defer execution by 150ms to allow OS snapping animations to settle
   // and ensure Chrome queries the correct final window dimensions.
   resizeTimeoutId = window.setTimeout(() => {
-    if (currentSettings && currentGlobalSetting) {
+    if (!isSameMonitor(getCurrentMonitor(), lastMonitor)) {
+      runCheckMonitorChange()
+    } else if (currentSettings && currentGlobalSetting) {
       runUpdateStyles(
         currentSettings,
         currentGlobalSetting,

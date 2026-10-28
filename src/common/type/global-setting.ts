@@ -28,8 +28,11 @@ export const GlobalSettingCodec = t.intersection([
   }),
 ])
 
+// Version 2 stores each site as a SiteSetting instead of a list
+export const CURRENT_SCHEMA_VERSION = 2
+
 export const defaultGlobalSetting: GlobalSetting = {
-  schema_version: 1,
+  schema_version: CURRENT_SCHEMA_VERSION,
   enabled: true,
   showRuler: false,
   disableWhenNotMaximized: false,

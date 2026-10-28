@@ -19,7 +19,7 @@ This document describes the code design principles and style conventions that mu
 
 ## 4. Data Verification & Storage Codecs
 
-- **Storage Codecs:** Use `io-ts` codecs (specifically `PaddingSettingCodec` and `GlobalSettingCodec`) to decode and validate data read from browser storage, maintaining backward compatibility for legacy structures.
+- **Storage Codecs:** Use `io-ts` codecs (specifically `decodeStoredSiteSetting` for site values, which also reads the older `PaddingSetting` lists, and `GlobalSettingCodec`) to decode and validate data read from browser storage, maintaining backward compatibility for legacy structures.
 - **Backup Verification:** Ensure configuration backup data imports are validated via `validateBackupData` using the correct codec arrays before importing.
 
 ## 5. Testing Conventions
