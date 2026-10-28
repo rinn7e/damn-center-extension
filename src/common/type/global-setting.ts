@@ -31,6 +31,29 @@ export const GlobalSettingCodec = t.intersection([
 // Version 2 stores each site as a SiteSetting instead of a list
 export const CURRENT_SCHEMA_VERSION = 2
 
+/**
+ * The schema version of stored data, read from its raw `global_settings`
+ * value. Version 1 may have saved no global settings at all. Only the number
+ * is read, so data from a newer schema still counts as newer when the rest of
+ * its global settings no longer decodes with `GlobalSettingCodec`.
+ */
+export const storedSchemaVersion = (rawGlobal: unknown): number => {
+  if (typeof rawGlobal !== 'object' || rawGlobal === null) {
+    return 1
+  } else {
+    const version = (rawGlobal as Record<string, unknown>)['schema_version']
+    return typeof version === 'number' ? version : 1
+  }
+}
+
+/**
+ * True when stored data was written by a newer version of the extension,
+ * whose format this one does not know. Such data is read but never written
+ * back, so going back to an older version does not destroy it.
+ */
+export const isNewerSchema = (rawGlobal: unknown): boolean =>
+  storedSchemaVersion(rawGlobal) > CURRENT_SCHEMA_VERSION
+
 export const defaultGlobalSetting: GlobalSetting = {
   schema_version: CURRENT_SCHEMA_VERSION,
   enabled: true,

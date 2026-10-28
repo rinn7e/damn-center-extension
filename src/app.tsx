@@ -13,7 +13,10 @@ import {
   SHOW_BUILD_DATE,
   UI_THEME_ID,
 } from './common/env'
-import { type GlobalSetting } from './common/type/global-setting'
+import {
+  CURRENT_SCHEMA_VERSION,
+  type GlobalSetting,
+} from './common/type/global-setting'
 import {
   type Monitor,
   formatMonitor,
@@ -42,7 +45,7 @@ import {
   SunIcon,
 } from './component/icon'
 import { getGlobError, matchUrlPattern } from './storage/storage'
-import { type Model, type Msg } from './type'
+import { type Migration, type Model, type Msg } from './type'
 import { activeRules, isViewingOtherMonitor, viewedRules } from './update'
 
 const transparentBgStyle = {
@@ -90,11 +93,12 @@ const toggleSwitchView = (
   )
 }
 
+// The title bar. Without a global setting (the migration prompt, where
+// nothing can be edited) it leaves out the on/off switch.
 const headerView = (
-  globalSetting: GlobalSetting,
+  globalSetting: GlobalSetting | null,
   dispatch: Dispatcher<Msg>,
 ) => {
-  const isEnabled = globalSetting.enabled
   const version =
     typeof chrome !== 'undefined' &&
     chrome.runtime &&
@@ -121,14 +125,16 @@ const headerView = (
             </span>
           )}
         </div>
-        <div className='flex items-center gap-[6px]'>
-          {toggleSwitchView(
-            isEnabled,
-            () => dispatch({ _tag: 'ToggleGlobalEnabled' }),
-            'big',
-            isEnabled ? 'Disable Extension' : 'Enable Extension',
-          )}
-        </div>
+        {globalSetting && (
+          <div className='flex items-center gap-[6px]'>
+            {toggleSwitchView(
+              globalSetting.enabled,
+              () => dispatch({ _tag: 'ToggleGlobalEnabled' }),
+              'big',
+              globalSetting.enabled ? 'Disable Extension' : 'Enable Extension',
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -458,8 +464,10 @@ const monitorPickerView = (
 ) => {
   const choices = [monitor, ...otherMonitors.map((entry) => entry.monitor)]
   return (
+    // Never shrinks: plain text would run under the site switch next to it;
+    // the row wraps instead
     <span
-      className='text-theme-text-dim flex min-w-0 items-center gap-[4px] font-mono text-[0.75rem]'
+      className='text-theme-text-dim flex shrink-0 items-center gap-[4px] font-mono text-[0.75rem]'
       title='Matches apply on monitors of this screen size'
     >
       <MonitorIcon className='h-[12px] w-[12px] shrink-0' />
@@ -538,6 +546,129 @@ const viewingOtherMonitorView = (
   )
 }
 
+const ISSUES_URL =
+  'https://github.com/rinn7e/damn-center-extension/issues/new/choose'
+
+// Covers the whole popup while the stored settings are not in the format of
+// this build, so nothing is edited. Older settings wait for the user to
+// confirm their migration; newer ones (saved by a newer version of the
+// extension, e.g. after an older build was installed by hand) ask the user
+// to update. Fails show the reason, with the
+// settings to download (nothing was written, so they are the old ones) and
+// where to report it.
+const migrationPromptView = (
+  migration: Exclude<Migration, { _tag: 'UpToDate' }>,
+  dispatch: Dispatcher<Msg>,
+) => {
+  const buttonClass =
+    'flex min-h-[30px] cursor-pointer items-center justify-center border px-[8px] py-[6px] text-center text-[0.8125rem] leading-tight font-semibold transition-all disabled:cursor-wait disabled:opacity-60'
+  const primaryClass = `${buttonClass} border-theme-primary bg-theme-primary text-theme-secondary hover:bg-theme-primary/80`
+  const secondaryClass = `${buttonClass} border-theme-primary/40 text-theme-primary hover:border-theme-primary`
+  return (
+    <div
+      role='dialog'
+      aria-modal='true'
+      aria-labelledby='migration-title'
+      className='bg-theme-secondary absolute inset-0 z-50 flex flex-col'
+    >
+      {headerView(null, dispatch)}
+      {/* Scrolls when it does not fit (large font sizes, long errors); safe
+          centering keeps the top reachable then */}
+      <div className='flex min-h-0 flex-1 flex-col justify-center-safe gap-[16px] overflow-y-auto px-[24px] py-[24px] text-center'>
+        {migration._tag === 'Newer' ? (
+          <>
+            <h2
+              id='migration-title'
+              className='text-base font-semibold text-red-500'
+            >
+              Your extension is out of date
+            </h2>
+            <p className='text-theme-text-dim text-[0.8125rem] leading-relaxed'>
+              This version of Damn Center expects format{' '}
+              {CURRENT_SCHEMA_VERSION}, but your saved settings are in format{' '}
+              {migration.storedVersion}, from a newer version. Update the
+              extension to use them. Nothing is changed meanwhile.
+            </p>
+          </>
+        ) : migration._tag === 'Failed' ? (
+          <>
+            <h2
+              id='migration-title'
+              className='text-base font-semibold text-red-500'
+            >
+              {migration.fromVersion === null
+                ? 'Settings could not be read'
+                : 'Settings update failed'}
+            </h2>
+            {/* Without a stored format, the settings could not even be read,
+                so no update was tried */}
+            <p className='text-theme-text-dim text-[0.8125rem] leading-relaxed'>
+              {migration.fromVersion === null
+                ? 'Your saved settings could not be read, and nothing was changed. Try again, or report the problem with the message below so it can be fixed.'
+                : 'Your settings could not be updated to the format of this version, and nothing was changed. Download them to keep a backup, and report the problem with the message below so it can be fixed.'}
+            </p>
+            {/* Selectable, so it can be copied into a report */}
+            <div className='bg-theme-bg-input cursor-text border border-red-500/40 p-[8px] text-left font-mono text-[0.75rem] wrap-break-word text-red-500 select-text'>
+              {migration.error}
+            </div>
+            {/* Three columns of the same width */}
+            <div className='grid grid-cols-3 gap-[8px]'>
+              <button
+                type='button'
+                className={primaryClass}
+                onClick={() => dispatch({ _tag: 'ExportConfig' })}
+              >
+                Download settings
+              </button>
+              <a
+                href={ISSUES_URL}
+                target='_blank'
+                rel='noopener noreferrer'
+                className={secondaryClass}
+              >
+                Report the problem
+              </a>
+              <button
+                type='button'
+                className={secondaryClass}
+                onClick={() => dispatch({ _tag: 'RunMigration' })}
+              >
+                Try again
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <h2
+              id='migration-title'
+              className='text-theme-text-main text-base font-semibold'
+            >
+              Settings update needed
+            </h2>
+            <p className='text-theme-text-dim text-[0.8125rem] leading-relaxed'>
+              This version of Damn Center stores its data in a new format
+              {migration.fromVersion !== null &&
+                ` (format ${migration.fromVersion} -> format ${CURRENT_SCHEMA_VERSION})`}
+              . Click OK to update your settings. Your pages keep their padding
+              meanwhile.
+            </p>
+            <div className='flex justify-center'>
+              <button
+                type='button'
+                className={`${primaryClass} min-w-[120px]`}
+                disabled={migration._tag === 'Running'}
+                onClick={() => dispatch({ _tag: 'RunMigration' })}
+              >
+                {migration._tag === 'Running' ? 'Updating...' : 'OK'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 const matchesCardView = (
   padSettingList: PathSetting[],
   selectedIndex: number,
@@ -554,21 +685,25 @@ const matchesCardView = (
   const readOnly = !isSameMonitor(viewedMonitor, monitor)
   return (
     <div className='flex flex-col gap-[12px]'>
-      <div className='flex items-center justify-between gap-[8px]'>
-        <div className='flex min-w-0 items-center gap-[8px]'>
+      {/* Wraps onto a second line when it does not fit (large font sizes,
+          or a monitor list instead of the screen size) */}
+      <div className='flex flex-wrap items-center justify-between gap-x-[8px] gap-y-[6px]'>
+        <div className='flex min-w-0 flex-wrap items-center gap-[8px]'>
           <span className='text-theme-text-main text-[0.875rem] font-semibold'>
             Matches
           </span>
           {monitorPickerView(monitor, viewedMonitor, otherMonitors, dispatch)}
           {padSettingList.length > 0 && (
-            <div className='group flex min-w-0 items-center gap-[6px]'>
+            <div className='group relative flex items-center'>
               {toggleSwitchView(
                 siteEnabled,
                 () => dispatch({ _tag: 'ToggleDomainEnabled' }),
                 'small',
                 siteEnabled ? 'Disable per Domain' : 'Enable per Domain',
               )}
-              <span className='text-theme-text-dim pointer-events-none truncate text-[0.625rem] leading-none font-normal opacity-0 select-none group-hover:opacity-100'>
+              {/* Shown next to the switch on hover only, so it takes no room
+                  in the row */}
+              <span className='text-theme-text-dim bg-theme-secondary pointer-events-none absolute top-1/2 left-full z-10 hidden -translate-y-1/2 pl-[6px] text-[0.625rem] leading-none font-normal whitespace-nowrap select-none group-hover:inline'>
                 {siteEnabled
                   ? 'Disable all matches in this domain'
                   : 'Enable all matches in this domain'}
@@ -1079,7 +1214,7 @@ export const App: React.FC<AppProps> = ({ model, dispatch }) => {
   )
 
   return (
-    <div className='bg-theme-secondary text-theme-text-main flex h-[550px] flex-col select-none'>
+    <div className='bg-theme-secondary text-theme-text-main relative flex h-[550px] flex-col select-none'>
       {/* Header Wrapper */}
       {headerView(globalSetting, dispatch)}
 
@@ -1134,6 +1269,9 @@ export const App: React.FC<AppProps> = ({ model, dispatch }) => {
           {footerView(globalSetting, dispatch)}
         </div>
       </div>
+
+      {model.migration._tag !== 'UpToDate' &&
+        migrationPromptView(model.migration, dispatch)}
     </div>
   )
 }

@@ -138,4 +138,20 @@ describe('runImport', () => {
     expect(alert).toHaveBeenCalledWith('This file is not a Damn Center backup.')
     expect(storage.calls).toEqual([])
   })
+
+  it('rejects a backup made with a newer version without asking', async () => {
+    const storage = fakeStorage(currentSettings)
+    const newer = {
+      ...backup,
+      global_settings: { ...defaultGlobalSetting, schema_version: 3 },
+    }
+
+    expect(await runImport(JSON.stringify(newer))).toBe(false)
+
+    expect(alert).toHaveBeenCalledWith(
+      'This backup was made with a newer version of Damn Center. Update the extension to import it.',
+    )
+    expect(confirm).not.toHaveBeenCalled()
+    expect(storage.calls).toEqual([])
+  })
 })

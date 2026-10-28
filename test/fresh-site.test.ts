@@ -36,8 +36,23 @@ beforeEach(() => {
     },
     storage: {
       local: {
-        get: (_keys: string[], callback: (res: object) => void) =>
-          setTimeout(() => callback({}), 0),
+        // Answers with what was saved, as the real storage does
+        get: (keys: string[] | null, callback: (res: object) => void) =>
+          setTimeout(
+            () =>
+              callback(
+                structuredClone(
+                  keys === null
+                    ? saved
+                    : Object.fromEntries(
+                        keys
+                          .filter((key) => key in saved)
+                          .map((key) => [key, saved[key]]),
+                      ),
+                ),
+              ),
+            0,
+          ),
         set: (items: Record<string, unknown>, callback?: () => void) => {
           Object.assign(saved, items)
           callback?.()
@@ -69,7 +84,11 @@ const run = async (init: Msg, ...msgs: Msg[]): Promise<Model> => {
     cmd.execute(() => undefined)
     model = next
   }
-  await new Promise((resolve) => setTimeout(resolve, 0))
+  // A save reads the stored schema version first (one tick of the fake
+  // storage), then writes; wait for both
+  for (let tick = 0; tick < 2; tick++) {
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  }
   if (model === null) throw new Error('model is null')
   return model
 }

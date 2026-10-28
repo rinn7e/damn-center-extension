@@ -1,0 +1,142 @@
+{
+  "en.wikipedia.org": [
+    {
+      "_tag": "DomainSetting",
+      "enabled": true
+    },
+    {
+      "_tag": "PathSetting",
+      "dark": {
+        "bgColor": "transparent",
+        "bgPattern": "dots",
+        "bgType": "pattern"
+      },
+      "enabled": true,
+      "light": {
+        "bgColor": "transparent",
+        "bgPattern": "dots",
+        "bgType": "pattern"
+      },
+      "matchPattern": "https://en.wikipedia.org/wiki/Special:*",
+      "shiftingStrategy": {
+        "_tag": "Flexbox"
+      },
+      "side": {
+        "_tag": "Left",
+        "width": 80
+      },
+      "themeMode": "system",
+      "updatedAt": 1793167036369
+    },
+    {
+      "_tag": "PathSetting",
+      "dark": {
+        "bgColor": "transparent",
+        "bgPattern": "dots",
+        "bgType": "pattern"
+      },
+      "enabled": true,
+      "light": {
+        "bgColor": "transparent",
+        "bgPattern": "dots",
+        "bgType": "pattern"
+      },
+      "matchPattern": "https://en.wikipedia.org/wiki/**",
+      "shiftingStrategy": {
+        "_tag": "Flexbox"
+      },
+      "side": {
+        "_tag": "Right",
+        "width": 80
+      },
+      "themeMode": "dark",
+      "updatedAt": 1793167036395
+    },
+    {
+      "_tag": "PathSetting",
+      "dark": {
+        "bgColor": "transparent",
+        "bgPattern": "dots",
+        "bgType": "pattern"
+      },
+      "enabled": true,
+      "light": {
+        "bgColor": "transparent",
+        "bgPattern": "dots",
+        "bgType": "pattern"
+      },
+      "matchPattern": "https://en.wikipedia.org/**",
+      "shiftingStrategy": {
+        "_tag": "Flexbox"
+      },
+      "side": {
+        "_tag": "Left",
+        "width": 80
+      },
+      "themeMode": "system",
+      "updatedAt": 1793167036001
+    }
+  ],
+  "global_settings": {
+    "disableWhenNotMaximized": true,
+    "enabled": true,
+    "fontSize": 20,
+    "schema_version": 1,
+    "showRuler": true
+  },
+  "news.ycombinator.com": [
+    {
+      "_tag": "DomainSetting",
+      "enabled": false,
+      "updatedAt": 1793167037310
+    },
+    {
+      "_tag": "PathSetting",
+      "dark": {
+        "bgColor": "transparent",
+        "bgPattern": "dots",
+        "bgType": "pattern"
+      },
+      "enabled": true,
+      "light": {
+        "bgColor": "transparent",
+        "bgPattern": "dots",
+        "bgType": "pattern"
+      },
+      "matchPattern": "https://news.ycombinator.com/news{,/**}",
+      "shiftingStrategy": {
+        "_tag": "Flexbox"
+      },
+      "side": {
+        "_tag": "Left",
+        "width": 80
+      },
+      "themeMode": "system",
+      "updatedAt": 1793167037277
+    },
+    {
+      "_tag": "PathSetting",
+      "dark": {
+        "bgColor": "transparent",
+        "bgPattern": "dots",
+        "bgType": "pattern"
+      },
+      "enabled": true,
+      "light": {
+        "bgColor": "transparent",
+        "bgPattern": "dots",
+        "bgType": "pattern"
+      },
+      "matchPattern": "https://news.ycombinator.com/**",
+      "shiftingStrategy": {
+        "_tag": "Flexbox"
+      },
+      "side": {
+        "_tag": "Left",
+        "width": 80
+      },
+      "themeMode": "system",
+      "updatedAt": 1793167036999
+    }
+  ]
+}

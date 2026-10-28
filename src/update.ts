@@ -11,6 +11,7 @@ import {
   type GlobalSetting,
   GlobalSettingCodec,
   defaultGlobalSetting,
+  isNewerSchema,
 } from './common/type/global-setting'
 import { type Hostname } from './common/type/hostname'
 import {
@@ -35,6 +36,7 @@ import {
 } from './common/type/site-setting'
 import { injectTheme, themes } from './common/type/theme'
 import {
+  checkStoredSchema,
   getHostname,
   loadGlobalSetting,
   loadSiteSetting,
@@ -43,7 +45,7 @@ import {
   saveGlobalSetting,
   saveSiteSetting,
 } from './storage/storage'
-import { type Model, type Msg } from './type'
+import { type Migration, type Model, type Msg } from './type'
 
 export const getActivePadSettingIndex = (
   url: string,
@@ -233,6 +235,19 @@ export const viewedRules = (model: Model): PathSetting[] =>
 export const isViewingOtherMonitor = (model: Model): boolean =>
   !isSameMonitor(model.viewedMonitor, model.monitor)
 
+// The only messages handled while stored settings wait for their migration:
+// the prompt itself, its backup download, and the popup getting ready
+const allowedBeforeMigration: Msg['_tag'][] = [
+  'Init',
+  'RunMigration',
+  'MigrationDone',
+  'MigrationFailed',
+  'ExportConfig',
+  'InjectThemeDone',
+  'SetFontSizeDone',
+  'NoOp',
+]
+
 // Messages that change the rules of the tab's monitor. They only make sense
 // while the popup shows that monitor, since they refer to its list.
 const isRuleEdit = (msg: Msg): boolean => {
@@ -324,6 +339,24 @@ export const swapArrayElements = <T>(
   }
 }
 
+// The user confirmed the migration prompt, or tries again after a failure
+const handleRunMigration = (model: Model): [Model, Cmd<Msg>] => {
+  if (model.migration._tag === 'Needed' || model.migration._tag === 'Failed') {
+    return [
+      {
+        ...model,
+        migration: {
+          _tag: 'Running',
+          fromVersion: model.migration.fromVersion,
+        },
+      },
+      runMigrationCmd(model.monitor),
+    ]
+  } else {
+    return [model, Cmd.none()]
+  }
+}
+
 const handleInit = (
   msg: Extract<Msg, { _tag: 'Init' }>,
   model: Model | null,
@@ -341,6 +374,7 @@ const handleInit = (
 
   return [
     {
+      migration: msg.migration,
       hostname: msg.hostname,
       currentUrl: msg.currentUrl,
       globalSetting: msg.globalSetting,
@@ -600,6 +634,12 @@ export const update = (
     } else {
       return [null, Cmd.none()]
     }
+  } else if (
+    model.migration._tag !== 'UpToDate' &&
+    !allowedBeforeMigration.includes(msg._tag)
+  ) {
+    // Nothing is edited until the stored settings are migrated
+    return [model, Cmd.none()]
   } else if (isViewingOtherMonitor(model) && isRuleEdit(msg)) {
     // Another monitor is shown read only
     return [model, Cmd.none()]
@@ -607,6 +647,29 @@ export const update = (
     switch (msg._tag) {
       case 'Init':
         return handleInit(msg, model)
+
+      case 'RunMigration':
+        return handleRunMigration(model)
+
+      // Reads everything again, now in the format of this build
+      case 'MigrationDone':
+        return [model, loadInitialDataCmd()]
+
+      case 'MigrationFailed':
+        return [
+          {
+            ...model,
+            migration: {
+              _tag: 'Failed',
+              fromVersion:
+                model.migration._tag === 'Running'
+                  ? model.migration.fromVersion
+                  : null,
+              error: msg.error,
+            },
+          },
+          Cmd.none(),
+        ]
 
       case 'ToggleGlobalEnabled':
         return handleToggleGlobalEnabled(model)
@@ -784,6 +847,15 @@ const triggerExportCmd = (): Cmd<Msg> => {
           resolve()
         } else {
           chrome.storage.local.get(null, (allData) => {
+            // A file of the stored settings is the way back after a failed
+            // migration, so a failed read must not save an empty one
+            if (chrome.runtime?.lastError || !allData) {
+              alert(
+                `Could not read your settings to download them: ${chrome.runtime?.lastError?.message ?? 'Storage read failed'}`,
+              )
+              resolve()
+              return
+            }
             try {
               const jsonStr = JSON.stringify(allData, null, 2)
               const blob = new Blob([jsonStr], { type: 'application/json' })
@@ -844,6 +916,18 @@ export const runImport = async (jsonText: string): Promise<boolean> => {
     parsed = JSON.parse(jsonText)
   } catch {
     alert('This file is not valid JSON.')
+    return false
+  }
+  // Checked first: a newer format may also fail the checks below. Importing
+  // it would store data this version can neither read nor safely save over
+  if (
+    typeof parsed === 'object' &&
+    parsed !== null &&
+    isNewerSchema((parsed as Record<string, unknown>)['global_settings'])
+  ) {
+    alert(
+      'This backup was made with a newer version of Damn Center. Update the extension to import it.',
+    )
     return false
   }
   if (!validateBackupData(parsed)) {
@@ -933,6 +1017,7 @@ export const queryActiveTabAndSettings = (): Promise<{
   globalSetting: GlobalSetting
   site: SiteSetting
   monitor: Monitor
+  migration: Migration
 }> => {
   return new Promise((resolve) => {
     // Sample page for the `pnpm dev` preview only, where there are no tabs
@@ -952,6 +1037,7 @@ export const queryActiveTabAndSettings = (): Promise<{
           ],
         },
         monitor: getCurrentMonitor(),
+        migration: { _tag: 'UpToDate' },
       })
     } else {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -961,22 +1047,33 @@ export const queryActiveTabAndSettings = (): Promise<{
         // edits there don't land under the dev preview's sample site
         const url = activeTab?.url ?? ''
         const host = getHostname(url)
-        // Bring old stored data up to date before reading it, so nothing
-        // this popup saves later is in the old shape. Old rules move to the
+        // Check that stored data is in the format of this build before
+        // anything is edited: old data must be migrated first, which the
+        // user confirms in a prompt over the popup. Old rules move to the
         // monitor of the tab, so it needs to be known first.
         queryTabMonitor(activeTab?.id)
           .then(async (monitor) => {
-            const migrated = await migrateStorage(monitor)()
-            if (migrated._tag === 'Left') {
-              console.error('[Damn Center] Migration failed:', migrated.left)
-            }
+            const checked = await checkStoredSchema(monitor)()
+            const migration: Migration =
+              checked._tag === 'Left'
+                ? {
+                    _tag: 'Failed',
+                    fromVersion: null,
+                    error: checked.left.message,
+                  }
+                : checked.right._tag === 'Older'
+                  ? { _tag: 'Needed', fromVersion: checked.right.version }
+                  : checked.right._tag === 'Newer'
+                    ? { _tag: 'Newer', storedVersion: checked.right.version }
+                    : { _tag: 'UpToDate' }
             return Promise.all([
               loadGlobalSetting()(),
               loadSiteSetting(host, monitor)(),
               Promise.resolve(monitor),
+              Promise.resolve(migration),
             ])
           })
-          .then(([globalEither, siteEither, monitor]) => {
+          .then(([globalEither, siteEither, monitor, migration]) => {
             const globalSetting =
               globalEither._tag === 'Right'
                 ? globalEither.right
@@ -991,6 +1088,7 @@ export const queryActiveTabAndSettings = (): Promise<{
               globalSetting,
               site,
               monitor,
+              migration,
             })
           })
       })
@@ -1012,6 +1110,7 @@ export const loadInitialDataCmd = (): Cmd<Msg> => {
           // added with + New Match
           site: res.value.site,
           monitor: res.value.monitor,
+          migration: res.value.migration,
         }
       } else {
         return {
@@ -1021,11 +1120,34 @@ export const loadInitialDataCmd = (): Cmd<Msg> => {
           globalSetting: defaultGlobalSetting,
           site: defaultSiteSetting,
           monitor: getCurrentMonitor(),
+          // Nothing was read, so nothing may be edited: the stored
+          // settings may still wait for their migration
+          migration: {
+            _tag: 'Failed',
+            fromVersion: null,
+            error: res.err instanceof Error ? res.err.message : String(res.err),
+          },
         }
       }
     },
   )
 }
+
+// Runs the migration the user confirmed in the prompt
+const runMigrationCmd = (monitor: Monitor): Cmd<Msg> =>
+  Task.attempt(
+    Task.fromPromise(async () => {
+      const result = await migrateStorage(monitor)()
+      if (result._tag === 'Left') throw result.left
+    }),
+    (res): Msg =>
+      res.tag === 'Ok'
+        ? { _tag: 'MigrationDone' }
+        : {
+            _tag: 'MigrationFailed',
+            error: res.err instanceof Error ? res.err.message : String(res.err),
+          },
+  )
 
 const persistSettingsAndMessageTab = (
   host: Hostname,

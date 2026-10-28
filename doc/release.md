@@ -35,7 +35,9 @@ real sites: a docs site, a news article, a page with a sticky header, and
 fullscreen video, with the ruler on and off.
 
 If the release changes the storage schema, follow the
-[storage migration strategy](storage-migration.md) first.
+[storage migration strategy](storage-migration.md) first. Such a release
+is never rolled back in the stores (see
+[No Rollbacks After a Format Change](#7-no-rollbacks-after-a-format-change)).
 
 ---
 
@@ -141,3 +143,13 @@ Update these when the UI or branding changes; see [Design Assets](assets.md) for
 
 - **Chrome**: 128×128 icon (in the package), 1–5 screenshots at 1280×800, the 440×280 small promo tile, and the text in [store-description.md](store-description.md).
 - **Firefox**: screenshots, summary (max 250 characters) and description from [store-description.md](store-description.md).
+
+---
+
+## 7. No Rollbacks After a Format Change
+
+Never roll back, in a store, a release that changed the storage schema (for example from 2.1 back to 2.0.0). Both stores can do it: the Chrome Web Store with [Rollback](https://developer.chrome.com/docs/webstore/rollback) and Firefox Add-ons with [Roll back to a previous version](https://extensionworkshop.com/documentation/publish/version-rollback/) publish the old package again under a new version number, and every installed copy updates to it. The old code cannot read the settings in the new format: users lose their padding, and anything they change there overwrites the new data.
+
+Release a fixed version instead, which still reads and writes the current schema: for example, turn off or revert only the broken feature and keep the storage format as it is. Never add a migration step that goes back to an older schema version.
+
+A release that did not change the storage schema can be rolled back in the stores, but a fixed release is still the safer default.

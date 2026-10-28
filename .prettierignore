@@ -1,1 +1,3 @@
 pnpm-lock.yaml
+# Real exports of released versions, kept exactly as the extension wrote them
+test/fixture/
