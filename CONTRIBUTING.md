@@ -53,6 +53,24 @@ Load `dist/chrome` as an unpacked extension (see the
 use the orange DEV icons and show the build date in the popup, so you can tell
 them apart from the store version.
 
+### Working in a git worktree
+
+To work on several branches at once, give each its own
+[git worktree](https://git-scm.com/docs/git-worktree). Put them under
+`.claude/worktrees/` (gitignored) or anywhere outside the repo. A worktree
+shares nothing that is gitignored, so set each one up again:
+
+```bash
+git worktree add .claude/worktrees/<name> -b <branch>
+cd .claude/worktrees/<name>
+pnpm install
+cp ../../../.env.development .   # or: cp .env.example .env.development
+pnpm run build:chrome            # its own dist/chrome
+```
+
+Load that worktree's `dist/chrome` as the unpacked extension while you test
+it. Nothing runs on a port, so worktrees do not get in each other's way.
+
 ## Before opening a pull request
 
 Run the same checks as CI:
