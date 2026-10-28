@@ -41,6 +41,7 @@ const initMsg: Extract<Msg, { _tag: 'Init' }> = {
     ],
   },
   monitor: { width: 1920, height: 1080 },
+  migration: { _tag: 'UpToDate' },
 }
 
 // Runs messages through update() starting from Init, returning the model

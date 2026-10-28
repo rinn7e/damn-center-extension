@@ -2,15 +2,22 @@
  * Copyright (C) 2026 Moremi Vannak
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { defaultGlobalSetting } from '../src/common/type/global-setting'
 import { type Hostname } from '../src/common/type/hostname'
+import {
+  type SiteSetting,
+  defaultSiteSetting,
+} from '../src/common/type/site-setting'
 import {
   getGlobError,
   getHostname,
   loadGlobalSetting,
   loadSiteSetting,
   matchUrlPattern,
+  saveGlobalSetting,
+  saveSiteSetting,
 } from '../src/storage/storage'
 
 // Set up hoisted mock state so we can control picomatch behavior dynamically
@@ -153,5 +160,113 @@ describe('Storage reads', () => {
     })()
 
     expect(result._tag).toBe('Left')
+  })
+})
+
+describe('Storage writes', () => {
+  let stored: Record<string, unknown>
+
+  beforeEach(() => {
+    stored = {}
+    vi.stubGlobal('chrome', {
+      runtime: {},
+      storage: {
+        local: {
+          get: (keys: string[] | null, callback: (res: object) => void) =>
+            callback(
+              keys === null
+                ? { ...stored }
+                : Object.fromEntries(
+                    keys
+                      .filter((key) => key in stored)
+                      .map((key) => [key, stored[key]]),
+                  ),
+            ),
+          set: (items: Record<string, unknown>, callback: () => void) => {
+            Object.assign(stored, items)
+            callback()
+          },
+        },
+      },
+    })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  const site: SiteSetting = { ...defaultSiteSetting, enabled: false }
+
+  it('saves when nothing is saved yet, and over data of this schema', async () => {
+    // The order of a fresh install: the popup saves the global settings
+    // when it first opens
+    expect((await saveGlobalSetting(defaultGlobalSetting)())._tag).toBe('Right')
+    expect(
+      (await saveSiteSetting('example.com' as Hostname, site)())._tag,
+    ).toBe('Right')
+    expect((await saveSiteSetting('other.org' as Hostname, site)())._tag).toBe(
+      'Right',
+    )
+    expect(stored).toEqual({
+      global_settings: defaultGlobalSetting,
+      'example.com': site,
+      'other.org': site,
+    })
+  })
+
+  it('marks the format of a first save into empty storage', async () => {
+    expect(
+      (await saveSiteSetting('example.com' as Hostname, site)())._tag,
+    ).toBe('Right')
+
+    // Without it, the site alone would read as version 1 data
+    expect(stored).toEqual({
+      global_settings: defaultGlobalSetting,
+      'example.com': site,
+    })
+  })
+
+  it('never saves among version 1 settings without global settings', async () => {
+    // Version 1 did not always save global settings; its sites are enough to
+    // tell that the data waits for its migration
+    stored = { 'example.com': [] }
+
+    const siteResult = await saveSiteSetting('other.org' as Hostname, site)()
+    const globalResult = await saveGlobalSetting(defaultGlobalSetting)()
+
+    expect(siteResult._tag).toBe('Left')
+    expect(globalResult._tag).toBe('Left')
+    expect(stored).toEqual({ 'example.com': [] })
+  })
+
+  it('never saves among settings that wait for their migration', async () => {
+    // Saving would mark them as migrated, so the migration would never run
+    stored = {
+      global_settings: { ...defaultGlobalSetting, schema_version: 1 },
+      'example.com': [],
+    }
+    const before = structuredClone(stored)
+
+    const siteResult = await saveSiteSetting('example.com' as Hostname, site)()
+    const globalResult = await saveGlobalSetting(defaultGlobalSetting)()
+
+    expect(siteResult._tag).toBe('Left')
+    expect(globalResult._tag).toBe('Left')
+    expect(stored).toEqual(before)
+  })
+
+  it('never saves over data of a newer schema', async () => {
+    stored = {
+      global_settings: { schema_version: 3, theme: 'auto' },
+      'example.com': { _tag: 'SiteSettingV3' },
+    }
+    const before = structuredClone(stored)
+
+    const siteResult = await saveSiteSetting('example.com' as Hostname, site)()
+    const globalResult = await saveGlobalSetting(defaultGlobalSetting)()
+
+    expect(siteResult._tag).toBe('Left')
+    expect(globalResult._tag).toBe('Left')
+    expect(stored).toEqual(before)
   })
 })

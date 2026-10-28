@@ -5,7 +5,10 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { defaultGlobalSetting } from '../src/common/type/global-setting'
+import {
+  CURRENT_SCHEMA_VERSION,
+  defaultGlobalSetting,
+} from '../src/common/type/global-setting'
 import { type Hostname } from '../src/common/type/hostname'
 import {
   type Monitor,
@@ -23,7 +26,12 @@ import {
   rulesFor,
   setRulesFor,
 } from '../src/common/type/site-setting'
-import { loadSiteSetting, migrateStoredData } from '../src/storage/storage'
+import {
+  MIGRATION_STEPS,
+  type MigrationStep,
+  loadSiteSetting,
+  migrateStoredData,
+} from '../src/storage/storage'
 import { type Model, type Msg } from '../src/type'
 import {
   activeRules,
@@ -231,7 +239,7 @@ describe('stored site settings', () => {
 })
 
 describe('migrating stored data to schema 2', () => {
-  it('moves every version 1 site to the given monitor and keeps a backup', () => {
+  it('moves every version 1 site to the given monitor', () => {
     const writes = migrateStoredData(
       {
         global_settings: { ...defaultGlobalSetting, schema_version: 1 },
@@ -242,22 +250,22 @@ describe('migrating stored data to schema 2', () => {
     )
 
     expect(writes).toEqual({
-      global_settings: { ...defaultGlobalSetting, schema_version: 2 },
-      [HOST]: v1SiteOnUltrawide,
-      'other.org': siteWith({ monitor: ultrawide, rules: [oldRule] }),
-      // The old values, kept in case the conversion lost something
-      [`backup_v1_${HOST}`]: v1Site,
-      'backup_v1_other.org': [oldRule],
+      set: {
+        global_settings: { ...defaultGlobalSetting, schema_version: 2 },
+        [HOST]: v1SiteOnUltrawide,
+        'other.org': siteWith({ monitor: ultrawide, rules: [oldRule] }),
+      },
+      remove: [],
     })
   })
 
   it('also runs when version 1 never saved the global settings', () => {
     const writes = migrateStoredData({ [HOST]: [oldRule] }, ultrawide)
 
-    expect(writes?.[HOST]).toEqual(
+    expect(writes?.set[HOST]).toEqual(
       siteWith({ monitor: ultrawide, rules: [oldRule] }),
     )
-    expect(writes?.global_settings).toEqual(defaultGlobalSetting)
+    expect(writes?.set.global_settings).toEqual(defaultGlobalSetting)
   })
 
   it('keeps the global settings the user chose', () => {
@@ -272,25 +280,22 @@ describe('migrating stored data to schema 2', () => {
       ultrawide,
     )
 
-    expect(writes?.global_settings).toEqual({
+    expect(writes?.set.global_settings).toEqual({
       ...defaultGlobalSetting,
       showRuler: true,
     })
   })
 
-  it('leaves earlier backups alone', () => {
-    const writes = migrateStoredData(
-      { 'backup_v1_other.org': [oldRule] },
-      ultrawide,
-    )
-
-    expect(writes).toEqual({ global_settings: defaultGlobalSetting })
-  })
-
-  it('keeps migrated data importable, backups included', () => {
+  it('keeps migrated data importable', () => {
     const writes = migrateStoredData({ [HOST]: v1Site }, ultrawide)
 
-    expect(writes && validateBackupData(writes)).toBe(true)
+    expect(writes && validateBackupData(writes.set)).toBe(true)
+  })
+
+  it('has one step for every schema version up to the current one', () => {
+    expect(MIGRATION_STEPS.map((step) => step.to)).toEqual(
+      Array.from({ length: CURRENT_SCHEMA_VERSION - 1 }, (_, i) => i + 2),
+    )
   })
 
   it('does nothing once the data is at schema 2', () => {
@@ -300,6 +305,116 @@ describe('migrating stored data to schema 2', () => {
         ultrawide,
       ),
     ).toBeNull()
+  })
+
+  it('leaves data of a newer schema alone, even when it does not decode', () => {
+    expect(
+      migrateStoredData(
+        {
+          // A future global setting this version cannot decode
+          global_settings: { schema_version: 3, theme: 'auto' },
+          [HOST]: v1Site,
+        },
+        ultrawide,
+      ),
+    ).toBeNull()
+  })
+})
+
+describe('running migration steps', () => {
+  // Made-up future steps, to check the runner on its own: 3 renames the
+  // tag of every SiteSetting, 4 removes a key
+  const toV3: MigrationStep = {
+    to: 3,
+    migrate: (stored) =>
+      Object.fromEntries(
+        Object.entries(stored).map(([key, value]) => [
+          key,
+          typeof value === 'object' &&
+          value !== null &&
+          (value as { _tag?: string })._tag === 'SiteSetting'
+            ? { ...value, _tag: 'SiteSettingV3' }
+            : value,
+        ]),
+      ),
+  }
+  const toV4: MigrationStep = {
+    to: 4,
+    migrate: ({ 'other.org': _removed, ...rest }) => rest,
+  }
+  const steps = [...MIGRATION_STEPS, toV3, toV4]
+
+  it('runs every step after the stored version, in order, in one write', () => {
+    const writes = migrateStoredData(
+      {
+        global_settings: { ...defaultGlobalSetting, schema_version: 1 },
+        [HOST]: v1Site,
+        'other.org': [oldRule],
+      },
+      ultrawide,
+      steps,
+    )
+
+    expect(writes).toEqual({
+      set: {
+        global_settings: { ...defaultGlobalSetting, schema_version: 4 },
+        [HOST]: { ...v1SiteOnUltrawide, _tag: 'SiteSettingV3' },
+      },
+      remove: ['other.org'],
+    })
+  })
+
+  it('runs only the steps after the stored version', () => {
+    const writes = migrateStoredData(
+      {
+        global_settings: { ...defaultGlobalSetting, schema_version: 3 },
+        [HOST]: { ...twoMonitors, _tag: 'SiteSettingV3' },
+        'other.org': twoMonitors,
+      },
+      ultrawide,
+      steps,
+    )
+
+    // Step 3 would rename the tag of other.org; only step 4 runs
+    expect(writes).toEqual({
+      set: { global_settings: { ...defaultGlobalSetting, schema_version: 4 } },
+      remove: ['other.org'],
+    })
+  })
+
+  it('fails instead of resetting global settings a step broke', () => {
+    // A buggy future step that drops a required field
+    const breaksGlobal: MigrationStep = {
+      to: 3,
+      migrate: (stored) => ({
+        ...stored,
+        global_settings: { fontSize: 20 },
+      }),
+    }
+
+    expect(() =>
+      migrateStoredData({ global_settings: defaultGlobalSetting }, ultrawide, [
+        ...MIGRATION_STEPS,
+        breaksGlobal,
+      ]),
+    ).toThrow('The global settings do not match format 3 after the migration')
+  })
+
+  it('rewrites only the values a step changed', () => {
+    const writes = migrateStoredData(
+      {
+        global_settings: { ...defaultGlobalSetting, schema_version: 2 },
+        [HOST]: twoMonitors,
+        'plain.org': 'not a site value',
+      },
+      ultrawide,
+      steps,
+    )
+
+    expect(Object.keys(writes?.set ?? {}).sort()).toEqual([
+      HOST,
+      'global_settings',
+    ])
   })
 })
 
@@ -382,7 +497,11 @@ describe('the popup', () => {
       cmd.execute(() => undefined)
       model = next
     }
-    await new Promise((resolve) => setTimeout(resolve, 0))
+    // A save reads the stored schema version first (one tick of the fake
+    // storage), then writes; wait for both
+    for (let tick = 0; tick < 2; tick++) {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    }
     if (model === null) throw new Error('model is null')
     return model
   }
@@ -406,20 +525,237 @@ describe('the popup', () => {
     expect(model.monitor).toEqual(laptop)
   })
 
-  it('moves version 1 settings to the monitor of the tab', async () => {
+  describe('with version 1 settings', () => {
+    beforeEach(() => {
+      stored = {
+        global_settings: { ...defaultGlobalSetting, schema_version: 1 },
+        [HOST]: v1Site,
+      }
+    })
+
+    it('asks before migrating, and changes nothing until then', async () => {
+      const init = await openPopup()
+      const before = structuredClone(stored)
+
+      expect(init.migration).toEqual({ _tag: 'Needed', fromVersion: 1 })
+      const model = await run(init, {
+        _tag: 'SetPadWidth',
+        sideType: 'left',
+        width: 200,
+      })
+
+      expect(activeRules(model)).toEqual([oldRule])
+      expect(stored).toEqual(before)
+    })
+
+    it('migrates to the monitor of the tab once the user clicks OK', async () => {
+      const init = await openPopup()
+      const model = update(init, null)[0]
+      if (model === null) throw new Error('model is null')
+      const dispatched: Msg[] = []
+
+      const [running, cmd] = update({ _tag: 'RunMigration' }, model)
+      cmd.execute((msg) => dispatched.push(msg))
+      await vi.waitFor(() => expect(dispatched).toHaveLength(1))
+
+      expect(running?.migration).toEqual({ _tag: 'Running', fromVersion: 1 })
+      expect(dispatched).toEqual([{ _tag: 'MigrationDone' }])
+      expect(stored).toEqual({
+        global_settings: { ...defaultGlobalSetting, schema_version: 2 },
+        [HOST]: v1SiteOnUltrawide,
+      })
+      // Opening again finds nothing to migrate
+      expect((await openPopup()).migration).toEqual({ _tag: 'UpToDate' })
+    })
+
+    it('shows why the migration failed, and writes nothing', async () => {
+      const init = await openPopup()
+      const model = update(init, null)[0]
+      if (model === null) throw new Error('model is null')
+      const before = structuredClone(stored)
+      const local = (
+        globalThis as unknown as {
+          chrome: {
+            runtime: { lastError?: { message: string } }
+            storage: { local: { set: unknown } }
+          }
+        }
+      ).chrome
+      local.storage.local.set = (_items: unknown, callback: () => void) => {
+        local.runtime.lastError = { message: 'QUOTA_BYTES quota exceeded' }
+        callback()
+        local.runtime.lastError = undefined
+      }
+      const dispatched: Msg[] = []
+
+      const [running, cmd] = update({ _tag: 'RunMigration' }, model)
+      if (running === null) throw new Error('model is null')
+      cmd.execute((msg) => dispatched.push(msg))
+      await vi.waitFor(() => expect(dispatched).toHaveLength(1))
+
+      expect(dispatched).toEqual([
+        { _tag: 'MigrationFailed', error: 'QUOTA_BYTES quota exceeded' },
+      ])
+      expect(update(dispatched[0]!, running)[0]?.migration).toEqual({
+        _tag: 'Failed',
+        fromVersion: 1,
+        error: 'QUOTA_BYTES quota exceeded',
+      })
+      expect(stored).toEqual(before)
+    })
+  })
+
+  it('asks even when only the global settings are in an old format', async () => {
+    stored = { global_settings: { ...defaultGlobalSetting, schema_version: 1 } }
+
+    expect((await openPopup()).migration).toEqual({
+      _tag: 'Needed',
+      fromVersion: 1,
+    })
+  })
+
+  it('keeps the stored format when trying again after a failure', () => {
+    const model = update(
+      {
+        _tag: 'Init',
+        hostname: HOST as Hostname,
+        currentUrl: `https://${HOST}/page`,
+        globalSetting: defaultGlobalSetting,
+        site: twoMonitors,
+        monitor: ultrawide,
+        migration: { _tag: 'Running', fromVersion: 1 },
+      },
+      null,
+    )[0]
+    if (model === null) throw new Error('model is null')
+
+    const failed = update({ _tag: 'MigrationFailed', error: 'nope' }, model)[0]
+    const again = failed && update({ _tag: 'RunMigration' }, failed)[0]
+
+    expect(failed?.migration).toEqual({
+      _tag: 'Failed',
+      fromVersion: 1,
+      error: 'nope',
+    })
+    expect(again?.migration).toEqual({ _tag: 'Running', fromVersion: 1 })
+  })
+
+  it('shows a failed read on open, and migrates when tried again', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
     stored = {
       global_settings: { ...defaultGlobalSetting, schema_version: 1 },
       [HOST]: v1Site,
     }
+    const local = (
+      globalThis as unknown as {
+        chrome: {
+          runtime: { lastError?: { message: string } }
+          storage: {
+            local: {
+              get: (keys: unknown, callback: (res?: object) => void) => void
+            }
+          }
+        }
+      }
+    ).chrome
+    const get = local.storage.local.get
+    // The first full read (the check on open) fails
+    let failNext = true
+    local.storage.local.get = (keys, callback) => {
+      if (keys === null && failNext) {
+        failNext = false
+        local.runtime.lastError = { message: 'Storage read failed' }
+        callback(undefined)
+        local.runtime.lastError = undefined
+      } else {
+        get(keys, callback)
+      }
+    }
 
-    const model = await run(await openPopup())
+    const init = await openPopup()
+    expect(init.migration).toEqual({
+      _tag: 'Failed',
+      fromVersion: null,
+      error: 'Storage read failed',
+    })
+    const model = update(init, null)[0]
+    if (model === null) throw new Error('model is null')
+    // Nothing is edited while the prompt shows the failure
+    expect(update({ _tag: 'ToggleShowRuler' }, model)[0]).toBe(model)
 
-    expect(activeRules(model)).toEqual([oldRule])
-    expect(stored[HOST]).toEqual(v1SiteOnUltrawide)
-    expect(stored[`backup_v1_${HOST}`]).toEqual(v1Site)
-    expect(stored.global_settings).toEqual(
-      expect.objectContaining({ schema_version: 2 }),
+    const dispatched: Msg[] = []
+    update({ _tag: 'RunMigration' }, model)[1].execute((msg) =>
+      dispatched.push(msg),
     )
+    await vi.waitFor(() => expect(dispatched).toHaveLength(1))
+
+    expect(dispatched).toEqual([{ _tag: 'MigrationDone' }])
+    expect(stored[HOST]).toEqual(v1SiteOnUltrawide)
+  })
+
+  it('updates the version of a fresh install without asking', async () => {
+    stored = {}
+
+    const init = await openPopup()
+
+    expect(init.migration).toEqual({ _tag: 'UpToDate' })
+    expect(stored).toEqual({ global_settings: defaultGlobalSetting })
+  })
+
+  it('says so instead of downloading an empty file when the read fails', async () => {
+    const alert = vi.fn()
+    vi.stubGlobal('alert', alert)
+    const model = update(await openPopup(), null)[0]
+    if (model === null) throw new Error('model is null')
+    const local = (
+      globalThis as unknown as {
+        chrome: {
+          runtime: { lastError?: { message: string } }
+          storage: {
+            local: {
+              get: (keys: unknown, callback: (res?: object) => void) => void
+            }
+          }
+        }
+      }
+    ).chrome
+    local.storage.local.get = (_keys, callback) => {
+      local.runtime.lastError = { message: 'Storage read failed' }
+      callback(undefined)
+      local.runtime.lastError = undefined
+    }
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click')
+
+    update({ _tag: 'ExportConfig' }, model)[1].execute(() => undefined)
+    await vi.waitFor(() => expect(alert).toHaveBeenCalled())
+
+    expect(alert).toHaveBeenCalledWith(
+      'Could not read your settings to download them: Storage read failed',
+    )
+    expect(click).not.toHaveBeenCalled()
+  })
+
+  it('asks to update the extension when a newer one saved the settings', async () => {
+    stored = {
+      global_settings: { ...defaultGlobalSetting, schema_version: 3 },
+      [HOST]: twoMonitors,
+    }
+    const before = structuredClone(stored)
+
+    const init = await openPopup()
+    const model = await run(
+      init,
+      { _tag: 'SetPadWidth', sideType: 'left', width: 200 },
+      { _tag: 'ToggleShowRuler' },
+      { _tag: 'AddPadSetting' },
+      // There is nothing to migrate down to this format
+      { _tag: 'RunMigration' },
+    )
+
+    expect(init.migration).toEqual({ _tag: 'Newer', storedVersion: 3 })
+    expect(model.migration).toEqual({ _tag: 'Newer', storedVersion: 3 })
+    expect(activeRules(model)).toEqual([wideRule])
+    expect(stored).toEqual(before)
   })
 
   it('saves edits to the rules of this monitor only', async () => {

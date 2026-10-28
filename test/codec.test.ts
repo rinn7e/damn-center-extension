@@ -5,6 +5,11 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  defaultGlobalSetting,
+  isNewerSchema,
+  storedSchemaVersion,
+} from '../src/common/type/global-setting'
+import {
   PaddingSettingCodec,
   defaultPathSetting,
 } from '../src/common/type/pad-setting'
@@ -72,5 +77,24 @@ describe('PaddingSettingCodec', () => {
     }
     const result = PaddingSettingCodec.decode(invalid)
     expect(result._tag).toBe('Left')
+  })
+})
+
+describe('storedSchemaVersion', () => {
+  it('reads the version of the stored global settings', () => {
+    expect(storedSchemaVersion(defaultGlobalSetting)).toBe(2)
+    expect(storedSchemaVersion({ schema_version: 3, theme: 'auto' })).toBe(3)
+  })
+
+  it('counts data without a version as version 1', () => {
+    expect(storedSchemaVersion(undefined)).toBe(1)
+    expect(storedSchemaVersion({ enabled: true })).toBe(1)
+    expect(storedSchemaVersion('2')).toBe(1)
+  })
+
+  it('tells data of a newer schema apart', () => {
+    expect(isNewerSchema({ schema_version: 3 })).toBe(true)
+    expect(isNewerSchema(defaultGlobalSetting)).toBe(false)
+    expect(isNewerSchema(undefined)).toBe(false)
   })
 })

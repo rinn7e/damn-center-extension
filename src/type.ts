@@ -8,7 +8,22 @@ import type { Monitor } from './common/type/monitor'
 import type { PadBgType, PadThemeMode } from './common/type/pad-setting'
 import type { SiteSetting } from './common/type/site-setting'
 
+// Whether the stored settings are in the schema version of this build. Until
+// they are, a screen covers the popup and nothing can be edited: older
+// settings wait for the user to confirm their migration (pages keep reading
+// the old format meanwhile), newer ones for the extension to be updated.
+export type Migration =
+  | { _tag: 'UpToDate' }
+  | { _tag: 'Needed'; fromVersion: number }
+  | { _tag: 'Running'; fromVersion: number | null }
+  // fromVersion is null when the stored settings could not even be read
+  | { _tag: 'Failed'; fromVersion: number | null; error: string }
+  // A newer version of the extension saved the settings: this one cannot
+  // read their format, so it asks the user to update and never saves
+  | { _tag: 'Newer'; storedVersion: number }
+
 export interface Model {
+  migration: Migration
   hostname: Hostname
   currentUrl: string
   globalSetting: GlobalSetting
@@ -37,7 +52,12 @@ export type Msg =
       globalSetting: GlobalSetting
       site: SiteSetting
       monitor: Monitor
+      migration: Migration
     }
+  // The user confirmed the migration prompt
+  | { _tag: 'RunMigration' }
+  | { _tag: 'MigrationDone' }
+  | { _tag: 'MigrationFailed'; error: string }
   | { _tag: 'ToggleGlobalEnabled' }
   | { _tag: 'ToggleDomainEnabled' }
   | { _tag: 'ToggleCopyMonitorList' }
