@@ -620,6 +620,26 @@ const handleCopyAllRules = (
   }
 }
 
+const handleCopyRulesFromMonitor = (
+  msg: Extract<Msg, { _tag: 'CopyRulesFromMonitor' }>,
+  model: Model,
+): [Model, Cmd<Msg>] => {
+  const rules = rulesFor(model.site, msg.monitor)
+  // Only a monitor without rules offers the list, so nothing is replaced
+  if (activeRules(model).length > 0 || rules.length === 0) {
+    return [model, Cmd.none()]
+  } else {
+    return replaceActiveRules(
+      {
+        ...model,
+        viewedMonitor: model.monitor,
+        isCopyMonitorListOpen: false,
+      },
+      rules,
+    )
+  }
+}
+
 export const init = (): [Model | null, Cmd<Msg>] => {
   return [null, loadInitialDataCmd()]
 }
@@ -691,6 +711,9 @@ export const update = (
 
       case 'CopyAllRules':
         return handleCopyAllRules(msg, model)
+
+      case 'CopyRulesFromMonitor':
+        return handleCopyRulesFromMonitor(msg, model)
 
       case 'ToggleEnabled':
         return handleToggleEnabled(msg, model)

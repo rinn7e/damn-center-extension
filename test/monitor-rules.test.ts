@@ -788,19 +788,35 @@ describe('the popup', () => {
     const opened = await run(init)
     expect(activeRules(opened)).toEqual([])
 
+    // One click in "Copy from another monitor" copies them all
     const model = await run(
       init,
       { _tag: 'ToggleCopyMonitorList' },
-      { _tag: 'ViewMonitor', monitor: laptop },
-      { _tag: 'CopyAllRules', mode: 'Replace' },
+      { _tag: 'CopyRulesFromMonitor', monitor: laptop },
     )
 
     expect(activeRules(model)).toEqual([laptopRule])
+    expect(model.viewedMonitor).toEqual({ width: 1920, height: 1080 })
+    expect(model.isCopyMonitorListOpen).toBe(false)
     expect((stored[HOST] as SiteSetting).monitors).toEqual([
       { monitor: ultrawide, rules: [wideRule] },
       { monitor: laptop, rules: [laptopRule] },
       { monitor: { width: 1920, height: 1080 }, rules: [laptopRule] },
     ])
+  })
+
+  it('never copies over rules this monitor already has', async () => {
+    stored[HOST] = twoMonitors
+    const init = await openPopup()
+    const before = structuredClone(stored)
+
+    const model = await run(init, {
+      _tag: 'CopyRulesFromMonitor',
+      monitor: laptop,
+    })
+
+    expect(activeRules(model)).toEqual([wideRule])
+    expect(stored).toEqual(before)
   })
 
   it('applies the rules of its own monitor to the tab while showing another', async () => {

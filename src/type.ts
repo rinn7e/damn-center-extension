@@ -66,6 +66,9 @@ export type Msg =
   // Replace: this monitor gets exactly the viewed rules. AddMissing: only the
   // viewed rules whose URL pattern this monitor doesn't have are added
   | { _tag: 'CopyAllRules'; mode: 'Replace' | 'AddMissing' }
+  // From "Copy from another monitor", while this monitor has no rules: copies
+  // all the rules of that monitor at once
+  | { _tag: 'CopyRulesFromMonitor'; monitor: Monitor }
   | { _tag: 'ToggleEnabled'; index: number }
   | { _tag: 'SetPadSideType'; sideType: 'Left' | 'Right' | 'Both' }
   | { _tag: 'SetPadWidth'; sideType: 'left' | 'right'; width: number }

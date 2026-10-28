@@ -411,7 +411,7 @@ const matchRowView = (
   )
 }
 
-// Lets a monitor without rules open another monitor, to copy its rules
+// Lets a monitor without rules copy all the rules of another monitor
 const copyMonitorRulesView = (
   otherMonitors: MonitorRules[],
   isOpen: boolean,
@@ -433,8 +433,12 @@ const copyMonitorRulesView = (
               key={formatMonitor(entry.monitor)}
               type='button'
               onClick={() =>
-                dispatch({ _tag: 'ViewMonitor', monitor: entry.monitor })
+                dispatch({
+                  _tag: 'CopyRulesFromMonitor',
+                  monitor: entry.monitor,
+                })
               }
+              title='Copy these matches to this monitor'
               className='bg-theme-bg-input border-theme-border-input hover:border-theme-primary text-theme-text-main flex cursor-pointer items-center justify-between border px-[10px] py-[6px] text-[0.8125rem] transition-all'
             >
               <span className='flex items-center gap-[6px] font-mono'>
