@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and adher
 
 ### Changed
 
-- **Settings Format**: Each site is now saved as one value holding the site switch and its matches, instead of a list mixing the two. Your settings are converted the first time you open the popup, and the old values are kept as `backup_v1_*` entries. Until then, pages keep using your old settings on every monitor. Backups made with earlier versions still import; backups made with this version need this version or later.
+- **Settings Format**: Each site is now saved as one value holding the site switch and its matches, instead of a list mixing the two. The first time you open the popup after the update, it asks to update your settings to the new format; click **OK** to convert them. Until then, pages keep using your old settings on every monitor, and nothing can be edited. If the update fails, the popup shows why, lets you download your settings and links to the issue tracker. Backups made with earlier versions still import; backups made with this version need this version or later.
 - **Page Elements**: The padding, ruler and style elements the extension adds to pages now use `damn-center-*` ids instead of the old `symmetry-pad-*` names. If you wrote custom user styles for those ids, update them.
 - **Firefox 140+**: The Firefox version now requires Firefox 140 or later (an ESR release), the first version that supports the add-on's data-collection declaration.
 - **Smaller and Faster**: The script that runs on every page is less than half its old size (117 KB → 53 KB), because fp-ts is now imported as tree-shakeable ES modules. Old backup icons and screenshots are no longer copied into the packages.
