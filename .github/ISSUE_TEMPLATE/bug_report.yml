@@ -1,6 +1,6 @@
 name: Bug report
 description: Something doesn't look or work right
-labels: [bug]
+labels: ['1-bug']
 body:
   - type: input
     id: url
