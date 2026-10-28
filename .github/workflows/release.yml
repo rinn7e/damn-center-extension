@@ -3,6 +3,9 @@ name: Release
 on:
   push:
     tags: ['v*']
+  # Publishing the checked draft release uploads it to the stores
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -14,6 +17,7 @@ concurrency:
 jobs:
   # Builds and checks with a read-only token
   build:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -67,8 +71,8 @@ jobs:
       - name: Write checksums
         working-directory: dist
         run: |
-          sha256sum damn-center-chrome-$GITHUB_REF_NAME.zip \
-            damn-center-firefox-$GITHUB_REF_NAME.zip > SHA256SUMS.txt
+          sha256sum "damn-center-chrome-$GITHUB_REF_NAME.zip" \
+            "damn-center-firefox-$GITHUB_REF_NAME.zip" > SHA256SUMS.txt
           cat SHA256SUMS.txt
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -105,6 +109,120 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --title "Damn Center $GITHUB_REF_NAME" \
             --notes-file notes.md \
-            damn-center-chrome-$GITHUB_REF_NAME.zip \
-            damn-center-firefox-$GITHUB_REF_NAME.zip \
+            "damn-center-chrome-$GITHUB_REF_NAME.zip" \
+            "damn-center-firefox-$GITHUB_REF_NAME.zip" \
             SHA256SUMS.txt
+
+  # Uploads the zips of a published release to the stores. It runs no
+  # project code, and only this job can read the store secrets
+  stores:
+    # Pre-releases stay on GitHub
+    if: github.event_name == 'release' && !github.event.release.prerelease
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Holds the store secrets, and waits for the maintainer's approval
+    environment: stores
+    permissions:
+      contents: read
+      # gh attestation verify
+      attestations: read
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+    steps:
+      # Before any upload, so a missing secret never leaves one store behind
+      - name: Check the store secrets are set
+        env:
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+          AMO_API_KEY: ${{ secrets.AMO_API_KEY }}
+          AMO_API_SECRET: ${{ secrets.AMO_API_SECRET }}
+        run: |
+          missing=0
+          for name in CHROME_EXTENSION_ID CHROME_PUBLISHER_ID CHROME_CLIENT_ID \
+            CHROME_CLIENT_SECRET CHROME_REFRESH_TOKEN AMO_API_KEY AMO_API_SECRET; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Secret $name is missing in the stores environment"
+              missing=1
+            fi
+          done
+          exit "$missing"
+      - name: Download the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "damn-center-chrome-$TAG.zip" \
+            --pattern "damn-center-firefox-$TAG.zip"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --archive zip --output source.zip
+      - name: Check the zips were built by this workflow from the tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for zip in "damn-center-chrome-$TAG.zip" "damn-center-firefox-$TAG.zip"; do
+            if ! gh attestation verify "$zip" --repo "$GITHUB_REPOSITORY" \
+              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml" \
+              --source-ref "refs/tags/$TAG"; then
+              echo "::error::$zip has no build attestation from release.yml at $TAG, nothing was uploaded"
+              exit 1
+            fi
+          done
+      # The build instructions for the AMO reviewer, kept in doc/release.md
+      - name: Write the AMO reviewer notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -H 'Accept: application/vnd.github.raw' \
+            "repos/$GITHUB_REPOSITORY/contents/doc/release.md?ref=$TAG" > release.md
+          # The code block between the two markers
+          awk '
+            /<!-- amo-reviewer-notes:start -->/ { found = 1; next }
+            /<!-- amo-reviewer-notes:end -->/ { exit }
+            found && /^```/ { inside = !inside; next }
+            inside { print }
+          ' release.md > notes.txt
+          if [ ! -s notes.txt ]; then
+            echo "::error::No AMO reviewer notes in doc/release.md at $TAG"
+            exit 1
+          fi
+          jq -n --rawfile notes notes.txt \
+            '{version: {approval_notes: ($notes | rtrimstr("\n"))}}' > amo-metadata.json
+      - id: node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - name: Upload to the Chrome Web Store
+        env:
+          EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+          CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        # Uploads the zip, then submits it for review
+        run: |
+          if ! npx --yes chrome-webstore-upload-cli@4.0.2 \
+            --source "damn-center-chrome-$TAG.zip"; then
+            echo "::error::Chrome Web Store upload of $TAG failed, see the log of this step"
+            exit 1
+          fi
+      # Runs even when Chrome failed, so one store does not hold up the other
+      - name: Upload to Firefox Add-ons
+        if: ${{ !cancelled() && steps.node.conclusion == 'success' }}
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.AMO_API_KEY }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_API_SECRET }}
+        # web-ext sign packs a folder, so it gets the files of the checked
+        # zip. Approval is a human review, so it does not wait for it
+        run: |
+          unzip -q "damn-center-firefox-$TAG.zip" -d firefox
+          if ! npx --yes web-ext@10.7.0 sign --channel listed \
+            --source-dir firefox \
+            --upload-source-code source.zip \
+            --amo-metadata amo-metadata.json \
+            --approval-timeout 0; then
+            echo "::error::Firefox Add-ons upload of $TAG failed, see the log of this step"
+            exit 1
+          fi
