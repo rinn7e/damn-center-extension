@@ -458,8 +458,10 @@ const monitorPickerView = (
 ) => {
   const choices = [monitor, ...otherMonitors.map((entry) => entry.monitor)]
   return (
+    // Never shrinks: plain text would run under the site switch next to it;
+    // the row wraps instead
     <span
-      className='text-theme-text-dim flex min-w-0 items-center gap-[4px] font-mono text-[0.75rem]'
+      className='text-theme-text-dim flex shrink-0 items-center gap-[4px] font-mono text-[0.75rem]'
       title='Matches apply on monitors of this screen size'
     >
       <MonitorIcon className='h-[12px] w-[12px] shrink-0' />
@@ -554,21 +556,25 @@ const matchesCardView = (
   const readOnly = !isSameMonitor(viewedMonitor, monitor)
   return (
     <div className='flex flex-col gap-[12px]'>
-      <div className='flex items-center justify-between gap-[8px]'>
-        <div className='flex min-w-0 items-center gap-[8px]'>
+      {/* Wraps onto a second line when it does not fit (large font sizes,
+          or a monitor list instead of the screen size) */}
+      <div className='flex flex-wrap items-center justify-between gap-x-[8px] gap-y-[6px]'>
+        <div className='flex min-w-0 flex-wrap items-center gap-[8px]'>
           <span className='text-theme-text-main text-[0.875rem] font-semibold'>
             Matches
           </span>
           {monitorPickerView(monitor, viewedMonitor, otherMonitors, dispatch)}
           {padSettingList.length > 0 && (
-            <div className='group flex min-w-0 items-center gap-[6px]'>
+            <div className='group relative flex items-center'>
               {toggleSwitchView(
                 siteEnabled,
                 () => dispatch({ _tag: 'ToggleDomainEnabled' }),
                 'small',
                 siteEnabled ? 'Disable per Domain' : 'Enable per Domain',
               )}
-              <span className='text-theme-text-dim pointer-events-none truncate text-[0.625rem] leading-none font-normal opacity-0 select-none group-hover:opacity-100'>
+              {/* Shown next to the switch on hover only, so it takes no room
+                  in the row */}
+              <span className='text-theme-text-dim bg-theme-secondary pointer-events-none absolute top-1/2 left-full z-10 hidden -translate-y-1/2 pl-[6px] text-[0.625rem] leading-none font-normal whitespace-nowrap select-none group-hover:inline'>
                 {siteEnabled
                   ? 'Disable all matches in this domain'
                   : 'Enable all matches in this domain'}
