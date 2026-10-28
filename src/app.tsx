@@ -518,22 +518,41 @@ const viewingOtherMonitorView = (
         monitor ({formatMonitor(monitor)}) has {matchCountText(currentCount)}.
       </div>
       <div className='flex flex-wrap items-center gap-[6px]'>
-        <button
-          type='button'
-          onClick={() => dispatch({ _tag: 'CopyAllRules', mode: 'Replace' })}
-          className={copyButtonClass}
-          title='Replace the matches of this monitor with these'
-        >
-          Copy all (replace)
-        </button>
-        <button
-          type='button'
-          onClick={() => dispatch({ _tag: 'CopyAllRules', mode: 'AddMissing' })}
-          className={copyButtonClass}
-          title='Add the matches whose URL pattern this monitor does not have yet'
-        >
-          Copy missing
-        </button>
+        {/* Without matches on this monitor, replacing and adding the missing
+            ones do the same, so one button does */}
+        {currentCount === 0 ? (
+          <button
+            type='button'
+            onClick={() => dispatch({ _tag: 'CopyAllRules', mode: 'Replace' })}
+            className={copyButtonClass}
+            title='Copy these matches to this monitor'
+          >
+            Copy all
+          </button>
+        ) : (
+          <>
+            <button
+              type='button'
+              onClick={() =>
+                dispatch({ _tag: 'CopyAllRules', mode: 'Replace' })
+              }
+              className={copyButtonClass}
+              title='Replace the matches of this monitor with these'
+            >
+              Copy all (replace)
+            </button>
+            <button
+              type='button'
+              onClick={() =>
+                dispatch({ _tag: 'CopyAllRules', mode: 'AddMissing' })
+              }
+              className={copyButtonClass}
+              title='Add the matches whose URL pattern this monitor does not have yet'
+            >
+              Copy missing
+            </button>
+          </>
+        )}
         <button
           type='button'
           onClick={() => dispatch({ _tag: 'ViewMonitor', monitor })}
