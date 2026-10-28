@@ -56,3 +56,6 @@ backup/
 
 # Safari Web Extension app wrapper project
 /safari-extension/
+
+# Git worktrees made by Claude Code (one per branch, see CONTRIBUTING.md)
+/.claude/worktrees/
