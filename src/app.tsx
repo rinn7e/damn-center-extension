@@ -474,7 +474,6 @@ const monitorPickerView = (
       className='text-theme-text-dim flex shrink-0 items-center gap-[4px] font-mono text-[0.75rem]'
       title='Matches apply on monitors of this screen size'
     >
-      <MonitorIcon className='h-[12px] w-[12px] shrink-0' />
       {otherMonitors.length === 0 ? (
         formatMonitor(monitor)
       ) : (
