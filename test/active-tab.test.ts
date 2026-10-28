@@ -6,7 +6,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { queryActiveTabAndSettings } from '../src/update'
 
-const stubBrowser = (tab: { id: number; url?: string }) =>
+const stubBrowser = (tab: { id: number; url?: string }) => {
+  // The popup falls back to its own screen when the tab has no answer
+  vi.stubGlobal('screen', { width: 1920, height: 1080 })
   vi.stubGlobal('chrome', {
     runtime: {},
     tabs: {
@@ -17,9 +19,12 @@ const stubBrowser = (tab: { id: number; url?: string }) =>
       local: {
         get: (_keys: string[], callback: (res: object) => void) =>
           setTimeout(() => callback({}), 0),
+        // The popup marks fresh storage with the current schema version
+        set: (_items: object, callback?: () => void) => callback?.(),
       },
     },
   })
+}
 
 describe('queryActiveTabAndSettings', () => {
   afterEach(() => {

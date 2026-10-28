@@ -5,11 +5,13 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { type SiteSetting } from '../src/common/type/site-setting'
 import { type Model, type Msg } from '../src/type'
-import { loadInitialDataCmd, update } from '../src/update'
+import { activeRules, loadInitialDataCmd, update } from '../src/update'
 
 // A site the user has never set up: the popup shows the empty state
-// ("No matches added yet"), and nothing saves a rule until + New Match
+// ("No matches for this monitor yet"), and nothing saves a rule until + New
+// Match
 
 const HOST = 'example.org'
 let saved: Record<string, unknown>
@@ -25,7 +27,12 @@ beforeEach(() => {
     tabs: {
       query: (_query: object, callback: (tabs: object[]) => void) =>
         callback([{ id: 1, url: `https://${HOST}/page` }]),
-      sendMessage: vi.fn(),
+      // No content script answers, like on a page that was open before the
+      // extension was installed
+      sendMessage: vi.fn(
+        (_tabId: number, _message: unknown, callback?: () => void) =>
+          callback?.(),
+      ),
     },
     storage: {
       local: {
@@ -72,7 +79,7 @@ describe('a site without saved rules', () => {
     const init = await openPopup()
 
     expect(init.hostname).toBe(HOST)
-    expect(init.padSettingList).toEqual([])
+    expect(init.site.monitors).toEqual([])
   })
 
   it.each<Msg>([
@@ -84,15 +91,15 @@ describe('a site without saved rules', () => {
   ])('gets no rule saved by $_tag', async (msg) => {
     await run(await openPopup(), msg)
 
-    const rules = (saved[HOST] as Array<{ _tag: string }> | undefined) ?? []
-    expect(rules.filter((item) => item._tag === 'PathSetting')).toEqual([])
+    const site = saved[HOST] as SiteSetting | undefined
+    expect(site?.monitors ?? []).toEqual([])
   })
 
   it('gets a rule once the user clicks + New Match', async () => {
     const model = await run(await openPopup(), { _tag: 'AddPadSetting' })
 
-    expect(model.padSettingList).toHaveLength(1)
-    expect(saved[HOST]).toContainEqual(
+    expect(activeRules(model)).toHaveLength(1)
+    expect((saved[HOST] as SiteSetting).monitors[0]!.rules).toContainEqual(
       expect.objectContaining({ _tag: 'PathSetting' }),
     )
   })

@@ -15,13 +15,21 @@ import {
 } from './common/env'
 import { type GlobalSetting } from './common/type/global-setting'
 import {
-  type DomainSetting,
+  type Monitor,
+  formatMonitor,
+  isSameMonitor,
+} from './common/type/monitor'
+import {
   type PadTheme,
   type PadThemeMode,
   type PathSetting,
   defaultPathSetting,
 } from './common/type/pad-setting'
 import { darkColors, lightColors, patterns } from './common/type/preset'
+import {
+  type MonitorRules,
+  otherMonitorRules,
+} from './common/type/site-setting'
 import { themes } from './common/type/theme'
 import {
   ChevronDownIcon,
@@ -35,6 +43,7 @@ import {
 } from './component/icon'
 import { getGlobError, matchUrlPattern } from './storage/storage'
 import { type Model, type Msg } from './type'
+import { activeRules, isViewingOtherMonitor, viewedRules } from './update'
 
 const transparentBgStyle = {
   backgroundImage:
@@ -268,6 +277,8 @@ const matchRowView = (
   listLength: number,
   selectedIndex: number,
   currentUrl: string,
+  // True for the rules of another monitor, which can only be copied
+  readOnly: boolean,
   dispatch: Dispatcher<Msg>,
 ) => {
   const isMatching = matchUrlPattern(currentUrl, item.matchPattern)
@@ -286,6 +297,7 @@ const matchRowView = (
       <input
         type='text'
         value={item.matchPattern}
+        readOnly={readOnly}
         onChange={(e) => {
           dispatch({
             _tag: 'UpdateMatchPattern',
@@ -305,57 +317,76 @@ const matchRowView = (
       )}
 
       {/* Line 2: Buttons & Toggle Switch */}
-      <div className='flex items-center justify-between gap-[8px]'>
-        <div className='flex items-center gap-[6px]'>
+      {readOnly ? (
+        <div className='flex items-center justify-between gap-[8px]'>
           <button
             type='button'
             onClick={(e) => {
               e.stopPropagation()
-              dispatch({ _tag: 'DeletePadSetting', index: idx })
+              dispatch({ _tag: 'CopyRuleToCurrentMonitor', index: idx })
             }}
-            className='flex h-[22px] shrink-0 cursor-pointer items-center justify-center border border-red-500/20 px-[8px] text-[0.8125rem] font-semibold text-red-500 transition-all hover:border-red-500/40 hover:text-red-600'
+            className='border-theme-primary/40 text-theme-primary hover:border-theme-primary flex h-[22px] shrink-0 cursor-pointer items-center justify-center border px-[8px] text-[0.8125rem] font-semibold transition-all'
+            title='Copy this match to the monitor this tab is on, replacing a match with the same URL pattern'
           >
-            Delete
+            Copy to this monitor
           </button>
-          <button
-            type='button'
-            disabled={idx === 0}
-            onClick={(e) => {
-              e.stopPropagation()
-              dispatch({ _tag: 'MoveMatchUp', index: idx })
-            }}
-            className='border-theme-border-input hover:bg-theme-bg-input text-theme-text-main flex h-[22px] shrink-0 cursor-pointer items-center justify-center border px-[8px] text-[0.8125rem] font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40'
-            title='Move Up'
-          >
-            <ChevronUpIcon />
-          </button>
-          <button
-            type='button'
-            disabled={idx === listLength - 1}
-            onClick={(e) => {
-              e.stopPropagation()
-              dispatch({ _tag: 'MoveMatchDown', index: idx })
-            }}
-            className='border-theme-border-input hover:bg-theme-bg-input text-theme-text-main flex h-[22px] shrink-0 cursor-pointer items-center justify-center border px-[8px] text-[0.8125rem] font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40'
-            title='Move Down'
-          >
-            <ChevronDownIcon />
-          </button>
-        </div>
-
-        {/* Enable/Disable switch for this match */}
-        <div className='flex items-center gap-[6px]'>
           <span className='text-theme-text-dim text-[0.8125rem] font-semibold tracking-wider uppercase'>
-            Enabled
+            {item.enabled ? 'Enabled' : 'Disabled'}
           </span>
-          {toggleSwitchView(
-            item.enabled,
-            () => dispatch({ _tag: 'ToggleEnabled', index: idx }),
-            'small',
-            item.enabled ? 'Disable Match' : 'Enable Match',
-          )}
         </div>
-      </div>
+      ) : (
+        <div className='flex items-center justify-between gap-[8px]'>
+          <div className='flex items-center gap-[6px]'>
+            <button
+              type='button'
+              onClick={(e) => {
+                e.stopPropagation()
+                dispatch({ _tag: 'DeletePadSetting', index: idx })
+              }}
+              className='flex h-[22px] shrink-0 cursor-pointer items-center justify-center border border-red-500/20 px-[8px] text-[0.8125rem] font-semibold text-red-500 transition-all hover:border-red-500/40 hover:text-red-600'
+            >
+              Delete
+            </button>
+            <button
+              type='button'
+              disabled={idx === 0}
+              onClick={(e) => {
+                e.stopPropagation()
+                dispatch({ _tag: 'MoveMatchUp', index: idx })
+              }}
+              className='border-theme-border-input hover:bg-theme-bg-input text-theme-text-main flex h-[22px] shrink-0 cursor-pointer items-center justify-center border px-[8px] text-[0.8125rem] font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40'
+              title='Move Up'
+            >
+              <ChevronUpIcon />
+            </button>
+            <button
+              type='button'
+              disabled={idx === listLength - 1}
+              onClick={(e) => {
+                e.stopPropagation()
+                dispatch({ _tag: 'MoveMatchDown', index: idx })
+              }}
+              className='border-theme-border-input hover:bg-theme-bg-input text-theme-text-main flex h-[22px] shrink-0 cursor-pointer items-center justify-center border px-[8px] text-[0.8125rem] font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40'
+              title='Move Down'
+            >
+              <ChevronDownIcon />
+            </button>
+          </div>
+
+          {/* Enable/Disable switch for this match */}
+          <div className='flex items-center gap-[6px]'>
+            <span className='text-theme-text-dim text-[0.8125rem] font-semibold tracking-wider uppercase'>
+              Enabled
+            </span>
+            {toggleSwitchView(
+              item.enabled,
+              () => dispatch({ _tag: 'ToggleEnabled', index: idx }),
+              'small',
+              item.enabled ? 'Disable Match' : 'Enable Match',
+            )}
+          </div>
+        </div>
+      )}
       {isMatching && isActiveMatch && (
         <div className='flex items-center gap-[4px] px-[2px]'>
           <div
@@ -374,47 +405,187 @@ const matchRowView = (
   )
 }
 
+// Lets a monitor without rules open another monitor, to copy its rules
+const copyMonitorRulesView = (
+  otherMonitors: MonitorRules[],
+  isOpen: boolean,
+  dispatch: Dispatcher<Msg>,
+) => {
+  return (
+    <div className='flex flex-col gap-[8px] pb-[8px]'>
+      <button
+        type='button'
+        onClick={() => dispatch({ _tag: 'ToggleCopyMonitorList' })}
+        className='text-theme-primary hover:text-theme-primary/80 cursor-pointer self-start text-[0.8125rem] font-semibold transition-all'
+      >
+        Copy from another monitor
+      </button>
+      {isOpen && (
+        <div className='flex flex-col gap-[6px]'>
+          {otherMonitors.map((entry) => (
+            <button
+              key={formatMonitor(entry.monitor)}
+              type='button'
+              onClick={() =>
+                dispatch({ _tag: 'ViewMonitor', monitor: entry.monitor })
+              }
+              className='bg-theme-bg-input border-theme-border-input hover:border-theme-primary text-theme-text-main flex cursor-pointer items-center justify-between border px-[10px] py-[6px] text-[0.8125rem] transition-all'
+            >
+              <span className='flex items-center gap-[6px] font-mono'>
+                <MonitorIcon className='h-[14px] w-[14px]' />
+                {formatMonitor(entry.monitor)}
+              </span>
+              <span className='text-theme-text-dim'>
+                {matchCountText(entry.rules.length)}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const matchCountText = (count: number) =>
+  count === 1 ? '1 match' : `${count} matches`
+
+// The monitor next to "Matches": a picker when other monitors have rules
+const monitorPickerView = (
+  monitor: Monitor,
+  viewedMonitor: Monitor,
+  otherMonitors: MonitorRules[],
+  dispatch: Dispatcher<Msg>,
+) => {
+  const choices = [monitor, ...otherMonitors.map((entry) => entry.monitor)]
+  return (
+    <span
+      className='text-theme-text-dim flex min-w-0 items-center gap-[4px] font-mono text-[0.75rem]'
+      title='Matches apply on monitors of this screen size'
+    >
+      <MonitorIcon className='h-[12px] w-[12px] shrink-0' />
+      {otherMonitors.length === 0 ? (
+        formatMonitor(monitor)
+      ) : (
+        <select
+          value={formatMonitor(viewedMonitor)}
+          onChange={(e) => {
+            const chosen = choices.find(
+              (choice) => formatMonitor(choice) === e.target.value,
+            )
+            if (chosen) dispatch({ _tag: 'ViewMonitor', monitor: chosen })
+          }}
+          className='bg-theme-bg-input border-theme-border-input text-theme-text-main min-w-0 cursor-pointer border px-[2px] font-mono text-[0.75rem] focus:outline-none'
+        >
+          <option value={formatMonitor(monitor)}>
+            {formatMonitor(monitor)} (current)
+          </option>
+          {otherMonitors.map((entry) => (
+            <option
+              key={formatMonitor(entry.monitor)}
+              value={formatMonitor(entry.monitor)}
+            >
+              {formatMonitor(entry.monitor)} (
+              {matchCountText(entry.rules.length)})
+            </option>
+          ))}
+        </select>
+      )}
+    </span>
+  )
+}
+
+// Shown while the popup shows another monitor than the tab's
+const viewingOtherMonitorView = (
+  monitor: Monitor,
+  viewedMonitor: Monitor,
+  currentCount: number,
+  dispatch: Dispatcher<Msg>,
+) => {
+  const copyButtonClass =
+    'border-theme-primary/40 text-theme-primary hover:border-theme-primary flex h-[22px] cursor-pointer items-center justify-center border px-[8px] text-[0.8125rem] font-semibold transition-all'
+  return (
+    <div className='bg-theme-bg-input border-theme-border-input flex flex-col gap-[8px] border p-[8px]'>
+      <div className='text-theme-text-dim text-[0.8125rem]'>
+        Viewing the matches of {formatMonitor(viewedMonitor)}, read only. This
+        monitor ({formatMonitor(monitor)}) has {matchCountText(currentCount)}.
+      </div>
+      <div className='flex flex-wrap items-center gap-[6px]'>
+        <button
+          type='button'
+          onClick={() => dispatch({ _tag: 'CopyAllRules', mode: 'Replace' })}
+          className={copyButtonClass}
+          title='Replace the matches of this monitor with these'
+        >
+          Copy all (replace)
+        </button>
+        <button
+          type='button'
+          onClick={() => dispatch({ _tag: 'CopyAllRules', mode: 'AddMissing' })}
+          className={copyButtonClass}
+          title='Add the matches whose URL pattern this monitor does not have yet'
+        >
+          Copy missing
+        </button>
+        <button
+          type='button'
+          onClick={() => dispatch({ _tag: 'ViewMonitor', monitor })}
+          className='text-theme-text-dim hover:text-theme-text-main cursor-pointer px-[4px] text-[0.8125rem] font-semibold transition-all'
+        >
+          Back to this monitor
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const matchesCardView = (
   padSettingList: PathSetting[],
   selectedIndex: number,
   currentUrl: string,
   matchesCollapsed: boolean,
-  domainSetting: DomainSetting,
+  siteEnabled: boolean,
+  monitor: Monitor,
+  viewedMonitor: Monitor,
+  otherMonitors: MonitorRules[],
+  currentCount: number,
+  isCopyMonitorListOpen: boolean,
   dispatch: Dispatcher<Msg>,
 ) => {
+  const readOnly = !isSameMonitor(viewedMonitor, monitor)
   return (
     <div className='flex flex-col gap-[12px]'>
-      <div className='flex items-center justify-between'>
-        <div className='flex items-center gap-[8px]'>
+      <div className='flex items-center justify-between gap-[8px]'>
+        <div className='flex min-w-0 items-center gap-[8px]'>
           <span className='text-theme-text-main text-[0.875rem] font-semibold'>
             Matches
           </span>
+          {monitorPickerView(monitor, viewedMonitor, otherMonitors, dispatch)}
           {padSettingList.length > 0 && (
-            <div className='group flex items-center gap-[6px]'>
+            <div className='group flex min-w-0 items-center gap-[6px]'>
               {toggleSwitchView(
-                domainSetting.enabled,
+                siteEnabled,
                 () => dispatch({ _tag: 'ToggleDomainEnabled' }),
                 'small',
-                domainSetting.enabled
-                  ? 'Disable per Domain'
-                  : 'Enable per Domain',
+                siteEnabled ? 'Disable per Domain' : 'Enable per Domain',
               )}
-              <span className='text-theme-text-dim pointer-events-none text-[0.625rem] leading-none font-normal opacity-0 select-none group-hover:opacity-100'>
-                {domainSetting.enabled
+              <span className='text-theme-text-dim pointer-events-none truncate text-[0.625rem] leading-none font-normal opacity-0 select-none group-hover:opacity-100'>
+                {siteEnabled
                   ? 'Disable all matches in this domain'
                   : 'Enable all matches in this domain'}
               </span>
             </div>
           )}
         </div>
-        <div className='flex items-center gap-[8px]'>
-          <button
-            type='button'
-            onClick={() => dispatch({ _tag: 'AddPadSetting' })}
-            className='text-theme-primary hover:text-theme-primary/80 cursor-pointer text-[0.8125rem] font-semibold transition-all'
-          >
-            + New Match
-          </button>
+        <div className='flex shrink-0 items-center gap-[8px]'>
+          {!readOnly && (
+            <button
+              type='button'
+              onClick={() => dispatch({ _tag: 'AddPadSetting' })}
+              className='text-theme-primary hover:text-theme-primary/80 cursor-pointer text-[0.8125rem] font-semibold whitespace-nowrap transition-all'
+            >
+              + New Match
+            </button>
+          )}
           <button
             type='button'
             onClick={() => dispatch({ _tag: 'ToggleMatchesCollapsed' })}
@@ -432,14 +603,37 @@ const matchesCardView = (
 
       {!matchesCollapsed && (
         <>
+          {readOnly &&
+            viewingOtherMonitorView(
+              monitor,
+              viewedMonitor,
+              currentCount,
+              dispatch,
+            )}
           {padSettingList.length === 0 ? (
-            <div className='text-theme-text-dim pb-[8px] text-[0.8125rem]'>
-              No matches added yet. Click "+ New Match" to configure custom page
-              padding.
+            <div className='flex flex-col gap-[8px]'>
+              <div className='text-theme-text-dim pb-[8px] text-[0.8125rem]'>
+                No matches for this monitor yet. Click "+ New Match" to
+                configure custom page padding.
+              </div>
+              {otherMonitors.length > 0 &&
+                copyMonitorRulesView(
+                  otherMonitors,
+                  isCopyMonitorListOpen,
+                  dispatch,
+                )}
             </div>
           ) : (
             <div
-              className={`flex flex-col gap-[8px] transition-opacity duration-200 ${!domainSetting.enabled ? 'pointer-events-none opacity-50' : ''}`}
+              className={`flex flex-col gap-[8px] transition-opacity duration-200 ${
+                // Rules of another monitor can still be copied while the
+                // site is off
+                !siteEnabled
+                  ? readOnly
+                    ? 'opacity-50'
+                    : 'pointer-events-none opacity-50'
+                  : ''
+              }`}
             >
               {padSettingList.map((item, idx) =>
                 matchRowView(
@@ -448,6 +642,7 @@ const matchesCardView = (
                   padSettingList.length,
                   selectedIndex,
                   currentUrl,
+                  readOnly,
                   dispatch,
                 ),
               )}
@@ -670,8 +865,12 @@ const styleEditorView = (
   settings: PathSetting,
   globalSetting: GlobalSetting,
   activePresetTab: 'light' | 'dark',
+  // True for a rule of another monitor: its own settings can't be changed,
+  // but the ruler and the light / dark preview still work
+  readOnly: boolean,
   dispatch: Dispatcher<Msg>,
 ) => {
+  const ruleFieldsClass = `flex min-w-0 flex-col gap-[16px] ${readOnly ? 'opacity-60' : ''}`
   return (
     <div className='animate-slide-down flex flex-col gap-[16px]'>
       <div className='border-theme-border-card border-t' />
@@ -691,25 +890,29 @@ const styleEditorView = (
         </button>
       </div>
 
-      {/* Padding Width */}
-      {paddingWidthView(settings, dispatch)}
+      <fieldset disabled={readOnly} className={ruleFieldsClass}>
+        {/* Padding Width */}
+        {paddingWidthView(settings, dispatch)}
 
-      {/* Padding Side */}
-      {paddingSideView(settings, dispatch)}
+        {/* Padding Side */}
+        {paddingSideView(settings, dispatch)}
 
-      {/* Theme Trigger Mode selection */}
-      {themeTriggerModeView(settings, dispatch)}
+        {/* Theme Trigger Mode selection */}
+        {themeTriggerModeView(settings, dispatch)}
+      </fieldset>
 
       {/* Background Styling Box */}
       <div className='border-theme-border-card bg-theme-bg-card flex flex-col gap-[12px] border p-[12px]'>
         {styleHeaderTabView(activePresetTab, dispatch)}
 
         {/* Render styling inputs for the selected sub-tab */}
-        {padThemeStylingView(
-          activePresetTab,
-          settings[activePresetTab],
-          dispatch,
-        )}
+        <fieldset disabled={readOnly} className={ruleFieldsClass}>
+          {padThemeStylingView(
+            activePresetTab,
+            settings[activePresetTab],
+            dispatch,
+          )}
+        </fieldset>
       </div>
     </div>
   )
@@ -847,14 +1050,15 @@ interface AppProps {
 
 export const App: React.FC<AppProps> = ({ model, dispatch }) => {
   const {
-    padSettingList,
     selectedIndex,
     activePresetTab,
     globalSetting,
-    domainSetting,
     isInjectThemeDone,
     isSetFontSizeDone,
   } = model
+  const padSettingList = viewedRules(model)
+  const isViewingOther = isViewingOtherMonitor(model)
+  const siteEnabled = model.site.enabled
 
   if (!isInjectThemeDone || !isSetFontSizeDone) {
     return (
@@ -869,7 +1073,7 @@ export const App: React.FC<AppProps> = ({ model, dispatch }) => {
 
   const settings = padSettingList[selectedIndex] || defaultPathSetting
   const hasAnyEnabled =
-    padSettingList.some((item) => item.enabled) && domainSetting.enabled
+    padSettingList.some((item) => item.enabled) && siteEnabled
   const matchesAnyPattern = padSettingList.some((item) =>
     matchUrlPattern(model.currentUrl, item.matchPattern),
   )
@@ -890,7 +1094,12 @@ export const App: React.FC<AppProps> = ({ model, dispatch }) => {
                 selectedIndex,
                 model.currentUrl,
                 model.matchesCollapsed,
-                domainSetting,
+                siteEnabled,
+                model.monitor,
+                model.viewedMonitor,
+                otherMonitorRules(model.site, model.monitor),
+                activeRules(model).length,
+                model.isCopyMonitorListOpen,
                 dispatch,
               )}
 
@@ -901,6 +1110,8 @@ export const App: React.FC<AppProps> = ({ model, dispatch }) => {
                   settings,
                   globalSetting,
                   activePresetTab,
+                  // Another monitor's style is shown, but can't be changed
+                  isViewingOther,
                   dispatch,
                 )}
             </>

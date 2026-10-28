@@ -4,7 +4,6 @@
  */
 import * as TE from 'fp-ts/TaskEither'
 import { pipe } from 'fp-ts/function'
-import * as t from 'io-ts'
 import { Cmd, Task } from 'tea-cup-fp'
 
 import { DEFAULT_FONT_SIZE, UI_THEME_ID } from './common/env'
@@ -15,23 +14,34 @@ import {
 } from './common/type/global-setting'
 import { type Hostname } from './common/type/hostname'
 import {
+  type Monitor,
+  MonitorCodec,
+  getCurrentMonitor,
+  isSameMonitor,
+} from './common/type/monitor'
+import {
   type DomainSetting,
   type PadSide,
-  type PaddingSetting,
-  PaddingSettingCodec,
   type PathSetting,
   createDefaultPathSetting,
-  defaultDomainSetting,
   defaultPathSetting,
 } from './common/type/pad-setting'
+import {
+  type SiteSetting,
+  defaultSiteSetting,
+  isStoredSiteSetting,
+  rulesFor,
+  setRulesFor,
+} from './common/type/site-setting'
 import { injectTheme, themes } from './common/type/theme'
 import {
   getHostname,
   loadGlobalSetting,
-  loadPadSettings,
+  loadSiteSetting,
   matchUrlPattern,
+  migrateStorage,
   saveGlobalSetting,
-  savePadSettings,
+  saveSiteSetting,
 } from './storage/storage'
 import { type Model, type Msg } from './type'
 
@@ -211,12 +221,78 @@ export const updatePadSettingInList = (
   }
 }
 
+/** The rules in use on the model's monitor, the ones the popup edits. */
+export const activeRules = (model: Model): PathSetting[] =>
+  rulesFor(model.site, model.monitor)
+
+/** The rules of the monitor the popup shows. */
+export const viewedRules = (model: Model): PathSetting[] =>
+  rulesFor(model.site, model.viewedMonitor)
+
+/** True while the popup shows another monitor than the tab's, read only. */
+export const isViewingOtherMonitor = (model: Model): boolean =>
+  !isSameMonitor(model.viewedMonitor, model.monitor)
+
+// Messages that change the rules of the tab's monitor. They only make sense
+// while the popup shows that monitor, since they refer to its list.
+const isRuleEdit = (msg: Msg): boolean => {
+  switch (msg._tag) {
+    case 'ToggleEnabled':
+    case 'SetPadSideType':
+    case 'SetPadWidth':
+    case 'SetPadThemeMode':
+    case 'UpdateBgType':
+    case 'UpdateBgColor':
+    case 'UpdateBgPattern':
+    case 'AddPadSetting':
+    case 'DeletePadSetting':
+    case 'UpdateMatchPattern':
+    case 'MoveMatchUp':
+    case 'MoveMatchDown':
+      return true
+    default:
+      return false
+  }
+}
+
+/**
+ * Adds `rule` to `list`, replacing the rule with the same URL pattern if
+ * there is one; otherwise it goes last, so the rules already there keep
+ * their priority.
+ */
+export const copyRuleInto = (
+  list: PathSetting[],
+  rule: PathSetting,
+): PathSetting[] =>
+  list.some((item) => item.matchPattern === rule.matchPattern)
+    ? list.map((item) =>
+        item.matchPattern === rule.matchPattern ? rule : item,
+      )
+    : [...list, rule]
+
+/** Adds the rules of `from` whose URL pattern `list` doesn't have yet. */
+export const copyMissingRulesInto = (
+  list: PathSetting[],
+  from: PathSetting[],
+): PathSetting[] => [
+  ...list,
+  ...from.filter(
+    (rule) => !list.some((item) => item.matchPattern === rule.matchPattern),
+  ),
+]
+
+/** Replaces the rules in use on the model's monitor. */
+const withActiveRules = (model: Model, rules: PathSetting[]): Model => ({
+  ...model,
+  site: setRulesFor(model.site, model.monitor, rules),
+})
+
 const updateActiveSetting = (
   model: Model,
   updater: (active: PathSetting) => PathSetting,
 ): [Model, Cmd<Msg>] => {
   const updatedList = updatePadSettingInList(
-    model.padSettingList,
+    activeRules(model),
     model.selectedIndex,
     updater,
   )
@@ -224,18 +300,10 @@ const updateActiveSetting = (
   if (!updatedActive) {
     return [model, Cmd.none()]
   } else {
+    const updatedModel = withActiveRules(model, updatedList)
     return [
-      { ...model, padSettingList: updatedList },
-      Cmd.batch([
-        saveSettingsCmd(
-          model.hostname,
-          model.currentUrl,
-          updatedList,
-          model.globalSetting,
-          model.domainSetting,
-        ),
-        injectThemeCmd(updatedActive),
-      ]),
+      updatedModel,
+      Cmd.batch([saveSettingsCmd(updatedModel), injectThemeCmd(updatedActive)]),
     ]
   }
 }
@@ -260,15 +328,13 @@ const handleInit = (
   msg: Extract<Msg, { _tag: 'Init' }>,
   model: Model | null,
 ): [Model, Cmd<Msg>] => {
-  const selectedIndex = getActivePadSettingIndex(
-    msg.currentUrl,
-    msg.padSettingList,
-  )
-  const activeSettings = msg.padSettingList[selectedIndex] || {
+  const padSettingList = rulesFor(msg.site, msg.monitor)
+  const selectedIndex = getActivePadSettingIndex(msg.currentUrl, padSettingList)
+  const activeSettings = padSettingList[selectedIndex] || {
     ...defaultPathSetting,
     enabled: false,
   }
-  const hasUrlMatch = msg.padSettingList.some((item) =>
+  const hasUrlMatch = padSettingList.some((item) =>
     matchUrlPattern(msg.currentUrl, item.matchPattern),
   )
   const defaultCollapsed = hasUrlMatch ? true : false
@@ -278,11 +344,13 @@ const handleInit = (
       hostname: msg.hostname,
       currentUrl: msg.currentUrl,
       globalSetting: msg.globalSetting,
-      domainSetting: msg.domainSetting,
-      padSettingList: msg.padSettingList,
+      site: msg.site,
+      monitor: msg.monitor,
+      viewedMonitor: msg.monitor,
       selectedIndex,
       activePresetTab: model ? model.activePresetTab : 'light',
       matchesCollapsed: model ? model.matchesCollapsed : defaultCollapsed,
+      isCopyMonitorListOpen: false,
       isInjectThemeDone: false,
       isSetFontSizeDone: false,
     },
@@ -293,11 +361,29 @@ const handleInit = (
   ]
 }
 
+// Saves a new list of rules for the model's monitor, selects the rule that
+// matches the page and applies its theme to the popup
+const replaceActiveRules = (
+  model: Model,
+  updatedList: PathSetting[],
+): [Model, Cmd<Msg>] => {
+  const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
+  const activeSettings = updatedList[updatedIndex] || defaultPathSetting
+  const updatedModel = {
+    ...withActiveRules(model, updatedList),
+    selectedIndex: updatedIndex,
+  }
+  return [
+    updatedModel,
+    Cmd.batch([saveSettingsCmd(updatedModel), injectThemeCmd(activeSettings)]),
+  ]
+}
+
 const handleToggleEnabled = (
   msg: Extract<Msg, { _tag: 'ToggleEnabled' }>,
   model: Model,
 ): [Model, Cmd<Msg>] => {
-  const target = model.padSettingList[msg.index]
+  const target = activeRules(model)[msg.index]
   if (!target) {
     return [model, Cmd.none()]
   } else {
@@ -306,49 +392,29 @@ const handleToggleEnabled = (
       enabled: !target.enabled,
       updatedAt: Date.now(),
     }
-    const updatedList = [...model.padSettingList]
+    const updatedList = [...activeRules(model)]
     updatedList[msg.index] = updatedTarget
-    const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
-    const activeSettings = updatedList[updatedIndex] || defaultPathSetting
-    return [
-      { ...model, padSettingList: updatedList, selectedIndex: updatedIndex },
-      Cmd.batch([
-        saveSettingsCmd(
-          model.hostname,
-          model.currentUrl,
-          updatedList,
-          model.globalSetting,
-          model.domainSetting,
-        ),
-        injectThemeCmd(activeSettings),
-      ]),
-    ]
+    return replaceActiveRules(model, updatedList)
   }
 }
 
 const handleAddPadSetting = (model: Model): [Model, Cmd<Msg>] => {
   const defaultPattern = getDefaultPatternForUrl(model.currentUrl)
   const newSetting = createDefaultPathSetting(defaultPattern)
-  const updatedList = [newSetting, ...model.padSettingList]
+  const updatedList = [newSetting, ...activeRules(model)]
   const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
   const updatedGlobal = { ...model.globalSetting, showRuler: true }
+  const updatedModel = {
+    ...withActiveRules(model, updatedList),
+    selectedIndex: updatedIndex,
+    globalSetting: updatedGlobal,
+    matchesCollapsed: false,
+  }
   return [
-    {
-      ...model,
-      padSettingList: updatedList,
-      selectedIndex: updatedIndex,
-      globalSetting: updatedGlobal,
-      matchesCollapsed: false,
-    },
+    updatedModel,
     Cmd.batch([
       saveGlobalSettingCmd(updatedGlobal),
-      saveSettingsCmd(
-        model.hostname,
-        model.currentUrl,
-        updatedList,
-        updatedGlobal,
-        model.domainSetting,
-      ),
+      saveSettingsCmd(updatedModel),
       injectThemeCmd(updatedList[updatedIndex] || defaultPathSetting),
     ]),
   ]
@@ -358,28 +424,19 @@ const handleDeletePadSetting = (
   msg: Extract<Msg, { _tag: 'DeletePadSetting' }>,
   model: Model,
 ): [Model, Cmd<Msg>] => {
-  const updatedList = model.padSettingList.filter((_, idx) => idx !== msg.index)
+  const updatedList = activeRules(model).filter((_, idx) => idx !== msg.index)
   const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
   const activeSettings = updatedList[updatedIndex] || {
     ...defaultPathSetting,
     enabled: false,
   }
+  const updatedModel = {
+    ...withActiveRules(model, updatedList),
+    selectedIndex: updatedIndex,
+  }
   return [
-    {
-      ...model,
-      padSettingList: updatedList,
-      selectedIndex: updatedIndex,
-    },
-    Cmd.batch([
-      saveSettingsCmd(
-        model.hostname,
-        model.currentUrl,
-        updatedList,
-        model.globalSetting,
-        model.domainSetting,
-      ),
-      injectThemeCmd(activeSettings),
-    ]),
+    updatedModel,
+    Cmd.batch([saveSettingsCmd(updatedModel), injectThemeCmd(activeSettings)]),
   ]
 }
 
@@ -387,7 +444,7 @@ const handleUpdateMatchPattern = (
   msg: Extract<Msg, { _tag: 'UpdateMatchPattern' }>,
   model: Model,
 ): [Model, Cmd<Msg>] => {
-  const target = model.padSettingList[msg.index]
+  const target = activeRules(model)[msg.index]
   if (!target) {
     return [model, Cmd.none()]
   } else {
@@ -396,23 +453,9 @@ const handleUpdateMatchPattern = (
       matchPattern: msg.matchPattern,
       updatedAt: Date.now(),
     }
-    const updatedList = [...model.padSettingList]
+    const updatedList = [...activeRules(model)]
     updatedList[msg.index] = updatedTarget
-    const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
-    const activeSettings = updatedList[updatedIndex] || defaultPathSetting
-    return [
-      { ...model, padSettingList: updatedList, selectedIndex: updatedIndex },
-      Cmd.batch([
-        saveSettingsCmd(
-          model.hostname,
-          model.currentUrl,
-          updatedList,
-          model.globalSetting,
-          model.domainSetting,
-        ),
-        injectThemeCmd(activeSettings),
-      ]),
-    ]
+    return replaceActiveRules(model, updatedList)
   }
 }
 
@@ -421,25 +464,11 @@ const handleMoveMatchUp = (
   model: Model,
 ): [Model, Cmd<Msg>] => {
   const idx = msg.index
-  if (idx <= 0 || idx >= model.padSettingList.length) {
+  const list = activeRules(model)
+  if (idx <= 0 || idx >= list.length) {
     return [model, Cmd.none()]
   } else {
-    const updatedList = swapArrayElements(model.padSettingList, idx, idx - 1)
-    const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
-    const activeSettings = updatedList[updatedIndex] || defaultPathSetting
-    return [
-      { ...model, padSettingList: updatedList, selectedIndex: updatedIndex },
-      Cmd.batch([
-        saveSettingsCmd(
-          model.hostname,
-          model.currentUrl,
-          updatedList,
-          model.globalSetting,
-          model.domainSetting,
-        ),
-        injectThemeCmd(activeSettings),
-      ]),
-    ]
+    return replaceActiveRules(model, swapArrayElements(list, idx, idx - 1))
   }
 }
 
@@ -448,72 +477,113 @@ const handleMoveMatchDown = (
   model: Model,
 ): [Model, Cmd<Msg>] => {
   const idx = msg.index
-  if (idx < 0 || idx >= model.padSettingList.length - 1) {
+  const list = activeRules(model)
+  if (idx < 0 || idx >= list.length - 1) {
     return [model, Cmd.none()]
   } else {
-    const updatedList = swapArrayElements(model.padSettingList, idx, idx + 1)
-    const updatedIndex = getActivePadSettingIndex(model.currentUrl, updatedList)
-    const activeSettings = updatedList[updatedIndex] || defaultPathSetting
-    return [
-      { ...model, padSettingList: updatedList, selectedIndex: updatedIndex },
-      Cmd.batch([
-        saveSettingsCmd(
-          model.hostname,
-          model.currentUrl,
-          updatedList,
-          model.globalSetting,
-          model.domainSetting,
-        ),
-        injectThemeCmd(activeSettings),
-      ]),
-    ]
+    return replaceActiveRules(model, swapArrayElements(list, idx, idx + 1))
   }
 }
 
-const handleToggleGlobalEnabled = (model: Model): [Model, Cmd<Msg>] => {
-  const updatedGlobal = {
-    ...model.globalSetting,
-    enabled: !model.globalSetting.enabled,
-  }
+// Saves a changed global setting and applies it to the active tab
+const updateGlobalSetting = (
+  model: Model,
+  updatedGlobal: GlobalSetting,
+  extraCmds: Cmd<Msg>[] = [],
+): [Model, Cmd<Msg>] => {
   const activeSettings =
-    model.padSettingList[model.selectedIndex] || defaultPathSetting
+    viewedRules(model)[model.selectedIndex] || defaultPathSetting
+  const updatedModel = { ...model, globalSetting: updatedGlobal }
   return [
-    { ...model, globalSetting: updatedGlobal },
+    updatedModel,
     Cmd.batch([
       saveGlobalSettingCmd(updatedGlobal),
-      saveSettingsCmd(
-        model.hostname,
-        model.currentUrl,
-        model.padSettingList,
-        updatedGlobal,
-        model.domainSetting,
-      ),
+      saveSettingsCmd(updatedModel),
       injectThemeCmd(activeSettings),
+      ...extraCmds,
     ]),
   ]
 }
 
+const handleToggleGlobalEnabled = (model: Model): [Model, Cmd<Msg>] =>
+  updateGlobalSetting(model, {
+    ...model.globalSetting,
+    enabled: !model.globalSetting.enabled,
+  })
+
 const handleToggleDomainEnabled = (model: Model): [Model, Cmd<Msg>] => {
-  const updatedDomain: DomainSetting = {
-    ...model.domainSetting,
-    enabled: !model.domainSetting.enabled,
-    updatedAt: Date.now(),
+  const updatedModel = {
+    ...model,
+    site: {
+      ...model.site,
+      enabled: !model.site.enabled,
+      updatedAt: Date.now(),
+    },
   }
   const activeSettings =
-    model.padSettingList[model.selectedIndex] || defaultPathSetting
+    viewedRules(model)[model.selectedIndex] || defaultPathSetting
   return [
-    { ...model, domainSetting: updatedDomain },
-    Cmd.batch([
-      saveSettingsCmd(
-        model.hostname,
-        model.currentUrl,
-        model.padSettingList,
-        model.globalSetting,
-        updatedDomain,
-      ),
-      injectThemeCmd(activeSettings),
-    ]),
+    updatedModel,
+    Cmd.batch([saveSettingsCmd(updatedModel), injectThemeCmd(activeSettings)]),
   ]
+}
+
+// Shows the rules of a monitor, selecting the one that matches the page
+const handleViewMonitor = (
+  msg: Extract<Msg, { _tag: 'ViewMonitor' }>,
+  model: Model,
+): [Model, Cmd<Msg>] => {
+  const list = rulesFor(model.site, msg.monitor)
+  const selectedIndex = getActivePadSettingIndex(model.currentUrl, list)
+  return [
+    {
+      ...model,
+      viewedMonitor: msg.monitor,
+      selectedIndex,
+      isCopyMonitorListOpen: false,
+      matchesCollapsed: false,
+    },
+    // The popup takes the theme of the rule it shows
+    injectThemeCmd(list[selectedIndex] || defaultPathSetting),
+  ]
+}
+
+// Copies one rule of the viewed monitor to the tab's monitor, and keeps
+// showing the viewed monitor so more can be copied
+const handleCopyRuleToCurrentMonitor = (
+  msg: Extract<Msg, { _tag: 'CopyRuleToCurrentMonitor' }>,
+  model: Model,
+): [Model, Cmd<Msg>] => {
+  const rule = viewedRules(model)[msg.index]
+  if (!rule || !isViewingOtherMonitor(model)) {
+    return [model, Cmd.none()]
+  } else {
+    const updatedModel = withActiveRules(
+      model,
+      copyRuleInto(activeRules(model), rule),
+    )
+    return [updatedModel, saveSettingsCmd(updatedModel)]
+  }
+}
+
+// Copies all the rules of the viewed monitor to the tab's monitor, then shows
+// the tab's monitor with the result
+const handleCopyAllRules = (
+  msg: Extract<Msg, { _tag: 'CopyAllRules' }>,
+  model: Model,
+): [Model, Cmd<Msg>] => {
+  if (!isViewingOtherMonitor(model)) {
+    return [model, Cmd.none()]
+  } else {
+    const updatedList =
+      msg.mode === 'Replace'
+        ? viewedRules(model)
+        : copyMissingRulesInto(activeRules(model), viewedRules(model))
+    return replaceActiveRules(
+      { ...model, viewedMonitor: model.monitor },
+      updatedList,
+    )
+  }
 }
 
 export const init = (): [Model | null, Cmd<Msg>] => {
@@ -530,6 +600,9 @@ export const update = (
     } else {
       return [null, Cmd.none()]
     }
+  } else if (isViewingOtherMonitor(model) && isRuleEdit(msg)) {
+    // Another monitor is shown read only
+    return [model, Cmd.none()]
   } else {
     switch (msg._tag) {
       case 'Init':
@@ -540,6 +613,21 @@ export const update = (
 
       case 'ToggleDomainEnabled':
         return handleToggleDomainEnabled(model)
+
+      case 'ToggleCopyMonitorList':
+        return [
+          { ...model, isCopyMonitorListOpen: !model.isCopyMonitorListOpen },
+          Cmd.none(),
+        ]
+
+      case 'ViewMonitor':
+        return handleViewMonitor(msg, model)
+
+      case 'CopyRuleToCurrentMonitor':
+        return handleCopyRuleToCurrentMonitor(msg, model)
+
+      case 'CopyAllRules':
+        return handleCopyAllRules(msg, model)
 
       case 'ToggleEnabled':
         return handleToggleEnabled(msg, model)
@@ -607,51 +695,17 @@ export const update = (
       case 'MoveMatchDown':
         return handleMoveMatchDown(msg, model)
 
-      case 'ToggleShowRuler': {
-        const updatedGlobal = {
+      case 'ToggleShowRuler':
+        return updateGlobalSetting(model, {
           ...model.globalSetting,
           showRuler: !model.globalSetting.showRuler,
-        }
-        const activeSettings =
-          model.padSettingList[model.selectedIndex] || defaultPathSetting
-        return [
-          { ...model, globalSetting: updatedGlobal },
-          Cmd.batch([
-            saveGlobalSettingCmd(updatedGlobal),
-            saveSettingsCmd(
-              model.hostname,
-              model.currentUrl,
-              model.padSettingList,
-              updatedGlobal,
-              model.domainSetting,
-            ),
-            injectThemeCmd(activeSettings),
-          ]),
-        ]
-      }
+        })
 
-      case 'ToggleDisableWhenNotMaximized': {
-        const updatedGlobal = {
+      case 'ToggleDisableWhenNotMaximized':
+        return updateGlobalSetting(model, {
           ...model.globalSetting,
           disableWhenNotMaximized: !model.globalSetting.disableWhenNotMaximized,
-        }
-        const activeSettings =
-          model.padSettingList[model.selectedIndex] || defaultPathSetting
-        return [
-          { ...model, globalSetting: updatedGlobal },
-          Cmd.batch([
-            saveGlobalSettingCmd(updatedGlobal),
-            saveSettingsCmd(
-              model.hostname,
-              model.currentUrl,
-              model.padSettingList,
-              updatedGlobal,
-              model.domainSetting,
-            ),
-            injectThemeCmd(activeSettings),
-          ]),
-        ]
-      }
+        })
 
       case 'ToggleMatchesCollapsed':
         return [
@@ -667,27 +721,11 @@ export const update = (
 
       case 'SetFontSize': {
         const clampedSize = Math.min(32, Math.max(12, msg.fontSize))
-        const updatedGlobal = {
-          ...model.globalSetting,
-          fontSize: clampedSize,
-        }
-        const activeSettings =
-          model.padSettingList[model.selectedIndex] || defaultPathSetting
-        return [
-          { ...model, globalSetting: updatedGlobal },
-          Cmd.batch([
-            saveGlobalSettingCmd(updatedGlobal),
-            saveSettingsCmd(
-              model.hostname,
-              model.currentUrl,
-              model.padSettingList,
-              updatedGlobal,
-              model.domainSetting,
-            ),
-            injectThemeCmd(activeSettings),
-            updateRootFontSizeCmd(clampedSize),
-          ]),
-        ]
+        return updateGlobalSetting(
+          model,
+          { ...model.globalSetting, fontSize: clampedSize },
+          [updateRootFontSizeCmd(clampedSize)],
+        )
       }
 
       case 'InjectThemeDone':
@@ -722,8 +760,8 @@ export const validateBackupData = (data: unknown): boolean => {
             isValid = false
           }
         } else {
-          const decoded = t.array(PaddingSettingCodec).decode(val)
-          if (decoded._tag === 'Left') {
+          // Backups made before schema version 2 hold the old site lists
+          if (!isStoredSiteSetting(val)) {
             isValid = false
           }
         }
@@ -855,11 +893,46 @@ const triggerImportCmd = (jsonText: string): Cmd<Msg> => {
   )
 }
 
+// How long the popup waits for the page to say which monitor it is on
+const TAB_MONITOR_TIMEOUT_MS = 300
+
+// The monitor the tab is on, as its page reports it. Pages without the
+// content script (e.g. browser pages) don't answer, and a busy page may not
+// answer in time; then the popup's own screen is used, which is the tab's
+// monitor too in a normal window.
+const queryTabMonitor = (tabId: number | undefined): Promise<Monitor> =>
+  new Promise((resolve) => {
+    if (tabId === undefined || !chrome.tabs.sendMessage) {
+      resolve(getCurrentMonitor())
+    } else {
+      // Whichever comes first wins; resolving twice does nothing
+      setTimeout(() => resolve(getCurrentMonitor()), TAB_MONITOR_TIMEOUT_MS)
+      try {
+        chrome.tabs.sendMessage(
+          tabId,
+          { type: 'GET_MONITOR' },
+          (response: unknown) => {
+            // Reading lastError marks it as handled
+            const noAnswer = chrome.runtime.lastError !== undefined
+            resolve(
+              !noAnswer && MonitorCodec.is(response)
+                ? response
+                : getCurrentMonitor(),
+            )
+          },
+        )
+      } catch {
+        resolve(getCurrentMonitor())
+      }
+    }
+  })
+
 export const queryActiveTabAndSettings = (): Promise<{
   hostname: Hostname
   currentUrl: string
   globalSetting: GlobalSetting
-  padSettingList: PaddingSetting[]
+  site: SiteSetting
+  monitor: Monitor
 }> => {
   return new Promise((resolve) => {
     // Sample page for the `pnpm dev` preview only, where there are no tabs
@@ -872,7 +945,13 @@ export const queryActiveTabAndSettings = (): Promise<{
         hostname: defaultHost,
         currentUrl: defaultUrl,
         globalSetting: defaultGlobalSetting,
-        padSettingList: [defaultPathSetting],
+        site: {
+          ...defaultSiteSetting,
+          monitors: [
+            { monitor: getCurrentMonitor(), rules: [defaultPathSetting] },
+          ],
+        },
+        monitor: getCurrentMonitor(),
       })
     } else {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -882,22 +961,38 @@ export const queryActiveTabAndSettings = (): Promise<{
         // edits there don't land under the dev preview's sample site
         const url = activeTab?.url ?? ''
         const host = getHostname(url)
-        Promise.all([loadGlobalSetting()(), loadPadSettings(host)()]).then(
-          ([globalEither, padEither]) => {
+        // Bring old stored data up to date before reading it, so nothing
+        // this popup saves later is in the old shape. Old rules move to the
+        // monitor of the tab, so it needs to be known first.
+        queryTabMonitor(activeTab?.id)
+          .then(async (monitor) => {
+            const migrated = await migrateStorage(monitor)()
+            if (migrated._tag === 'Left') {
+              console.error('[Damn Center] Migration failed:', migrated.left)
+            }
+            return Promise.all([
+              loadGlobalSetting()(),
+              loadSiteSetting(host, monitor)(),
+              Promise.resolve(monitor),
+            ])
+          })
+          .then(([globalEither, siteEither, monitor]) => {
             const globalSetting =
               globalEither._tag === 'Right'
                 ? globalEither.right
                 : defaultGlobalSetting
-            const padSettingList =
-              padEither._tag === 'Right' ? padEither.right : []
+            const site =
+              siteEither._tag === 'Right'
+                ? siteEither.right
+                : defaultSiteSetting
             resolve({
               hostname: host,
               currentUrl: url,
               globalSetting,
-              padSettingList,
+              site,
+              monitor,
             })
-          },
-        )
+          })
       })
     }
   })
@@ -908,24 +1003,15 @@ export const loadInitialDataCmd = (): Cmd<Msg> => {
     Task.fromPromise(queryActiveTabAndSettings),
     (res): Msg => {
       if (res.tag === 'Ok') {
-        const rawList = res.value.padSettingList
-        const domainSetting =
-          rawList.find(
-            (item): item is DomainSetting => item._tag === 'DomainSetting',
-          ) || defaultDomainSetting
-        const pathSettings = rawList.filter(
-          (item): item is PathSetting => item._tag === 'PathSetting',
-        )
-
         return {
           _tag: 'Init',
           hostname: res.value.hostname,
           currentUrl: res.value.currentUrl,
           globalSetting: res.value.globalSetting,
-          domainSetting,
           // A site without saved rules shows the empty state; rules are only
           // added with + New Match
-          padSettingList: pathSettings,
+          site: res.value.site,
+          monitor: res.value.monitor,
         }
       } else {
         return {
@@ -933,8 +1019,8 @@ export const loadInitialDataCmd = (): Cmd<Msg> => {
           hostname: 'unknown-domain' as Hostname,
           currentUrl: '',
           globalSetting: defaultGlobalSetting,
-          domainSetting: defaultDomainSetting,
-          padSettingList: [],
+          site: defaultSiteSetting,
+          monitor: getCurrentMonitor(),
         }
       }
     },
@@ -944,14 +1030,17 @@ export const loadInitialDataCmd = (): Cmd<Msg> => {
 const persistSettingsAndMessageTab = (
   host: Hostname,
   currentUrl: string,
+  site: SiteSetting,
   settingsList: PathSetting[],
   globalSetting: GlobalSetting,
-  domainSetting: DomainSetting,
 ): Promise<void> => {
-  const listToSave: PaddingSetting[] = [domainSetting, ...settingsList]
+  const domainSetting: DomainSetting = {
+    _tag: 'DomainSetting',
+    enabled: site.enabled,
+  }
   return new Promise((resolve) => {
     pipe(
-      savePadSettings(host, listToSave),
+      saveSiteSetting(host, site),
       TE.fold(
         (err) => {
           console.error('[Damn Center] Failed to save settings list:', err)
@@ -1018,21 +1107,19 @@ const persistSettingsAndMessageTab = (
   })
 }
 
-export const saveSettingsCmd = (
-  host: Hostname,
-  currentUrl: string,
-  settingsList: PathSetting[],
-  globalSetting: GlobalSetting,
-  domainSetting: DomainSetting,
-): Cmd<Msg> => {
+/**
+ * Saves the settings of the model's site, and applies the rules in use on
+ * its monitor to the active tab.
+ */
+export const saveSettingsCmd = (model: Model): Cmd<Msg> => {
   return Task.attempt(
     Task.fromPromise(() =>
       persistSettingsAndMessageTab(
-        host,
-        currentUrl,
-        settingsList,
-        globalSetting,
-        domainSetting,
+        model.hostname,
+        model.currentUrl,
+        model.site,
+        activeRules(model),
+        model.globalSetting,
       ),
     ),
     (): Msg => ({ _tag: 'NoOp' }),
